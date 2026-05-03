@@ -90,5 +90,10 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId));
       allow delete: if isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId));
     }
+
+    match /settings/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }
