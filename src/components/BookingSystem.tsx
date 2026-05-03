@@ -249,7 +249,7 @@ export const BookingSystem = () => {
       const slotStart = time;
       const slotEnd = addMinutes(time, selectedService.duration);
       
-      if (isBefore(slotStart, new Date()) && isSameDay(slotStart, new Date())) continue;
+      if (isBefore(slotStart, new Date())) continue;
 
       // Check if slot is occupied by appointment or block
       const isOccupied = appointments.some(appt => {
