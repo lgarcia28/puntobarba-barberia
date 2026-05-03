@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "Barber": {
+      "title": "Barber",
+      "description": "A barber working at the shop",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "photo": { "type": "string" },
+        "bio": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "barber"] }
+      },
+      "required": ["name", "email", "role"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "A booking for a barber service",
+      "type": "object",
+      "properties": {
+        "barberId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "service": { "type": "string", "enum": ["Corte de pelo", "Barba", "Corte y Barba"] },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["confirmed", "cancelled"] }
+      },
+      "required": ["barberId", "customerName", "customerPhone", "service", "startTime", "endTime", "status"]
+    },
+    "Block": {
+      "title": "Block",
+      "description": "A manual time block for a barber",
+      "type": "object",
+      "properties": {
+        "barberId": { "type": "string" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string" }
+      },
+      "required": ["barberId", "startTime", "endTime"]
+    }
+  },
+  "firestore": {
+    "/barbers/{barberId}": {
+      "schema": "Barber",
+      "description": "Barber profiles"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Customer bookings"
+    },
+    "/blocks/{blockId}": {
+      "schema": "Block",
+      "description": "Manual time blocks"
+    }
+  }
+}

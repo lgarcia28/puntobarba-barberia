@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bebas Neue", sans-serif;
+  
+  --color-crimson: #C1112F;
+  --color-charcoal: #676767;
+  --color-light-gray: #EBEBEB;
+}
+
+@layer base {
+  body {
+    @apply bg-[#000000] text-[#EBEBEB] antialiased;
+  }
+}
+
+.bg-distressed {
+  background-color: #000000;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
+    url('https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&q=80&w=2000');
+  background-size: cover;
+  background-attachment: fixed;
+  background-blend-mode: multiply;
+}
+
+.concrete-texture {
+  position: relative;
+}
+
+.concrete-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('https://www.transparenttextures.com/patterns/concrete-wall-2.png');
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 1;
+}

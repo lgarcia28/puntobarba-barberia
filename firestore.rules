@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: barbers
+    // Fields: id, name, photo, bio, email, role
+    //
+    // Collection: appointments
+    // Fields: barberId, customerName, customerPhone, service, startTime, endTime, status, createdAt
+    //
+    // Collection: blocks
+    // Fields: barberId, startTime, endTime, reason
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+             (
+               (request.auth.token.email == "leoneldariogarcia@gmail.com" && request.auth.token.email_verified == true) ||
+               (request.auth.token.email == "jhbarber87@gmail.com" && request.auth.token.email_verified == true) ||
+               (exists(/databases/$(database)/documents/barbers/$(request.auth.uid)) && 
+                get(/databases/$(database)/documents/barbers/$(request.auth.uid)).data.role == 'admin')
+             );
+    }
+
+    function isBarber(barberId) {
+      return isAuthenticated() && (request.auth.uid == barberId || get(/databases/$(database)/documents/barbers/$(request.auth.uid)).data.id == barberId);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidBarber(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             (data.role == 'admin' || data.role == 'barber');
+    }
+
+    function isValidAppointment(data) {
+      return data.barberId is string && 
+             data.customerName is string && data.customerName.size() > 0 &&
+             data.customerPhone is string && data.customerPhone.size() > 5 &&
+             (data['service'] == 'Corte de pelo' || data['service'] == 'Barba' || data['service'] == 'Corte y Barba') &&
+             data.startTime is timestamp &&
+             data.endTime is timestamp &&
+             data.endTime > data.startTime &&
+             (data.status == 'confirmed' || data.status == 'cancelled') &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidBlock(data) {
+      return data.barberId is string &&
+             data.startTime is timestamp &&
+             data.endTime is timestamp &&
+             data.endTime > data.startTime;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /barbers/{barberId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if true;
+      allow create: if true; // Allow public booking
+      allow update: if isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId));
+      allow delete: if isAdmin();
+    }
+
+    match /blocks/{blockId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && (isAdmin() || isBarber(request.resource.data.barberId));
+      allow update: if isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId));
+      allow delete: if isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId));
+    }
+  }
+}
