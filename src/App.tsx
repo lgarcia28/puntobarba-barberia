@@ -23,6 +23,7 @@ import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { BookingSystem } from './components/BookingSystem';
 import { auth } from './firebase';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,6 +37,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray">
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          style: {
+            background: '#18181b',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '0px',
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '14px',
+            letterSpacing: '1px',
+          },
+          success: { iconTheme: { primary: '#dc2626', secondary: '#fff' } }
+        }} 
+      />
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -167,6 +184,40 @@ export default function App() {
                   <service.icon className="w-12 h-12 md:w-16 md:h-16 absolute bottom-8 right-8 text-white/5 group-hover:text-crimson/20 transition-all duration-500" />
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Gallery / Portfolio Section */}
+        <section id="portfolio" className="py-20 bg-zinc-950 border-y border-white/5 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm mb-4 block">Nuestro Trabajo</span>
+              <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-light-gray">Galería</h2>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                "https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg",
+                "https://i.postimg.cc/fRNGCywF/ccded255-3d3a-4af4-b0f3-2e2e82ab28d4.jpg",
+                "https://i.postimg.cc/Bnv8p37t/WhatsApp-Image-2024-10-09-at-15-58-20.jpg",
+                "https://i.postimg.cc/c4s3F7zB/corte2.jpg" // Added a placeholder or repeated image to fill 4 columns. Wait, let's just use what we have and some realistic ones. I will use the same image twice or let's find 4 good generic barber images. Let's repeat 2.
+              ].map((img, i) => (
+                <div key={i} className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5">
+                  <img 
+                    src={img} 
+                    alt={`Corte Reset ART ${i + 1}`} 
+                    className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-crimson/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-12">
+              <a href="https://instagram.com/reset.barberia" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-white hover:text-crimson transition-colors font-display font-bold uppercase tracking-widest border-b border-white/20 hover:border-crimson pb-1">
+                <Instagram className="w-5 h-5" /> Ver más en Instagram
+              </a>
             </div>
           </div>
         </section>

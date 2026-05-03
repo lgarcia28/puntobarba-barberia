@@ -21,6 +21,7 @@ import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2 } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import toast from 'react-hot-toast';
 
 // --- Types ---
 interface Barber {
@@ -82,6 +83,12 @@ export const BookingSystem = () => {
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
+
+  // Mis Turnos State
+  const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
+  const [searchPhone, setSearchPhone] = useState('');
+  const [myAppointments, setMyAppointments] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     getShopSettings().then((settings: any) => {
@@ -221,11 +228,11 @@ export const BookingSystem = () => {
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.code === 'auth/popup-blocked') {
-        alert('El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.');
+        toast.error('El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.');
       } else if (err.code === 'auth/unauthorized-domain') {
-        alert('Este dominio no está autorizado en la consola de Firebase. Por favor, añade ' + window.location.hostname + ' a la lista de dominios autorizados en Firebase Auth.');
+        toast.error('Este dominio no está autorizado en la consola de Firebase. Por favor, añade ' + window.location.hostname + ' a la lista de dominios autorizados en Firebase Auth.');
       } else {
-        alert('Error al iniciar sesión: ' + (err.message || 'Error desconocido'));
+        toast.error('Error al iniciar sesión: ' + (err.message || 'Error desconocido'));
       }
     }
   };
@@ -294,6 +301,32 @@ export const BookingSystem = () => {
     }
 
     return slots;
+  };
+
+  const handleSearchAppointments = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchPhone) return;
+    setIsSearching(true);
+    try {
+      const q = query(
+        collection(db, 'appointments'),
+        where('customerPhone', '==', searchPhone),
+        where('startTime', '>=', Timestamp.now())
+      );
+      const snapshot = await getDocs(q);
+      // Sort manually since we need an index for multiple fields
+      const appts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }))
+        .sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
+      setMyAppointments(appts);
+      if (appts.length === 0) {
+        toast.error('No se encontraron turnos próximos para este teléfono.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al buscar turnos.');
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleBooking = async (e: React.FormEvent) => {
@@ -551,6 +584,23 @@ export const BookingSystem = () => {
 
                 {selectedBarber && (
                   <div className="space-y-8">
+                    {/* Analytics Dashboard */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-black p-6 border border-white/5 flex flex-col justify-center">
+                        <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Turnos Programados</p>
+                        <p className="font-display font-black text-4xl text-light-gray">{adminAppts.length}</p>
+                      </div>
+                      <div className="bg-black p-6 border border-white/5 flex flex-col justify-center">
+                        <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Ingresos Estimados</p>
+                        <p className="font-display font-black text-4xl text-crimson">
+                          ${adminAppts.reduce((acc, appt) => {
+                            const svc = SERVICES.find(s => s.name === appt.service);
+                            return acc + (svc ? svc.price : 0);
+                          }, 0).toLocaleString('es-AR')}
+                        </p>
+                      </div>
+                    </div>
+
                     <div className="bg-black p-6 border border-white/5">
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                         <div className="flex flex-col gap-4">
@@ -777,22 +827,22 @@ export const BookingSystem = () => {
                     <button 
                       onClick={async () => {
                         if (!newBarber.name || !newBarber.email || !newBarber.photo) {
-                          alert('Por favor completa todos los campos y sube una foto.');
+                          toast.error('Por favor completa todos los campos y sube una foto.');
                           return;
                         }
                         setLoading(true);
                         try {
                           if (editingBarberId) {
                             await updateBarber(editingBarberId, newBarber);
-                            alert('Barbero actualizado correctamente.');
+                            toast.success('Barbero actualizado correctamente.');
                           } else {
                             await addBarber(newBarber);
-                            alert('Barbero agregado correctamente.');
+                            toast.success('Barbero agregado correctamente.');
                           }
                           setNewBarber({ name: '', email: '', photo: '', role: 'barber' });
                           setEditingBarberId(null);
                         } catch (err) {
-                          alert('Error al guardar barbero.');
+                          toast.error('Error al guardar barbero.');
                         } finally {
                           setLoading(false);
                         }
@@ -853,8 +903,9 @@ export const BookingSystem = () => {
                                 if (window.confirm(`¿Estás seguro de eliminar a ${b.name}?`)) {
                                   try {
                                     await deleteBarber(b.id);
+                                    toast.success('Barbero eliminado.');
                                   } catch (err) {
-                                    alert('Error al eliminar barbero.');
+                                    toast.error('Error al eliminar barbero.');
                                   }
                                 }
                               }}
@@ -931,9 +982,9 @@ export const BookingSystem = () => {
                       setLoading(true);
                       try {
                         await updateShopSettings(shopSettings);
-                        alert('Horarios guardados correctamente.');
+                        toast.success('Horarios guardados correctamente.');
                       } catch (err) {
-                        alert('Error al guardar los horarios.');
+                        toast.error('Error al guardar los horarios.');
                       } finally {
                         setLoading(false);
                       }
@@ -949,7 +1000,66 @@ export const BookingSystem = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Steps Indicator */}
+            <div className="flex gap-4 border-b border-white/5 pb-4 mb-8">
+              <button 
+                onClick={() => setBookingTab('agendar')}
+                className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Agendar Turno
+              </button>
+              <button 
+                onClick={() => setBookingTab('mis-turnos')}
+                className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'mis-turnos' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Mis Turnos
+              </button>
+            </div>
+
+            {bookingTab === 'mis-turnos' ? (
+              <div className="bg-black p-6 border border-white/5">
+                <h3 className="text-xl font-display font-bold uppercase mb-6 flex items-center gap-3">
+                  <CalendarIcon className="text-crimson" /> Consultar Mis Turnos
+                </h3>
+                <form onSubmit={handleSearchAppointments} className="flex gap-4 mb-8">
+                  <input 
+                    type="tel"
+                    placeholder="Tu número de teléfono"
+                    value={searchPhone}
+                    onChange={(e) => setSearchPhone(e.target.value)}
+                    className="flex-1 bg-zinc-900 border border-white/10 p-4 text-white font-display uppercase tracking-widest"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={isSearching}
+                    className="bg-crimson px-8 font-bold uppercase text-white hover:bg-crimson/80 disabled:opacity-50"
+                  >
+                    {isSearching ? '...' : 'Buscar'}
+                  </button>
+                </form>
+
+                {myAppointments.length > 0 && (
+                  <div className="space-y-4">
+                    {myAppointments.map(appt => {
+                      const b = barbers.find(b => b.id === appt.barberId);
+                      return (
+                        <div key={appt.id} className="p-4 border border-white/5 bg-zinc-900 flex justify-between items-center">
+                          <div>
+                            <p className="font-display font-bold uppercase text-lg">{appt.service}</p>
+                            <p className="text-charcoal text-sm">con {b ? b.name : 'Barbero'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-display font-bold text-crimson">{format(appt.startTime.toDate(), 'dd/MM/yyyy')}</p>
+                            <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Steps Indicator */}
             <div className="flex justify-between mb-12 relative">
               <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/30 -z-10" />
               {[1, 2, 3, 4].map(s => (
@@ -1174,6 +1284,8 @@ export const BookingSystem = () => {
                 </motion.div>
               )}
             </AnimatePresence>
+            </>
+          )}
           </div>
         )}
       </div>
