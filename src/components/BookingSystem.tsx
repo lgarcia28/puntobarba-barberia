@@ -15,7 +15,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -77,10 +77,17 @@ export const BookingSystem = () => {
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [isJose, setIsJose] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [showBarberManagement, setShowBarberManagement] = useState(false);
+  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
+
+  useEffect(() => {
+    getShopSettings().then((settings: any) => {
+      setShopSettings(settings);
+    });
+  }, []);
 
   // Fetch Barbers from Firestore
   useEffect(() => {
@@ -231,14 +238,15 @@ export const BookingSystem = () => {
     if (!selectedBarber || !selectedService) return [];
 
     const dayOfWeek = getDay(selectedDate);
-    if (dayOfWeek === 0) return []; // Sunday closed
+    const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+    if (!daySchedule.isOpen) return [];
 
     const slots = [];
-    const startHour = 9;
-    const endHour = dayOfWeek === 6 ? 17 : 19; // Sat: 17, Mon-Fri: 19
+    const [startH, startM] = daySchedule.start.split(':').map(Number);
+    const [endH, endM] = daySchedule.end.split(':').map(Number);
     
-    const startTime = setMinutes(setHours(startOfDay(selectedDate), startHour), 0);
-    const endTime = setMinutes(setHours(startOfDay(selectedDate), endHour), 0);
+    const startTime = setMinutes(setHours(startOfDay(selectedDate), startH), startM);
+    const endTime = setMinutes(setHours(startOfDay(selectedDate), endH), endM);
 
     const interval = eachMinuteOfInterval({
       start: startTime,
@@ -504,21 +512,27 @@ export const BookingSystem = () => {
             {isJose && (
               <div className="flex gap-4 border-b border-white/5 pb-4">
                 <button 
-                  onClick={() => setShowBarberManagement(false)}
-                  className={`text-xs font-bold uppercase tracking-widest ${!showBarberManagement ? 'text-crimson' : 'text-charcoal'}`}
+                  onClick={() => setActiveAdminTab('agenda')}
+                  className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-crimson' : 'text-charcoal'}`}
                 >
                   Agenda y Bloqueos
                 </button>
                 <button 
-                  onClick={() => setShowBarberManagement(true)}
-                  className={`text-xs font-bold uppercase tracking-widest ${showBarberManagement ? 'text-crimson' : 'text-charcoal'}`}
+                  onClick={() => setActiveAdminTab('barberos')}
+                  className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'barberos' ? 'text-crimson' : 'text-charcoal'}`}
                 >
                   Gestión de Barberos
+                </button>
+                <button 
+                  onClick={() => setActiveAdminTab('horarios')}
+                  className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'horarios' ? 'text-crimson' : 'text-charcoal'}`}
+                >
+                  Horarios de Atención
                 </button>
               </div>
             )}
 
-            {!showBarberManagement ? (
+            {activeAdminTab === 'agenda' && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {barbers
@@ -600,10 +614,13 @@ export const BookingSystem = () => {
                         <button 
                           onClick={() => {
                             const dayOfWeek = getDay(adminDate);
-                            const endHour = dayOfWeek === 6 ? 17 : 19;
+                            const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                            if (!daySchedule.isOpen) return;
+                            const [startH, startM] = daySchedule.start.split(':').map(Number);
+                            const [endH, endM] = daySchedule.end.split(':').map(Number);
                             const allSlots = eachMinuteOfInterval({
-                              start: setHours(startOfDay(adminDate), 9),
-                              end: setHours(startOfDay(adminDate), endHour)
+                              start: setMinutes(setHours(startOfDay(adminDate), startH), startM),
+                              end: setMinutes(setHours(startOfDay(adminDate), endH), endM)
                             }, { step: 30 }).map(t => format(t, 'HH:mm'));
                             
                             if (selectedTimesForBlocking.length === allSlots.length) {
@@ -616,10 +633,13 @@ export const BookingSystem = () => {
                         >
                           {(() => {
                             const dayOfWeek = getDay(adminDate);
-                            const endHour = dayOfWeek === 6 ? 17 : 19;
+                            const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                            if (!daySchedule.isOpen) return 'Deseleccionar Todo';
+                            const [startH, startM] = daySchedule.start.split(':').map(Number);
+                            const [endH, endM] = daySchedule.end.split(':').map(Number);
                             const allSlots = eachMinuteOfInterval({
-                              start: setHours(startOfDay(adminDate), 9),
-                              end: setHours(startOfDay(adminDate), endHour)
+                              start: setMinutes(setHours(startOfDay(adminDate), startH), startM),
+                              end: setMinutes(setHours(startOfDay(adminDate), endH), endM)
                             }, { step: 30 }).map(t => format(t, 'HH:mm'));
                             return selectedTimesForBlocking.length === allSlots.length ? 'Deseleccionar Todo' : 'Seleccionar Todo';
                           })()}
@@ -627,10 +647,16 @@ export const BookingSystem = () => {
                       </div>
 
                       <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-8">
-                        {eachMinuteOfInterval({
-                          start: setHours(startOfDay(adminDate), 9),
-                          end: setHours(startOfDay(adminDate), getDay(adminDate) === 6 ? 17 : 19)
-                        }, { step: 30 }).map(time => {
+                        {(() => {
+                          const dayOfWeek = getDay(adminDate);
+                          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                          if (!daySchedule.isOpen) return <div className="col-span-full py-8 text-center text-charcoal">Cerrado este día</div>;
+                          const [startH, startM] = daySchedule.start.split(':').map(Number);
+                          const [endH, endM] = daySchedule.end.split(':').map(Number);
+                          return eachMinuteOfInterval({
+                            start: setMinutes(setHours(startOfDay(adminDate), startH), startM),
+                            end: setMinutes(setHours(startOfDay(adminDate), endH), endM)
+                          }, { step: 30 }).map(time => {
                           const tStr = format(time, 'HH:mm');
                           const block = adminBlocks.find(b => format(b.startTime.toDate(), 'HH:mm') === tStr);
                           const appt = adminAppts.find(a => format(a.startTime.toDate(), 'HH:mm') === tStr);
@@ -664,7 +690,7 @@ export const BookingSystem = () => {
                               {!appt && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
                             </button>
                           );
-                        })}
+                        })})()}
                       </div>
 
                       <div className="flex flex-col md:flex-row gap-4">
@@ -691,7 +717,9 @@ export const BookingSystem = () => {
                   </div>
                 )}
               </>
-            ) : (
+            )}
+            
+            {activeAdminTab === 'barberos' && (
               <div className="space-y-6">
                 <div className="bg-black p-6 border border-white/5">
                   <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
@@ -840,6 +868,81 @@ export const BookingSystem = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+            
+            {activeAdminTab === 'horarios' && (
+              <div className="space-y-6">
+                <div className="bg-black p-6 border border-white/5">
+                  <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-crimson" /> Horarios de Atención Generales
+                  </h3>
+                  <div className="space-y-4">
+                    {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((dayName, index) => {
+                      const daySchedule = shopSettings?.schedule?.[index] || DEFAULT_SCHEDULE[index as keyof typeof DEFAULT_SCHEDULE];
+                      return (
+                        <div key={index} className="flex items-center gap-4 p-4 bg-zinc-900 border border-white/5">
+                          <div className="w-32 font-bold uppercase text-sm">{dayName}</div>
+                          <label className="flex items-center gap-2 text-xs uppercase cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={daySchedule.isOpen}
+                              onChange={(e) => {
+                                const newSchedule = { ...shopSettings.schedule };
+                                newSchedule[index] = { ...daySchedule, isOpen: e.target.checked };
+                                setShopSettings({ ...shopSettings, schedule: newSchedule });
+                              }}
+                              className="accent-crimson"
+                            />
+                            Abierto
+                          </label>
+                          {daySchedule.isOpen && (
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="time" 
+                                value={daySchedule.start}
+                                onChange={(e) => {
+                                  const newSchedule = { ...shopSettings.schedule };
+                                  newSchedule[index] = { ...daySchedule, start: e.target.value };
+                                  setShopSettings({ ...shopSettings, schedule: newSchedule });
+                                }}
+                                className="bg-black border border-white/10 p-2 text-xs"
+                              />
+                              <span>a</span>
+                              <input 
+                                type="time" 
+                                value={daySchedule.end}
+                                onChange={(e) => {
+                                  const newSchedule = { ...shopSettings.schedule };
+                                  newSchedule[index] = { ...daySchedule, end: e.target.value };
+                                  setShopSettings({ ...shopSettings, schedule: newSchedule });
+                                }}
+                                className="bg-black border border-white/10 p-2 text-xs"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      setLoading(true);
+                      try {
+                        await updateShopSettings(shopSettings);
+                        alert('Horarios guardados correctamente.');
+                      } catch (err) {
+                        alert('Error al guardar los horarios.');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                    className="w-full mt-6 bg-crimson py-4 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all disabled:opacity-50"
+                  >
+                    {loading ? 'Guardando...' : 'Guardar Horarios'}
+                  </button>
                 </div>
               </div>
             )}

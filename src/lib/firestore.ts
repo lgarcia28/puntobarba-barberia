@@ -197,3 +197,40 @@ export async function updateBarbersData() {
     handleFirestoreError(error, OperationType.UPDATE, 'barbers');
   }
 }
+
+export const DEFAULT_SCHEDULE = {
+  0: { isOpen: false, start: '09:00', end: '19:00' },
+  1: { isOpen: true, start: '09:00', end: '19:00' },
+  2: { isOpen: true, start: '09:00', end: '19:00' },
+  3: { isOpen: true, start: '09:00', end: '19:00' },
+  4: { isOpen: true, start: '09:00', end: '19:00' },
+  5: { isOpen: true, start: '09:00', end: '19:00' },
+  6: { isOpen: true, start: '09:00', end: '17:00' }
+};
+
+export async function getShopSettings() {
+  try {
+    const settingsRef = doc(db, 'settings', 'shop');
+    const snap = await getDoc(settingsRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return { schedule: DEFAULT_SCHEDULE };
+  } catch (error) {
+    console.error('Error fetching settings', error);
+    return { schedule: DEFAULT_SCHEDULE };
+  }
+}
+
+export async function updateShopSettings(data: any) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    const settingsRef = doc(db, 'settings', 'shop');
+    await setDoc(settingsRef, data, { merge: true });
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'settings');
+  }
+}
