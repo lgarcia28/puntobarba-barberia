@@ -219,12 +219,7 @@ export default function App() {
                 className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-900 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors"
               >
                 <Instagram className="w-16 h-16 md:w-20 md:h-20 text-white/30 group-hover:text-crimson transition-colors mb-4 md:mb-6" />
-                <span className="text-white/30 group-hover:text-crimson font-display font-bold uppercase tracking-widest text-xs md:text-sm transition-colors text-center px-4">Ir al Instagram</span>
-              </a>
-            </div>
-            <div className="text-center mt-12">
-              <a href="https://instagram.com/reset.barberia" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-white hover:text-crimson transition-colors font-display font-bold uppercase tracking-widest border-b border-white/20 hover:border-crimson pb-1">
-                <Instagram className="w-5 h-5" /> Ver más en Instagram
+                <span className="text-white/30 group-hover:text-crimson font-display font-bold uppercase tracking-widest text-xs md:text-sm transition-colors text-center px-4">Ver más en Instagram</span>
               </a>
             </div>
           </div>
