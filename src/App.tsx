@@ -200,8 +200,7 @@ export default function App() {
               {[
                 "https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg",
                 "https://i.postimg.cc/fRNGCywF/ccded255-3d3a-4af4-b0f3-2e2e82ab28d4.jpg",
-                "https://i.postimg.cc/Bnv8p37t/WhatsApp-Image-2024-10-09-at-15-58-20.jpg",
-                "https://i.postimg.cc/c4s3F7zB/corte2.jpg" // Added a placeholder or repeated image to fill 4 columns. Wait, let's just use what we have and some realistic ones. I will use the same image twice or let's find 4 good generic barber images. Let's repeat 2.
+                "https://i.postimg.cc/ydHCPN5n/9696527f-03e6-442a-8ba1-6be736a5f5fc.jpg"
               ].map((img, i) => (
                 <div key={i} className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5">
                   <img 
@@ -213,6 +212,15 @@ export default function App() {
                   <div className="absolute inset-0 bg-gradient-to-t from-crimson/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
               ))}
+              <a 
+                href="https://www.instagram.com/reset.barberia/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-900 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors"
+              >
+                <Instagram className="w-16 h-16 md:w-20 md:h-20 text-white/30 group-hover:text-crimson transition-colors mb-4 md:mb-6" />
+                <span className="text-white/30 group-hover:text-crimson font-display font-bold uppercase tracking-widest text-xs md:text-sm transition-colors text-center px-4">Ir al Instagram</span>
+              </a>
             </div>
             <div className="text-center mt-12">
               <a href="https://instagram.com/reset.barberia" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-white hover:text-crimson transition-colors font-display font-bold uppercase tracking-widest border-b border-white/20 hover:border-crimson pb-1">
