@@ -44,7 +44,7 @@ async function startServer() {
       // Para un Webhook de n8n:
       const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-      const message = `¡Hola ${customerName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n¡Te esperamos!`;
+      const message = `¡Hola ${customerName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://maps.google.com/?q=Mitre+264,+Rosario\n\n¡Te esperamos!`;
 
       if (N8N_WEBHOOK_URL) {
         // Opción 1: Enviar a n8n
