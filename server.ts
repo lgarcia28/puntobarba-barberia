@@ -35,7 +35,19 @@ async function startServer() {
       }
 
       // Format phone number to E.164 without '+' (e.g., 549341...)
-      const formattedPhone = phone.replace(/\D/g, "");
+      let formattedPhone = phone.replace(/\D/g, "");
+      
+      // En Argentina, WhatsApp requiere el formato 549 + código de área + número
+      // Si el usuario ingresa 10 dígitos (ej: 3416055274), le agregamos 549
+      if (formattedPhone.length === 10) {
+        formattedPhone = "549" + formattedPhone;
+      } else if (formattedPhone.startsWith("54") && formattedPhone.length === 12) {
+        // Si ingresaron 54 + 10 dígitos pero les faltó el 9
+        formattedPhone = "549" + formattedPhone.substring(2);
+      } else if (formattedPhone.startsWith("0")) {
+        // Si arrancan con 0 (ej: 0341...), sacamos el 0 y agregamos 549
+        formattedPhone = "549" + formattedPhone.substring(1);
+      }
 
       // Para Green API directamente:
       const GREEN_API_ID = process.env.GREEN_API_ID;
