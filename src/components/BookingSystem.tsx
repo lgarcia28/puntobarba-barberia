@@ -1166,18 +1166,35 @@ export const BookingSystem = () => {
                       <CalendarIcon className="text-crimson" /> Fecha y Hora
                     </h3>
 
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2 pb-4">
-                      {Array.from({ length: 30 }).map((_, i) => {
-                        const date = addMinutes(new Date(), i * 1440);
+                    <div className="grid grid-cols-7 gap-1 md:gap-2 pb-4">
+                      {Array.from({ length: 35 }).map((_, i) => {
+                        const today = startOfDay(new Date());
+                        const currentDayOfWeek = getDay(today);
+                        // getDay: 0 = Sunday, 1 = Monday, ...
+                        const daysToSubtract = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+                        const date = addMinutes(today, (i - daysToSubtract) * 1440);
+                        
                         const isSelected = isSameDay(date, selectedDate);
+                        const isPast = isBefore(date, today);
+                        const isToday = isSameDay(date, today);
+
                         return (
                           <button
                             key={i}
+                            disabled={isPast}
                             onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
-                            className={`py-3 border flex flex-col items-center transition-all ${isSelected ? 'border-crimson bg-crimson text-white shadow-lg shadow-crimson/20 scale-105 z-10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:bg-zinc-900'}`}
+                            className={`py-2 md:py-3 border flex flex-col items-center transition-all ${
+                              isPast
+                                ? 'border-white/5 bg-black/50 text-charcoal/30 cursor-not-allowed opacity-50'
+                                : isSelected
+                                ? 'border-crimson bg-crimson text-white shadow-lg shadow-crimson/20 scale-105 z-10'
+                                : isToday
+                                ? 'border-white bg-black text-white hover:bg-zinc-900'
+                                : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:bg-zinc-900'
+                            }`}
                           >
-                            <span className="text-[10px] font-bold uppercase tracking-widest">{format(date, 'EEE', { locale: es })}</span>
-                            <span className="text-xl font-display font-black">{format(date, 'dd')}</span>
+                            <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest">{format(date, 'EEE', { locale: es })}</span>
+                            <span className="text-lg md:text-xl font-display font-black">{format(date, 'dd')}</span>
                           </button>
                         );
                       })}
