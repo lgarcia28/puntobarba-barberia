@@ -544,7 +544,7 @@ export const BookingSystem = () => {
   return (
     <div ref={containerRef} className="max-w-4xl mx-auto bg-zinc-900/50 border border-white/5 p-6 md:p-10 rounded-sm concrete-texture shadow-2xl">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-tighter text-light-gray">
+        <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-normal text-light-gray">
           {isBarberAdmin ? 'Panel de Gestión' : 'Reserva tu Turno'}
         </h2>
         {user ? (
@@ -1288,7 +1288,7 @@ export const BookingSystem = () => {
                     <div className="w-24 h-24 bg-crimson rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-crimson/30">
                       <CheckCircle2 className="w-12 h-12 text-white" />
                     </div>
-                    <h3 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-light-gray">¡Turno Confirmado!</h3>
+                    <h3 className="text-4xl md:text-6xl font-display font-black uppercase tracking-normal text-light-gray">¡Turno Confirmado!</h3>
                     <p className="text-charcoal text-lg md:text-xl font-display max-w-md mx-auto">
                       Te esperamos el <span className="text-white">{format(selectedDate, 'dd/MM')}</span> a las <span className="text-white">{selectedTime} HS</span> con <span className="text-white">{selectedBarber.name}</span>.
                     </p>

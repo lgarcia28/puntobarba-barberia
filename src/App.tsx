@@ -56,7 +56,7 @@ export default function App() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-3xl font-black tracking-tighter uppercase font-display flex items-center gap-1">
+          <div className="text-3xl font-black tracking-normal uppercase font-display flex items-center gap-1">
             RESET <span className="bg-crimson text-white px-2 py-0.5 leading-none">ART</span> <span className="text-sm font-bold tracking-[0.3em] ml-2 hidden sm:inline">BARBERSHOP</span>
           </div>
           
@@ -123,7 +123,7 @@ export default function App() {
               <span className="inline-block px-3 py-1 bg-crimson/10 border border-crimson/20 text-crimson font-display text-sm font-bold tracking-[0.2em] uppercase">
                 Estilo & Academia
               </span>
-              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-display font-black uppercase leading-[0.85] tracking-tighter">
+              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-display font-black uppercase leading-[0.85] tracking-normal">
                 RESET <span className="text-crimson">ART</span>
               </h1>
               <p className="text-lg md:text-3xl font-display text-charcoal max-w-lg italic border-l-0 md:border-l-4 border-crimson md:pl-6 uppercase tracking-tight mx-auto md:mx-0">
@@ -152,7 +152,7 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="flex flex-col lg:flex-row justify-between items-center mb-16 md:mb-24 gap-12">
               <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tighter text-light-gray">Servicios de Autor</h2>
+                <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">Servicios de Autor</h2>
                 <div className="h-2 w-24 bg-crimson mt-4 mx-auto lg:mx-0" />
                 <p className="max-w-md text-charcoal text-base md:text-xl mt-8 mx-auto lg:mx-0 font-display">
                   Excelencia técnica en cada detalle. Fusionamos la barbería clásica con tendencias contemporáneas de alto nivel.
@@ -193,7 +193,7 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm mb-4 block">Nuestro Trabajo</span>
-              <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-light-gray">Galería</h2>
+              <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-normal text-light-gray">Galería</h2>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -227,7 +227,7 @@ export default function App() {
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson to-transparent opacity-30" />
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-tighter text-light-gray">Agenda tu Turno</h2>
+              <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-normal text-light-gray">Agenda tu Turno</h2>
               <p className="text-charcoal text-lg md:text-2xl font-display mt-4 uppercase tracking-widest">Sistema de gestión en tiempo real</p>
             </div>
             <BookingSystem />
@@ -256,7 +256,7 @@ export default function App() {
               <div className="space-y-8 md:space-y-10 order-1 lg:order-2 text-center lg:text-left">
                 <div>
                   <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm md:text-lg mb-4 block">Reset Academy</span>
-                  <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-tighter leading-[0.9] text-light-gray">
+                  <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-normal leading-[0.9] text-light-gray">
                     Capacitación Barbería Profesional
                   </h2>
                 </div>
@@ -338,7 +338,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
               <div className="space-y-10 md:space-y-12 text-center lg:text-left">
                 <div>
-                  <h2 className="text-5xl md:text-9xl font-display font-black uppercase tracking-tighter mb-6 text-light-gray">Ubicanos</h2>
+                  <h2 className="text-5xl md:text-9xl font-display font-black uppercase tracking-normal mb-6 text-light-gray">Ubicanos</h2>
                   <p className="text-charcoal text-xl md:text-2xl font-display">El taller donde la técnica se encuentra con el estilo urbano.</p>
                 </div>
 
@@ -403,7 +403,7 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-black py-16 border-t border-white/5 concrete-texture">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-3xl font-black uppercase font-display tracking-tighter flex items-center gap-1">
+          <div className="text-3xl font-black uppercase font-display tracking-normal flex items-center gap-1">
             RESET <span className="bg-crimson text-white px-2 py-0.5 leading-none">ART</span>
           </div>
           <p className="text-xs text-charcoal uppercase tracking-[0.3em] text-center font-display">
