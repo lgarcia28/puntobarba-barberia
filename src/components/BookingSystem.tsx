@@ -1166,18 +1166,18 @@ export const BookingSystem = () => {
                       <CalendarIcon className="text-crimson" /> Fecha y Hora
                     </h3>
 
-                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                      {[0, 1, 2, 3, 4, 5, 6].map(days => {
-                        const date = addMinutes(new Date(), days * 1440);
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2 pb-4">
+                      {Array.from({ length: 30 }).map((_, i) => {
+                        const date = addMinutes(new Date(), i * 1440);
                         const isSelected = isSameDay(date, selectedDate);
                         return (
                           <button
-                            key={days}
+                            key={i}
                             onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
-                            className={`flex-shrink-0 w-20 py-4 border flex flex-col items-center transition-all ${isSelected ? 'border-crimson bg-crimson text-white' : 'border-white/5 bg-black text-charcoal hover:border-white/20'}`}
+                            className={`py-3 border flex flex-col items-center transition-all ${isSelected ? 'border-crimson bg-crimson text-white shadow-lg shadow-crimson/20 scale-105 z-10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:bg-zinc-900'}`}
                           >
                             <span className="text-[10px] font-bold uppercase tracking-widest">{format(date, 'EEE', { locale: es })}</span>
-                            <span className="text-2xl font-display font-black">{format(date, 'dd')}</span>
+                            <span className="text-xl font-display font-black">{format(date, 'dd')}</span>
                           </button>
                         );
                       })}
