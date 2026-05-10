@@ -20,6 +20,14 @@ async function startServer() {
         return res.status(400).json({ error: "Faltan datos requeridos" });
       }
 
+      // Extraer el primer nombre y asegurar mayúscula inicial
+      let firstName = customerName.trim().split(" ")[0];
+      if (firstName) {
+        firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+      } else {
+        firstName = "Cliente";
+      }
+
       // Format phone number to E.164 without '+' (e.g., 549341...)
       let formattedPhone = phone.replace(/\D/g, "");
       
@@ -42,7 +50,7 @@ async function startServer() {
       // Para un Webhook de n8n:
       const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-      const message = `¡Hola ${customerName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+      const message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
 
       if (N8N_WEBHOOK_URL) {
         // Opción 1: Enviar a n8n
