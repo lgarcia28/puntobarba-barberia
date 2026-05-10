@@ -245,7 +245,7 @@ export default function App() {
                 <div className="absolute -top-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-crimson/10 rounded-full blur-3xl" />
                 <div className="relative aspect-square overflow-hidden rounded-sm border border-white/5 shadow-2xl">
                   <img 
-                    src="https://lh3.googleusercontent.com/gps-cs-s/AHVAweoyt6z_GAUoSiBtsIysbEtb6a0je-DvhUxX3FvSX8DBCP8PtxqvJtI37DmlkWHZNkz99e24bQlcwXBcfXrD5PnVm763nNBGPOzC2fWj0Lv7zgCJYDpMcYxrPVUCCH-vVphDnvjlYw=s680-w680-h510-rw" 
+                    src="https://i.postimg.cc/xdHc8cLT/b8b73d54-00a6-4972-8a14-ea91ba044718.jpg" 
                     alt="Reset Academy - Capacitación Profesional" 
                     className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
                     referrerPolicy="no-referrer"
