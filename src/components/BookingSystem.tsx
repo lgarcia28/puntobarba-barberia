@@ -602,23 +602,6 @@ export const BookingSystem = () => {
 
               {selectedBarber && (
                 <div className="space-y-8">
-                  <div className="flex justify-end">
-                    <button 
-                      onClick={async () => {
-                        if(window.confirm('ATENCIÓN: ¿Estás seguro que quieres borrar TODOS los turnos de la base de datos de forma permanente?')) {
-                          try {
-                            await clearAppointments();
-                            toast.success('Todos los turnos han sido eliminados.');
-                          } catch (e: any) {
-                            toast.error(e.message || 'Error al borrar turnos');
-                          }
-                        }
-                      }}
-                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm flex items-center gap-2 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" /> Borrar Todos los Turnos
-                    </button>
-                  </div>
                   {/* Analytics Dashboard */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-black p-6 border border-white/5 flex flex-col justify-center">
