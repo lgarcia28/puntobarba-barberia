@@ -790,6 +790,7 @@ export const BookingSystem = () => {
                             <input
                               type="date"
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
                               onChange={(e) => {
                                 if (e.target.value) {
                                   setAdminDate(new Date(e.target.value + 'T00:00:00'));
@@ -815,6 +816,7 @@ export const BookingSystem = () => {
                               type="date"
                               min={format(adminDate, 'yyyy-MM-dd')}
                               className="absolute inset-0 opacity-0 cursor-pointer"
+                              onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
                               onChange={(e) => {
                                 if (e.target.value) {
                                   setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
@@ -1407,6 +1409,7 @@ export const BookingSystem = () => {
                           type="date"
                           min={format(new Date(), 'yyyy-MM-dd')}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
                           onChange={(e) => {
                             if (e.target.value) {
                               const d = new Date(e.target.value + 'T00:00:00');
