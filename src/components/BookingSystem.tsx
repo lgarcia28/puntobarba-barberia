@@ -501,11 +501,10 @@ export const BookingSystem = () => {
 
   const handleCancelAppointment = async (appt: any) => {
     if (appt.isFixed && appt.groupId) {
-      const mode = window.prompt(
-        'Este es un turno fijo semanal.\n\nEscribe "1" para cancelar SOLO ESTE turno.\nEscribe "2" para cancelar ESTE y TODOS LOS FUTUROS turnos de esta serie.',
-        '1'
+      const isSeries = window.confirm(
+        'Este es un turno fijo semanal.\n\n¿Deseas cancelar TODA LA SERIE de turnos futuros?\n(Haz clic en Aceptar para cancelar todos, o Cancelar para la siguiente opción)'
       );
-      if (mode === '2') {
+      if (isSeries) {
         try {
           setLoading(true);
           const q = query(
@@ -520,7 +519,6 @@ export const BookingSystem = () => {
           });
           await batch.commit();
           toast.success('Serie de turnos cancelada correctamente.');
-          // Si estamos en la vista de Mis Turnos, recargamos la búsqueda
           if (searchPhone) {
             const e = new Event('submit') as any;
             handleSearchAppointments(e);
@@ -531,8 +529,9 @@ export const BookingSystem = () => {
           setLoading(false);
         }
         return;
-      } else if (mode !== '1') {
-        return;
+      } else {
+        const isSingle = window.confirm('¿Deseas cancelar SOLO ESTE turno?');
+        if (!isSingle) return;
       }
     } else {
       if (!window.confirm('¿Estás seguro de que deseas cancelar este turno?')) return;
