@@ -313,8 +313,8 @@ export const BookingSystem = () => {
     return slots;
   };
 
-  const handleSearchAppointments = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchAppointments = async (e?: any) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!searchPhone) return;
     setIsSearching(true);
     try {
@@ -326,6 +326,7 @@ export const BookingSystem = () => {
       const snapshot = await getDocs(q);
       // Sort manually since we need an index for multiple fields
       const appts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }))
+        .filter(a => a.status === 'confirmed')
         .sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
       setMyAppointments(appts);
       if (appts.length === 0) {
@@ -953,8 +954,17 @@ export const BookingSystem = () => {
                                           <p className="font-bold uppercase text-sm">{appt.customerName}</p>
                                           <p className="text-xs text-charcoal">{appt.service} {appt.isFixed ? '(FIJO)' : ''}</p>
                                         </div>
-                                        <div className="text-right">
-                                          <p className="font-display font-bold text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                                        <div className="flex items-center gap-4">
+                                          <div className="text-right">
+                                            <p className="font-display font-bold text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                                          </div>
+                                          <button
+                                            onClick={() => handleCancelAppointment(appt)}
+                                            className="text-crimson hover:text-white p-2 transition-colors border border-white/5 hover:border-crimson"
+                                            title="Cancelar Turno"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
                                         </div>
                                       </div>
                                     ))}
