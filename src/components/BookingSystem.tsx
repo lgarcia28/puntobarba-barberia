@@ -743,7 +743,6 @@ export const BookingSystem = () => {
 
       {isBarberAdmin && activeAdminTab === 'agenda' && (
         <div className="space-y-8">
-            <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {barbers
                   .filter(b => isJose || b.email === user?.email)
@@ -989,11 +988,11 @@ export const BookingSystem = () => {
                   </div>
                 </div>
               )}
-            </>
-          )}
+        </div>
+      )}
 
-          {activeAdminTab === 'barberos' && (
-            <div className="space-y-6">
+      {isBarberAdmin && activeAdminTab === 'barberos' && (
+        <div className="space-y-6">
               <div className="bg-black p-6 border border-white/5">
                 <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
                   <User className="w-5 h-5 text-crimson" /> {editingBarberId ? 'Editar Barbero' : 'Agregar Nuevo Barbero'}
@@ -1144,10 +1143,10 @@ export const BookingSystem = () => {
                 </div>
               </div>
             </div>
-          )}
+      )}
 
-          {activeAdminTab === 'horarios' && (
-            <div className="space-y-6">
+      {isBarberAdmin && activeAdminTab === 'horarios' && (
+        <div className="space-y-6">
               <div className="bg-black p-6 border border-white/5">
                 <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-crimson" /> Horarios de Atención Generales
@@ -1220,8 +1219,6 @@ export const BookingSystem = () => {
               </div>
             </div>
           )}
-        </div>
-      )}
 
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
