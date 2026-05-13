@@ -4,32 +4,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { phone, customerName, service, barber, date, time, isFixed } = req.body;
-    
-    if (!phone || !customerName || !date || !time) {
+    const { phone, customerName, service, barber, date, time, dayOfWeek, isFixed, action } = req.body;
+
+    if (!phone || !customerName || !service || !barber || !date || !time) {
       return res.status(400).json({ error: "Faltan datos requeridos" });
     }
 
-    // Extraer el primer nombre y asegurar mayúscula inicial
-    let firstName = customerName.trim().split(" ")[0];
-    if (firstName) {
-      firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-    } else {
-      firstName = "Cliente";
-    }
+    const firstName = customerName.split(' ')[0].toUpperCase();
 
-    // Format phone number to E.164 without '+' (e.g., 549341...)
+    // Limpiar el número de teléfono
     let formattedPhone = phone.replace(/\D/g, "");
-    
-    // En Argentina, WhatsApp requiere el formato 549 + código de área + número
-    // Si el usuario ingresa 10 dígitos (ej: 3416055274), le agregamos 549
+
     if (formattedPhone.length === 10) {
       formattedPhone = "549" + formattedPhone;
-    } else if (formattedPhone.startsWith("54") && formattedPhone.length === 12) {
-      // Si ingresaron 54 + 10 dígitos pero les faltó el 9
+    } else if (formattedPhone.startsWith("54") && !formattedPhone.startsWith("549") && formattedPhone.length === 12) {
       formattedPhone = "549" + formattedPhone.substring(2);
     } else if (formattedPhone.startsWith("0")) {
-      // Si arrancan con 0 (ej: 0341...), sacamos el 0 y agregamos 549
       formattedPhone = "549" + formattedPhone.substring(1);
     }
 
@@ -40,10 +30,24 @@ export default async function handler(req, res) {
     // Para un Webhook de n8n:
     const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-    let message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+    let message = "";
+    const dayStr = dayOfWeek ? `los ${dayOfWeek} ` : '';
 
-    if (isFixed) {
-      message = `¡Hola ${firstName}! 👋\nTu turno FIJO SEMANAL en ResetART ha sido confirmado.\n\n📅 A partir de: ${date}\n⏰ Todos a las ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos todas las semanas!`;
+    if (action === 'cancel_single') {
+      message = `¡Hola ${firstName}! 👋\nTe confirmamos que tu turno del ${date} a las ${time} HS con ${barber} ha sido CANCELADO exitosamente.\n\nSi deseas volver a agendar, puedes hacerlo en cualquier momento desde nuestra web. ¡Te esperamos pronto en ResetART!`;
+    } else if (action === 'cancel_series') {
+      message = `¡Hola ${firstName}! 👋\nTe confirmamos que TODA TU SERIE DE TURNOS FIJOS (cada ${dayOfWeek} a las ${time} HS) con ${barber} ha sido CANCELADA exitosamente a partir del ${date}.\n\nSi deseas volver a agendar, puedes hacerlo en cualquier momento desde nuestra web. ¡Te esperamos pronto en ResetART!`;
+    } else if (action === 'reschedule') {
+      message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido REPROGRAMADO con éxito.\n\n📅 Nueva Fecha: ${date}\n⏰ Nueva Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+      if (isFixed) {
+        message = `¡Hola ${firstName}! 👋\nTu turno FIJO SEMANAL en ResetART ha sido REPROGRAMADO con éxito.\n\n📅 A partir de la nueva fecha: ${date}\n⏰ Ahora será todos ${dayStr}a las ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos todas las semanas!`;
+      }
+    } else {
+      // Default: book
+      message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+      if (isFixed) {
+        message = `¡Hola ${firstName}! 👋\nTu turno FIJO SEMANAL en ResetART ha sido confirmado.\n\n📅 A partir de: ${date}\n⏰ Todos ${dayStr}a las ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos todas las semanas!`;
+      }
     }
 
     if (N8N_WEBHOOK_URL) {

@@ -420,7 +420,9 @@ export const BookingSystem = () => {
               barber: selectedBarber.name,
               date: format(selectedDate, 'dd/MM/yyyy'),
               time: selectedTime,
-              isFixed: true
+              dayOfWeek: format(selectedDate, 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(selectedDate, 'EEEE', { locale: es })) ? 's' : ''),
+              isFixed: true,
+              action: reschedulingApptId ? 'reschedule' : 'book'
             })
           });
         } catch (waErr) {
@@ -480,7 +482,9 @@ export const BookingSystem = () => {
               barber: selectedBarber.name,
               date: format(selectedDate, 'dd/MM/yyyy'),
               time: selectedTime,
-              isFixed: false
+              dayOfWeek: format(selectedDate, 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(selectedDate, 'EEEE', { locale: es })) ? 's' : ''),
+              isFixed: false,
+              action: reschedulingApptId ? 'reschedule' : 'book'
             })
           });
         } catch (waErr) {
@@ -519,6 +523,27 @@ export const BookingSystem = () => {
           });
           await batch.commit();
           toast.success('Serie de turnos cancelada correctamente.');
+          
+          try {
+            await fetch('/api/send-whatsapp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: appt.customerPhone,
+                customerName: appt.customerName,
+                service: appt.service,
+                barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
+                date: format(appt.startTime.toDate(), 'dd/MM/yyyy'),
+                time: format(appt.startTime.toDate(), 'HH:mm'),
+                dayOfWeek: format(appt.startTime.toDate(), 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(appt.startTime.toDate(), 'EEEE', { locale: es })) ? 's' : ''),
+                isFixed: true,
+                action: 'cancel_series'
+              })
+            });
+          } catch (waErr) {
+            console.error('Error al enviar WhatsApp de cancelación:', waErr);
+          }
+
           if (searchPhone) {
             const e = new Event('submit') as any;
             handleSearchAppointments(e);
@@ -541,6 +566,26 @@ export const BookingSystem = () => {
       const apptRef = doc(db, 'appointments', appt.id);
       await updateDoc(apptRef, { status: 'cancelled' });
       toast.success('Turno cancelado correctamente.');
+      
+      try {
+        await fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: appt.customerPhone,
+            customerName: appt.customerName,
+            service: appt.service,
+            barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
+            date: format(appt.startTime.toDate(), 'dd/MM/yyyy'),
+            time: format(appt.startTime.toDate(), 'HH:mm'),
+            isFixed: appt.isFixed || false,
+            action: 'cancel_single'
+          })
+        });
+      } catch (waErr) {
+        console.error('Error al enviar WhatsApp de cancelación:', waErr);
+      }
+
       if (searchPhone && bookingTab === 'mis-turnos') {
         const e = new Event('submit') as any;
         handleSearchAppointments(e);
