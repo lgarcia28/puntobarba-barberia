@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { phone, customerName, service, barber, date, time } = req.body;
+    const { phone, customerName, service, barber, date, time, isFixed } = req.body;
     
     if (!phone || !customerName || !date || !time) {
       return res.status(400).json({ error: "Faltan datos requeridos" });
@@ -40,7 +40,11 @@ export default async function handler(req, res) {
     // Para un Webhook de n8n:
     const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-    const message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+    let message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+
+    if (isFixed) {
+      message = `¡Hola ${firstName}! 👋\nTu turno FIJO SEMANAL en ResetART ha sido confirmado.\n\n📅 A partir de: ${date}\n⏰ Todos a las ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos todas las semanas!`;
+    }
 
     if (N8N_WEBHOOK_URL) {
       // Opción 1: Enviar a n8n

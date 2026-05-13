@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
-import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay } from 'date-fns';
+import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2 } from 'lucide-react';
@@ -42,13 +42,16 @@ export const BookingSystem = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
+  const [isFixedAppointment, setIsFixedAppointment] = useState(false);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [reschedulingApptId, setReschedulingApptId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<any[]>([]);
 
   // Admin Panel Specific State
   const [adminDate, setAdminDate] = useState(new Date());
   const [blockingEndDate, setBlockingEndDate] = useState<Date | null>(null);
   const [isRangeMode, setIsRangeMode] = useState(false);
+  const [adminViewMode, setAdminViewMode] = useState<'daily' | 'weekly'>('daily');
   const [adminAppts, setAdminAppts] = useState<any[]>([]);
   const [adminBlocks, setAdminBlocks] = useState<any[]>([]);
 
@@ -78,7 +81,7 @@ export const BookingSystem = () => {
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [isJose, setIsJose] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios'>('agenda');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -193,8 +196,15 @@ export const BookingSystem = () => {
   // Admin Data Fetching
   useEffect(() => {
     if (!selectedBarber || !isBarberAdmin) return;
-    const start = startOfDay(adminDate);
-    const end = endOfDay(adminDate);
+    
+    let start, end;
+    if (adminViewMode === 'weekly') {
+      start = startOfWeek(adminDate, { weekStartsOn: 1 });
+      end = endOfWeek(adminDate, { weekStartsOn: 1 });
+    } else {
+      start = startOfDay(adminDate);
+      end = endOfDay(adminDate);
+    }
 
     const qAppts = query(
       collection(db, 'appointments'),
@@ -219,7 +229,7 @@ export const BookingSystem = () => {
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'blocks'));
 
     return () => { unsubAppts(); unsubBlocks(); };
-  }, [selectedBarber, adminDate, isBarberAdmin]);
+  }, [selectedBarber, adminDate, isBarberAdmin, adminViewMode]);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -337,65 +347,149 @@ export const BookingSystem = () => {
     setError(null);
 
     const [hours, minutes] = selectedTime.split(':').map(Number);
-    const startTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes);
-    const endTime = addMinutes(startTime, selectedService.duration);
+    const baseStartTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes);
+    const baseEndTime = addMinutes(baseStartTime, selectedService.duration);
 
     try {
-      await runTransaction(db, async (transaction) => {
-        // Double check availability inside transaction for concurrency control
-        const q = query(
-          collection(db, 'appointments'),
-          where('barberId', '==', selectedBarber.id),
-          where('startTime', '>=', Timestamp.fromDate(startOfDay(selectedDate))),
-          where('startTime', '<=', Timestamp.fromDate(endOfDay(selectedDate))),
-          where('status', '==', 'confirmed')
-        );
-        const snapshot = await getDocs(q);
-        const existingAppts = snapshot.docs.map(d => d.data());
+      if (isFixedAppointment) {
+        // Book for 104 weeks (2 years)
+        const batch = writeBatch(db);
+        const weeksToBook = 104;
+        const groupId = `fixed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        let booksCount = 0;
 
-        const isOccupied = existingAppts.some(appt => {
-          const apptStart = appt.startTime.toDate();
-          const apptEnd = appt.endTime.toDate();
-          return (isBefore(startTime, apptEnd) && isAfter(endTime, apptStart));
-        });
-
-        if (isOccupied) {
-          throw new Error('Turno ya ocupado. Por favor elige otro horario.');
+        // Si estamos reprogramando, cancelamos el turno anterior
+        if (reschedulingApptId) {
+          batch.update(doc(db, 'appointments', reschedulingApptId), { status: 'cancelled' });
         }
 
-        const apptRef = doc(collection(db, 'appointments'));
-        transaction.set(apptRef, {
-          barberId: selectedBarber.id,
-          customerName: customerInfo.name,
-          customerPhone: customerInfo.phone,
-          service: selectedService.name,
-          startTime: Timestamp.fromDate(startTime),
-          endTime: Timestamp.fromDate(endTime),
-          status: 'confirmed',
-          createdAt: Timestamp.now()
-        });
-      });
+        for (let i = 0; i < weeksToBook; i++) {
+          const currentStartTime = addDays(baseStartTime, i * 7);
+          const currentEndTime = addDays(baseEndTime, i * 7);
 
-      // Enviar WhatsApp de confirmación automático mediante la API del servidor
-      try {
-        await fetch('/api/send-whatsapp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: customerInfo.phone,
+          // Check availability
+          const q = query(
+            collection(db, 'appointments'),
+            where('barberId', '==', selectedBarber.id),
+            where('startTime', '>=', Timestamp.fromDate(startOfDay(currentStartTime))),
+            where('startTime', '<=', Timestamp.fromDate(endOfDay(currentStartTime))),
+            where('status', '==', 'confirmed')
+          );
+          const snapshot = await getDocs(q);
+          const existingAppts = snapshot.docs.map(d => d.data());
+          
+          const isOccupied = existingAppts.some(appt => {
+            const apptStart = (appt as any).startTime.toDate();
+            const apptEnd = (appt as any).endTime.toDate();
+            return (isBefore(currentStartTime, apptEnd) && isAfter(currentEndTime, apptStart));
+          });
+
+          if (!isOccupied) {
+            const apptRef = doc(collection(db, 'appointments'));
+            batch.set(apptRef, {
+              barberId: selectedBarber.id,
+              customerName: customerInfo.name,
+              customerPhone: customerInfo.phone,
+              service: selectedService.name,
+              startTime: Timestamp.fromDate(currentStartTime),
+              endTime: Timestamp.fromDate(currentEndTime),
+              status: 'confirmed',
+              createdAt: Timestamp.now(),
+              isFixed: true,
+              groupId: groupId
+            });
+            booksCount++;
+          }
+        }
+
+        if (booksCount === 0) {
+           throw new Error('Todos los turnos de las próximas semanas están ocupados.');
+        }
+
+        await batch.commit();
+
+        try {
+          await fetch('/api/send-whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: customerInfo.phone,
+              customerName: customerInfo.name,
+              service: selectedService.name,
+              barber: selectedBarber.name,
+              date: format(selectedDate, 'dd/MM/yyyy'),
+              time: selectedTime,
+              isFixed: true
+            })
+          });
+        } catch (waErr) {
+          console.error('Error al enviar WhatsApp automático:', waErr);
+        }
+
+      } else {
+        await runTransaction(db, async (transaction) => {
+          // Double check availability inside transaction for concurrency control
+          const q = query(
+            collection(db, 'appointments'),
+            where('barberId', '==', selectedBarber.id),
+            where('startTime', '>=', Timestamp.fromDate(startOfDay(selectedDate))),
+            where('startTime', '<=', Timestamp.fromDate(endOfDay(selectedDate))),
+            where('status', '==', 'confirmed')
+          );
+          const snapshot = await getDocs(q);
+          const existingAppts = snapshot.docs.map(d => d.data());
+
+          const isOccupied = existingAppts.some(appt => {
+            const apptStart = (appt as any).startTime.toDate();
+            const apptEnd = (appt as any).endTime.toDate();
+            return (isBefore(baseStartTime, apptEnd) && isAfter(baseEndTime, apptStart));
+          });
+
+          if (isOccupied) {
+            throw new Error('Turno ya ocupado. Por favor elige otro horario.');
+          }
+
+          const apptRef = doc(collection(db, 'appointments'));
+          transaction.set(apptRef, {
+            barberId: selectedBarber.id,
             customerName: customerInfo.name,
+            customerPhone: customerInfo.phone,
             service: selectedService.name,
-            barber: selectedBarber.name,
-            date: format(selectedDate, 'dd/MM/yyyy'),
-            time: selectedTime
-          })
+            startTime: Timestamp.fromDate(baseStartTime),
+            endTime: Timestamp.fromDate(baseEndTime),
+            status: 'confirmed',
+            createdAt: Timestamp.now()
+          });
+
+          // Si estamos reprogramando, cancelamos el turno anterior
+          if (reschedulingApptId) {
+            transaction.update(doc(db, 'appointments', reschedulingApptId), { status: 'cancelled' });
+          }
         });
-      } catch (waErr) {
-        console.error('Error al enviar WhatsApp automático:', waErr);
+
+        // Enviar WhatsApp de confirmación automático
+        try {
+          await fetch('/api/send-whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: customerInfo.phone,
+              customerName: customerInfo.name,
+              service: selectedService.name,
+              barber: selectedBarber.name,
+              date: format(selectedDate, 'dd/MM/yyyy'),
+              time: selectedTime,
+              isFixed: false
+            })
+          });
+        } catch (waErr) {
+          console.error('Error al enviar WhatsApp automático:', waErr);
+        }
       }
 
       setSuccess(true);
       setStep(5);
+      setReschedulingApptId(null);
     } catch (err: any) {
       setError(err.message || 'Error al agendar el turno.');
       handleFirestoreError(err, OperationType.WRITE, 'appointments');
@@ -404,12 +498,53 @@ export const BookingSystem = () => {
     }
   };
 
-  const handleCancelAppointment = async (apptId: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas cancelar este turno?')) return;
+  const handleCancelAppointment = async (appt: any) => {
+    if (appt.isFixed && appt.groupId) {
+      const mode = window.prompt(
+        'Este es un turno fijo semanal.\n\nEscribe "1" para cancelar SOLO ESTE turno.\nEscribe "2" para cancelar ESTE y TODOS LOS FUTUROS turnos de esta serie.',
+        '1'
+      );
+      if (mode === '2') {
+        try {
+          setLoading(true);
+          const q = query(
+            collection(db, 'appointments'),
+            where('groupId', '==', appt.groupId),
+            where('startTime', '>=', appt.startTime)
+          );
+          const snapshot = await getDocs(q);
+          const batch = writeBatch(db);
+          snapshot.docs.forEach(d => {
+             batch.update(d.ref, { status: 'cancelled' });
+          });
+          await batch.commit();
+          toast.success('Serie de turnos cancelada correctamente.');
+          // Si estamos en la vista de Mis Turnos, recargamos la búsqueda
+          if (searchPhone) {
+            const e = new Event('submit') as any;
+            handleSearchAppointments(e);
+          }
+        } catch (err) {
+          handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+        } finally {
+          setLoading(false);
+        }
+        return;
+      } else if (mode !== '1') {
+        return;
+      }
+    } else {
+      if (!window.confirm('¿Estás seguro de que deseas cancelar este turno?')) return;
+    }
+
     try {
-      const apptRef = doc(db, 'appointments', apptId);
+      const apptRef = doc(db, 'appointments', appt.id);
       await updateDoc(apptRef, { status: 'cancelled' });
-      alert('Turno cancelado correctamente.');
+      toast.success('Turno cancelado correctamente.');
+      if (searchPhone && bookingTab === 'mis-turnos') {
+        const e = new Event('submit') as any;
+        handleSearchAppointments(e);
+      }
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, 'appointments');
     }
@@ -558,10 +693,10 @@ export const BookingSystem = () => {
         )}
       </div>
 
-      {isBarberAdmin ? (
-        <div className="space-y-8">
-          {isJose && (
-            <div className="flex gap-4 border-b border-white/5 pb-4">
+      {isBarberAdmin && (
+        <div className="space-y-8 mb-8">
+          {isJose ? (
+            <div className="flex flex-wrap gap-4 border-b border-white/5 pb-4">
               <button
                 onClick={() => setActiveAdminTab('agenda')}
                 className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-crimson' : 'text-charcoal'}`}
@@ -580,10 +715,34 @@ export const BookingSystem = () => {
               >
                 Horarios de Atención
               </button>
+              <button
+                onClick={() => setActiveAdminTab('agendar')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Agendar Turno
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-4 border-b border-white/5 pb-4">
+              <button
+                onClick={() => setActiveAdminTab('agenda')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Agenda y Bloqueos
+              </button>
+              <button
+                onClick={() => setActiveAdminTab('agendar')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Agendar Turno
+              </button>
             </div>
           )}
+        </div>
+      )}
 
-          {activeAdminTab === 'agenda' && (
+      {isBarberAdmin && activeAdminTab === 'agenda' && (
+        <div className="space-y-8">
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {barbers
@@ -623,15 +782,15 @@ export const BookingSystem = () => {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
-                          <div className="relative">
+                          <div className="relative inline-block">
                             <button
-                              className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl"
+                              className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2"
                             >
                               <CalendarIcon className="w-6 h-6 text-crimson" /> {isRangeMode ? 'Desde:' : 'Fecha:'} {format(adminDate, 'dd/MM/yyyy')}
                             </button>
                             <input
                               type="date"
-                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                               onChange={(e) => {
                                 if (e.target.value) {
                                   setAdminDate(new Date(e.target.value + 'T00:00:00'));
@@ -677,6 +836,15 @@ export const BookingSystem = () => {
                           />
                           Rango de días
                         </label>
+                        <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer hover:text-crimson">
+                          <input
+                            type="checkbox"
+                            checked={adminViewMode === 'weekly'}
+                            onChange={(e) => setAdminViewMode(e.target.checked ? 'weekly' : 'daily')}
+                            className="accent-crimson"
+                          />
+                          Vista Semanal
+                        </label>
                       </div>
 
                       <button
@@ -714,51 +882,89 @@ export const BookingSystem = () => {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-8">
-                      {(() => {
-                        const dayOfWeek = getDay(adminDate);
-                        const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
-                        if (!daySchedule.isOpen) return <div className="col-span-full py-8 text-center text-charcoal">Cerrado este día</div>;
-                        const [startH, startM] = daySchedule.start.split(':').map(Number);
-                        const [endH, endM] = daySchedule.end.split(':').map(Number);
-                        return eachMinuteOfInterval({
-                          start: setMinutes(setHours(startOfDay(adminDate), startH), startM),
-                          end: setMinutes(setHours(startOfDay(adminDate), endH), endM)
-                        }, { step: 30 }).map(time => {
-                          const tStr = format(time, 'HH:mm');
-                          const block = adminBlocks.find(b => format(b.startTime.toDate(), 'HH:mm') === tStr);
-                          const appt = adminAppts.find(a => format(a.startTime.toDate(), 'HH:mm') === tStr);
-                          const isSelected = selectedTimesForBlocking.includes(tStr);
+                    {adminViewMode === 'daily' ? (
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-8">
+                        {(() => {
+                          const dayOfWeek = getDay(adminDate);
+                          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                          if (!daySchedule.isOpen) return <div className="col-span-full py-8 text-center text-charcoal">Cerrado este día</div>;
+                          const [startH, startM] = daySchedule.start.split(':').map(Number);
+                          const [endH, endM] = daySchedule.end.split(':').map(Number);
+                          return eachMinuteOfInterval({
+                            start: setMinutes(setHours(startOfDay(adminDate), startH), startM),
+                            end: setMinutes(setHours(startOfDay(adminDate), endH), endM)
+                          }, { step: 30 }).map(time => {
+                            const tStr = format(time, 'HH:mm');
+                            const block = adminBlocks.find(b => format(b.startTime.toDate(), 'HH:mm') === tStr);
+                            const appt = adminAppts.find(a => format(a.startTime.toDate(), 'HH:mm') === tStr);
+                            const isSelected = selectedTimesForBlocking.includes(tStr);
 
-                          return (
-                            <button
-                              key={tStr}
-                              onClick={() => {
-                                if (isSelected) {
-                                  setSelectedTimesForBlocking(selectedTimesForBlocking.filter(t => t !== tStr));
-                                } else {
-                                  setSelectedTimesForBlocking([...selectedTimesForBlocking, tStr]);
-                                }
-                              }}
-                              className={`p-4 text-xs font-bold border transition-all flex flex-col items-center gap-1 min-h-[80px] justify-center relative ${isSelected ? 'scale-105 z-10 shadow-2xl' : ''
-                                } ${isSelected
-                                  ? 'bg-white text-black border-white'
-                                  : appt
-                                    ? 'bg-crimson/20 border-crimson text-crimson'
-                                    : block
-                                      ? 'bg-zinc-800 border-zinc-700 text-zinc-500'
-                                      : 'border-white/5 hover:border-white/20'
-                                }`}
-                            >
-                              <span className="text-sm">{tStr}</span>
-                              {appt && <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>}
-                              {block && <span className="uppercase text-[9px] font-black">Bloqueado</span>}
-                              {!appt && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
-                            </button>
-                          );
-                        })
-                      })()}
-                    </div>
+                            return (
+                              <button
+                                key={tStr}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedTimesForBlocking(selectedTimesForBlocking.filter(t => t !== tStr));
+                                  } else {
+                                    setSelectedTimesForBlocking([...selectedTimesForBlocking, tStr]);
+                                  }
+                                }}
+                                className={`p-4 text-xs font-bold border transition-all flex flex-col items-center gap-1 min-h-[80px] justify-center relative ${isSelected ? 'scale-105 z-10 shadow-2xl' : ''
+                                  } ${isSelected
+                                    ? 'bg-white text-black border-white'
+                                    : appt
+                                      ? 'bg-crimson/20 border-crimson text-crimson'
+                                      : block
+                                        ? 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                                        : 'border-white/5 hover:border-white/20'
+                                  }`}
+                              >
+                                <span className="text-sm">{tStr}</span>
+                                {appt && <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>}
+                                {block && <span className="uppercase text-[9px] font-black">Bloqueado</span>}
+                                {!appt && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
+                              </button>
+                            );
+                          })
+                        })()}
+                      </div>
+                    ) : (
+                      <div className="space-y-4 mb-8">
+                        {(() => {
+                          const days = eachDayOfInterval({
+                            start: startOfWeek(adminDate, { weekStartsOn: 1 }),
+                            end: endOfWeek(adminDate, { weekStartsOn: 1 })
+                          });
+                          return days.map(day => {
+                            const dayAppts = adminAppts.filter(a => isSameDay((a as any).startTime.toDate(), day));
+                            dayAppts.sort((a, b) => (a as any).startTime.toMillis() - (b as any).startTime.toMillis());
+                            
+                            return (
+                              <div key={day.toString()} className="bg-zinc-900 border border-white/5 p-4">
+                                <h4 className="font-display font-bold uppercase text-crimson mb-3">{format(day, 'EEEE dd/MM/yyyy', { locale: es })}</h4>
+                                {dayAppts.length === 0 ? (
+                                  <p className="text-charcoal text-xs uppercase font-bold">Sin turnos</p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {dayAppts.map(appt => (
+                                      <div key={appt.id} className="flex justify-between items-center bg-black p-3 border border-white/5">
+                                        <div>
+                                          <p className="font-bold uppercase text-sm">{appt.customerName}</p>
+                                          <p className="text-xs text-charcoal">{appt.service} {appt.isFixed ? '(FIJO)' : ''}</p>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="font-display font-bold text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
 
                     <div className="flex flex-col md:flex-row gap-4">
                       <button
@@ -1015,22 +1221,26 @@ export const BookingSystem = () => {
             </div>
           )}
         </div>
-      ) : (
+      )}
+
+      {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
-          <div className="flex gap-4 border-b border-white/5 pb-4 mb-8">
-            <button
-              onClick={() => setBookingTab('agendar')}
-              className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
-            >
-              Agendar Turno
-            </button>
-            <button
-              onClick={() => setBookingTab('mis-turnos')}
-              className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'mis-turnos' ? 'text-crimson' : 'text-charcoal'}`}
-            >
-              Mis Turnos
-            </button>
-          </div>
+          {!isBarberAdmin && (
+            <div className="flex gap-4 border-b border-white/5 pb-4 mb-8">
+              <button
+                onClick={() => setBookingTab('agendar')}
+                className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Agendar Turno
+              </button>
+              <button
+                onClick={() => setBookingTab('mis-turnos')}
+                className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'mis-turnos' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Mis Turnos
+              </button>
+            </div>
+          )}
 
           {bookingTab === 'mis-turnos' ? (
             <div className="bg-black p-6 border border-white/5">
@@ -1059,14 +1269,40 @@ export const BookingSystem = () => {
                   {myAppointments.map(appt => {
                     const b = barbers.find(b => b.id === appt.barberId);
                     return (
-                      <div key={appt.id} className="p-4 border border-white/5 bg-zinc-900 flex justify-between items-center">
+                      <div key={appt.id} className="p-4 border border-white/5 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                           <p className="font-display font-bold uppercase text-lg">{appt.service}</p>
                           <p className="text-charcoal text-sm">con {b ? b.name : 'Barbero'}</p>
+                          {appt.isFixed && <p className="text-xs text-crimson font-bold uppercase mt-1">Turno Fijo</p>}
                         </div>
-                        <div className="text-right">
-                          <p className="font-display font-bold text-crimson">{format(appt.startTime.toDate(), 'dd/MM/yyyy')}</p>
-                          <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')}</p>
+                        <div className="text-left md:text-right flex-1 md:flex-none w-full md:w-auto flex justify-between md:flex-col items-center md:items-end">
+                          <div>
+                            <p className="font-display font-bold text-crimson">{format(appt.startTime.toDate(), 'dd/MM/yyyy')}</p>
+                            <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                          </div>
+                          <div className="flex gap-2 mt-0 md:mt-2">
+                             <button
+                               onClick={() => handleCancelAppointment(appt)}
+                               className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-3 py-2 hover:border-crimson hover:text-crimson transition-colors"
+                             >
+                               Cancelar
+                             </button>
+                             <button
+                               onClick={() => {
+                                  if (window.confirm('Para reprogramar, elige tu nuevo horario. El turno actual se cancelará automáticamente cuando confirmes el nuevo. ¿Continuar?')) {
+                                      setSelectedBarber(b || null);
+                                      setSelectedService(SERVICES.find(s => s.name === appt.service) || null);
+                                      setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+                                      setReschedulingApptId(appt.id);
+                                      setStep(3); // Go to date selection
+                                      setBookingTab('agendar');
+                                  }
+                               }}
+                               className="text-[10px] font-bold uppercase tracking-widest bg-crimson text-white px-3 py-2 hover:bg-crimson/80 transition-colors"
+                             >
+                               Reprogramar
+                             </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1162,9 +1398,29 @@ export const BookingSystem = () => {
                     <button onClick={() => setStep(2)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
-                      <CalendarIcon className="text-crimson" /> Fecha y Hora
-                    </h3>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
+                        <CalendarIcon className="text-crimson" /> Fecha y Hora
+                      </h3>
+                      <div className="relative">
+                        <button className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-2 hover:border-crimson transition-colors uppercase text-xs font-bold">
+                          <CalendarIcon className="w-4 h-4 text-crimson" /> Elegir Día
+                        </button>
+                        <input
+                          type="date"
+                          min={format(new Date(), 'yyyy-MM-dd')}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const d = new Date(e.target.value + 'T00:00:00');
+                              if (isBefore(d, startOfDay(new Date()))) return;
+                              setSelectedDate(d);
+                              setSelectedTime(null);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
 
                     <div className="grid grid-cols-7 gap-1 md:gap-2 pb-4">
                       {Array.from({ length: 35 }).map((_, i) => {
@@ -1276,6 +1532,15 @@ export const BookingSystem = () => {
                           onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                           className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors"
                         />
+                        <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={isFixedAppointment}
+                            onChange={(e) => setIsFixedAppointment(e.target.checked)}
+                            className="w-5 h-5 accent-crimson"
+                          />
+                          Turno Fijo Semanal (Reservar mismo día y hora todas las semanas)
+                        </label>
                       </div>
 
                       {error && (
@@ -1310,7 +1575,7 @@ export const BookingSystem = () => {
                       Te esperamos el <span className="text-white">{format(selectedDate, 'dd/MM')}</span> a las <span className="text-white">{selectedTime} HS</span> con <span className="text-white">{selectedBarber.name}</span>.
                     </p>
                     <button
-                      onClick={() => { setStep(1); setSelectedBarber(null); setSelectedService(null); setSelectedTime(null); setSuccess(false); }}
+                      onClick={() => { setStep(1); setSelectedBarber(null); setSelectedService(null); setSelectedTime(null); setSuccess(false); setIsFixedAppointment(false); }}
                       className="bg-charcoal/20 px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-charcoal/40 transition-all"
                     >
                       Volver al Inicio
