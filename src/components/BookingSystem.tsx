@@ -1046,13 +1046,15 @@ export const BookingSystem = () => {
                                               Acortar a 30m
                                             </button>
                                           ) : (
-                                            <button
-                                              onClick={() => handleUpdateDuration(appt, 60)}
-                                              className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
-                                              title="Volver a 60 minutos"
-                                            >
-                                              Alargar a 60m
-                                            </button>
+                                            appt.service === 'Corte y Barba' && (
+                                              <button
+                                                onClick={() => handleUpdateDuration(appt, 60)}
+                                                className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                                title="Volver a 60 minutos"
+                                              >
+                                                Deshacer
+                                              </button>
+                                            )
                                           )}
                                           <button
                                             onClick={() => handleCancelAppointment(appt)}
