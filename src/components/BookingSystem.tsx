@@ -849,7 +849,7 @@ export const BookingSystem = () => {
                             <button
                               className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2"
                             >
-                              <CalendarIcon className="w-6 h-6 text-crimson" /> {isRangeMode ? 'Desde:' : 'Fecha:'} {format(adminDate, 'dd/MM/yyyy')}
+                              <CalendarIcon className="w-6 h-6 text-crimson" /> {isRangeMode ? 'Desde:' : 'Fecha:'} {format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}
                             </button>
                             <input
                               type="date"
@@ -862,10 +862,16 @@ export const BookingSystem = () => {
                                 }
                               }}
                             />
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronLeft /></button>
-                            <button onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronRight /></button>
+                            <div className="flex gap-2 items-center mt-2">
+                             <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Día Anterior"><ChevronLeft /></button>
+                             <button onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Siguiente Día"><ChevronRight /></button>
+                             <button 
+                               onClick={() => { setAdminDate(startOfDay(new Date())); setSelectedTimesForBlocking([]); }} 
+                               className="px-3 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-[10px] font-black uppercase"
+                             >
+                               Hoy
+                             </button>
+                            </div>
                           </div>
                         </div>
 
