@@ -842,50 +842,96 @@ export const BookingSystem = () => {
                   </div>
 
                   <div className="bg-black p-6 border border-white/5">
+                    {/* Off-screen date inputs — no touch area on screen, triggered only via ref */}
+                    <input
+                      ref={adminDateInputRef}
+                      type="date"
+                      value={format(adminDate, 'yyyy-MM-dd')}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setAdminDate(new Date(e.target.value + 'T00:00:00'));
+                          setSelectedTimesForBlocking([]);
+                        }
+                      }}
+                      style={{ position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
+                      tabIndex={-1}
+                    />
+                    <input
+                      ref={blockingEndDateInputRef}
+                      type="date"
+                      min={format(adminDate, 'yyyy-MM-dd')}
+                      value={blockingEndDate ? format(blockingEndDate, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
+                        }
+                      }}
+                      style={{ position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
+                      tabIndex={-1}
+                    />
+
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                       <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex gap-2 items-center mb-2">
-                           <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Día Anterior"><ChevronLeft /></button>
-                           <button onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Siguiente Día"><ChevronRight /></button>
-                           <button 
-                             onClick={() => { setAdminDate(startOfDay(new Date())); setSelectedTimesForBlocking([]); }} 
-                             className="px-3 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-[10px] font-black uppercase"
-                           >
-                             Hoy
-                           </button>
-                          </div>
-                          <div className="relative inline-block group">
-                            <CalendarIcon className="w-6 h-6 text-crimson absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                              type="date"
-                              value={format(adminDate, 'yyyy-MM-dd')}
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  setAdminDate(new Date(e.target.value + 'T00:00:00'));
-                                  setSelectedTimesForBlocking([]);
-                                }
-                              }}
-                              className="font-display font-bold uppercase flex items-center gap-2 group-hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 pl-12 pr-4 py-2 cursor-pointer outline-none w-[280px]"
-                            />
+                        <div className="flex flex-col gap-3">
+                          {/* Date display button — only this opens the calendar */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (adminDateInputRef.current) {
+                                adminDateInputRef.current.style.pointerEvents = 'auto';
+                                adminDateInputRef.current.showPicker();
+                                adminDateInputRef.current.style.pointerEvents = 'none';
+                              }
+                            }}
+                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 text-left"
+                          >
+                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0" />
+                            {format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}
+                          </button>
+
+                          {/* Navigation buttons — only change day, never open calendar */}
+                          <div className="flex gap-2 items-center">
+                            <button
+                              type="button"
+                              onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }}
+                              className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"
+                              title="Día Anterior"
+                            >
+                              <ChevronLeft />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }}
+                              className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"
+                              title="Siguiente Día"
+                            >
+                              <ChevronRight />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setAdminDate(startOfDay(new Date())); setSelectedTimesForBlocking([]); }}
+                              className="px-3 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-[10px] font-black uppercase"
+                            >
+                              Hoy
+                            </button>
                           </div>
                         </div>
 
                         {isRangeMode && (
-                          <div className="relative group">
-                            <CalendarIcon className="w-6 h-6 text-crimson absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                              type="date"
-                              min={format(adminDate, 'yyyy-MM-dd')}
-                              value={blockingEndDate ? format(blockingEndDate, 'yyyy-MM-dd') : ''}
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
-                                }
-                              }}
-                              className="font-display font-bold uppercase flex items-center gap-2 group-hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 pl-12 pr-4 py-2 cursor-pointer outline-none w-[280px]"
-                            />
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (blockingEndDateInputRef.current) {
+                                blockingEndDateInputRef.current.style.pointerEvents = 'auto';
+                                blockingEndDateInputRef.current.showPicker();
+                                blockingEndDateInputRef.current.style.pointerEvents = 'none';
+                              }
+                            }}
+                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 text-left"
+                          >
+                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0" />
+                            Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}
+                          </button>
                         )}
                       </div>
 
