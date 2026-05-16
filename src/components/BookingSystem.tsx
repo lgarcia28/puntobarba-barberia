@@ -980,7 +980,7 @@ export const BookingSystem = () => {
                                     {outOfHoursAppts.map(appt => (
                                       <div key={appt.id} className="bg-crimson/20 border border-crimson p-3 flex flex-col items-center gap-1">
                                         <span className="text-sm font-bold">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
-                                        <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
+                                        <span className="uppercase text-[9px] font-black w-full text-center leading-tight break-words">{appt.customerName}</span>
                                         <span className="text-[8px] font-bold">{appt.customerPhone}</span>
                                       </div>
                                     ))}
@@ -1019,8 +1019,8 @@ export const BookingSystem = () => {
                               >
                                 <span className="text-sm">{tStr}</span>
                                 {appt && (
-                                   <div className="flex flex-col items-center w-full overflow-hidden px-1">
-                                     <span className="uppercase text-[9px] font-black truncate w-full">{appt.customerName}</span>
+                                   <div className="flex flex-col items-center w-full px-1">
+                                     <span className="uppercase text-[9px] font-black w-full text-center leading-tight break-words">{appt.customerName}</span>
                                      <span className="text-[8px] text-charcoal font-bold">{appt.customerPhone}</span>
                                    </div>
                                  )}
