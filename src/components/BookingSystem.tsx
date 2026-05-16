@@ -954,7 +954,8 @@ export const BookingSystem = () => {
                     </div>
 
                     {adminViewMode === 'daily' ? (
-                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-8">
+                      <>
+                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-8">
                         {(() => {
                           const dayOfWeek = getDay(adminDate);
                           const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
@@ -1073,8 +1074,10 @@ export const BookingSystem = () => {
                           )}
                         </div>
                       </div>
+                    </>
                     ) : (
-                      <div className="space-y-4 mb-8">
+                      <>
+                        <div className="space-y-4 mb-8">
                         {(() => {
                           const days = eachDayOfInterval({
                             start: startOfWeek(adminDate, { weekStartsOn: 1 }),
@@ -1148,7 +1151,8 @@ export const BookingSystem = () => {
                           });
                         })()}
                       </div>
-                    )}
+                    </>
+                  )}
 
                     <div className="flex flex-col md:flex-row gap-4">
                       <button
