@@ -847,21 +847,15 @@ export const BookingSystem = () => {
                         <div className="flex flex-col gap-2">
                           <div className="relative inline-block">
                             <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                adminDateInputRef.current?.showPicker();
+                              }}
                               className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2"
                             >
                               <CalendarIcon className="w-6 h-6 text-crimson" /> {isRangeMode ? 'Desde:' : 'Fecha:'} {format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}
                             </button>
-                            <input
-                              type="date"
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                              onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  setAdminDate(new Date(e.target.value + 'T00:00:00'));
-                                  setSelectedTimesForBlocking([]);
-                                }
-                              }}
-                            />
                           </div>
                           <div className="flex gap-2 items-center">
                            <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Día Anterior"><ChevronLeft /></button>
@@ -878,21 +872,11 @@ export const BookingSystem = () => {
                         {isRangeMode && (
                           <div className="relative">
                             <button
+                              onClick={() => blockingEndDateInputRef.current?.showPicker()}
                               className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl"
                             >
                               <CalendarIcon className="w-6 h-6 text-crimson" /> Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}
                             </button>
-                            <input
-                              type="date"
-                              min={format(adminDate, 'yyyy-MM-dd')}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                              onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
-                                }
-                              }}
-                            />
                           </div>
                         )}
                       </div>
@@ -1154,8 +1138,32 @@ export const BookingSystem = () => {
                     </>
                   )}
 
-                    <div className="flex flex-col md:flex-row gap-4">
-                      <button
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Hidden Date Inputs */}
+                    <input
+                      ref={adminDateInputRef}
+                      type="date"
+                      className="hidden pointer-events-none"
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setAdminDate(new Date(e.target.value + 'T00:00:00'));
+                          setSelectedTimesForBlocking([]);
+                        }
+                      }}
+                    />
+                    <input
+                      ref={blockingEndDateInputRef}
+                      type="date"
+                      min={adminDate ? format(adminDate, 'yyyy-MM-dd') : undefined}
+                      className="hidden pointer-events-none"
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
+                        }
+                      }}
+                    />
+
+                    <button
                         onClick={handleBlockTime}
                         disabled={selectedTimesForBlocking.length === 0 || loading}
                         className="flex-1 bg-crimson py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-crimson/80 transition-all"
