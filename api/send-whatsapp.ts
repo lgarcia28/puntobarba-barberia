@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { phone, customerName, service, barber, date, time, dayOfWeek, isFixed, action } = req.body;
+    const { phone, customerName, service, barber, date, time, dayOfWeek, isFixed, lastDate, interval, action } = req.body;
 
     if (!phone || !customerName || !service || !barber || !date || !time) {
       return res.status(400).json({ error: "Faltan datos requeridos" });
@@ -32,6 +32,8 @@ export default async function handler(req, res) {
 
     let message = "";
     const dayStr = dayOfWeek ? `los ${dayOfWeek} ` : '';
+    const intervalTitle = interval === 'biweekly' ? 'FIJO QUINCENAL' : 'FIJO SEMANAL';
+    const intervalFreq = interval === 'biweekly' ? 'cada 15 días' : 'todas las semanas';
 
     if (action === 'cancel_single') {
       message = `¡Hola ${firstName}! 👋\nTe confirmamos que tu turno del ${date} a las ${time} HS con ${barber} ha sido CANCELADO exitosamente.\n\nSi deseas volver a agendar, puedes hacerlo en cualquier momento desde nuestra web. ¡Te esperamos pronto en ResetART!`;
@@ -40,13 +42,13 @@ export default async function handler(req, res) {
     } else if (action === 'reschedule') {
       message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido REPROGRAMADO con éxito.\n\n📅 Nueva Fecha: ${date}\n⏰ Nueva Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
       if (isFixed) {
-        message = `¡Hola ${firstName}! 👋\nTu turno FIJO SEMANAL en ResetART ha sido REPROGRAMADO con éxito.\n\n📅 A partir de la nueva fecha: ${date}\n⏰ Ahora será todos ${dayStr}a las ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos todas las semanas!`;
+        message = `¡Hola ${firstName}! 👋\nTu turno ${intervalTitle} en ResetART ha sido REPROGRAMADO con éxito.\n\n📅 A partir de: ${date}\n⏰ Ahora será ${dayStr}a las ${time} HS (${intervalFreq})\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n🗓️ Último turno: ${lastDate}\n\n📍 Dirección: Mitre 264, Rosario\n¡Te esperamos!`;
       }
     } else {
       // Default: book
       message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
       if (isFixed) {
-        message = `¡Hola ${firstName}! 👋\nTu turno FIJO SEMANAL en ResetART ha sido confirmado.\n\n📅 A partir de: ${date}\n⏰ Todos ${dayStr}a las ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos todas las semanas!`;
+        message = `¡Hola ${firstName}! 👋\nTu turno ${intervalTitle} en ResetART ha sido confirmado.\n\n📅 A partir de: ${date}\n⏰ Todos ${dayStr}a las ${time} HS (${intervalFreq})\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n🗓️ Último turno: ${lastDate}\n\n📍 Dirección: Mitre 264, Rosario\n¡Te esperamos!`;
       }
     }
 

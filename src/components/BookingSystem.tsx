@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
-import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2 } from 'lucide-react';
@@ -43,6 +43,7 @@ export const BookingSystem = () => {
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
   const [isFixedAppointment, setIsFixedAppointment] = useState(false);
+  const [fixedInterval, setFixedInterval] = useState<'weekly' | 'biweekly'>('weekly');
   const [appointments, setAppointments] = useState<any[]>([]);
   const [reschedulingApptId, setReschedulingApptId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<any[]>([]);
@@ -353,21 +354,22 @@ export const BookingSystem = () => {
 
     try {
       if (isFixedAppointment) {
-        // Book for 104 weeks (2 years)
         const batch = writeBatch(db);
-        const weeksToBook = 104;
+        const endDate = addMonths(baseStartTime, 1);
         const groupId = `fixed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         let booksCount = 0;
+        let lastDateBooked = baseStartTime;
 
         // Si estamos reprogramando, cancelamos el turno anterior
         if (reschedulingApptId) {
           batch.update(doc(db, 'appointments', reschedulingApptId), { status: 'cancelled' });
         }
 
-        for (let i = 0; i < weeksToBook; i++) {
-          const currentStartTime = addDays(baseStartTime, i * 7);
-          const currentEndTime = addDays(baseEndTime, i * 7);
+        let currentStartTime = baseStartTime;
+        let currentEndTime = baseEndTime;
+        const intervalDays = fixedInterval === 'weekly' ? 7 : 14;
 
+        while (isBefore(currentStartTime, endDate) || isSameDay(currentStartTime, endDate)) {
           // Check availability
           const q = query(
             collection(db, 'appointments'),
@@ -400,7 +402,11 @@ export const BookingSystem = () => {
               groupId: groupId
             });
             booksCount++;
+            lastDateBooked = currentStartTime;
           }
+          
+          currentStartTime = addDays(currentStartTime, intervalDays);
+          currentEndTime = addDays(currentEndTime, intervalDays);
         }
 
         if (booksCount === 0) {
@@ -422,6 +428,8 @@ export const BookingSystem = () => {
               time: selectedTime,
               dayOfWeek: format(selectedDate, 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(selectedDate, 'EEEE', { locale: es })) ? 's' : ''),
               isFixed: true,
+              lastDate: format(lastDateBooked, 'dd/MM/yyyy'),
+              interval: fixedInterval,
               action: reschedulingApptId ? 'reschedule' : 'book'
             })
           });
@@ -1586,15 +1594,36 @@ export const BookingSystem = () => {
                           onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                           className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors"
                         />
-                        <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={isFixedAppointment}
-                            onChange={(e) => setIsFixedAppointment(e.target.checked)}
-                            className="w-5 h-5 accent-crimson"
-                          />
-                          Turno Fijo Semanal (Reservar mismo día y hora todas las semanas)
-                        </label>
+                        <div className="space-y-4">
+                          <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={isFixedAppointment}
+                              onChange={(e) => setIsFixedAppointment(e.target.checked)}
+                              className="w-5 h-5 accent-crimson"
+                            />
+                            Turno Fijo (Reservar varias fechas por 1 mes)
+                          </label>
+
+                          {isFixedAppointment && (
+                            <div className="grid grid-cols-2 gap-4 ml-8 animate-in fade-in slide-in-from-left-2 duration-300">
+                              <button
+                                type="button"
+                                onClick={() => setFixedInterval('weekly')}
+                                className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all ${fixedInterval === 'weekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                              >
+                                Semanal (Cada 7 días)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setFixedInterval('biweekly')}
+                                className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all ${fixedInterval === 'biweekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                              >
+                                Quincenal (Cada 15 días)
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {error && (
