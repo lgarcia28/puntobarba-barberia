@@ -845,17 +845,19 @@ export const BookingSystem = () => {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
-                          <div className="relative inline-block">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                adminDateInputRef.current?.showPicker();
+                          <div className="relative inline-block group">
+                            <CalendarIcon className="w-6 h-6 text-crimson absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                              type="date"
+                              value={format(adminDate, 'yyyy-MM-dd')}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setAdminDate(new Date(e.target.value + 'T00:00:00'));
+                                  setSelectedTimesForBlocking([]);
+                                }
                               }}
-                              className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2"
-                            >
-                              <CalendarIcon className="w-6 h-6 text-crimson" /> {isRangeMode ? 'Desde:' : 'Fecha:'} {format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}
-                            </button>
+                              className="font-display font-bold uppercase flex items-center gap-2 group-hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 pl-12 pr-4 py-2 cursor-pointer outline-none w-[280px]"
+                            />
                           </div>
                           <div className="flex gap-2 items-center">
                            <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Día Anterior"><ChevronLeft /></button>
@@ -870,13 +872,19 @@ export const BookingSystem = () => {
                         </div>
 
                         {isRangeMode && (
-                          <div className="relative">
-                            <button
-                              onClick={() => blockingEndDateInputRef.current?.showPicker()}
-                              className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl"
-                            >
-                              <CalendarIcon className="w-6 h-6 text-crimson" /> Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}
-                            </button>
+                          <div className="relative group">
+                            <CalendarIcon className="w-6 h-6 text-crimson absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                              type="date"
+                              min={format(adminDate, 'yyyy-MM-dd')}
+                              value={blockingEndDate ? format(blockingEndDate, 'yyyy-MM-dd') : ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
+                                }
+                              }}
+                              className="font-display font-bold uppercase flex items-center gap-2 group-hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 pl-12 pr-4 py-2 cursor-pointer outline-none w-[280px]"
+                            />
                           </div>
                         )}
                       </div>
@@ -1139,29 +1147,6 @@ export const BookingSystem = () => {
                   )}
 
                   <div className="flex flex-col md:flex-row gap-4">
-                    {/* Hidden Date Inputs */}
-                    <input
-                      ref={adminDateInputRef}
-                      type="date"
-                      className="sr-only pointer-events-none"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setAdminDate(new Date(e.target.value + 'T00:00:00'));
-                          setSelectedTimesForBlocking([]);
-                        }
-                      }}
-                    />
-                    <input
-                      ref={blockingEndDateInputRef}
-                      type="date"
-                      min={adminDate ? format(adminDate, 'yyyy-MM-dd') : undefined}
-                      className="sr-only pointer-events-none"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
-                        }
-                      }}
-                    />
 
                     <button
                         onClick={handleBlockTime}
