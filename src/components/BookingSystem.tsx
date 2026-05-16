@@ -986,7 +986,7 @@ export const BookingSystem = () => {
                                     {outOfHoursAppts.map(appt => (
                                       <div key={appt.id} className="bg-crimson/20 border border-crimson p-3 flex flex-col items-center gap-1">
                                         <span className="text-sm font-bold">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
-                                        <span className="uppercase text-[9px] font-black w-full text-center leading-tight break-words">{appt.customerName}</span>
+                                        <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
                                         <span className="text-[8px] font-bold">{appt.customerPhone}</span>
                                       </div>
                                     ))}
@@ -1025,8 +1025,8 @@ export const BookingSystem = () => {
                               >
                                 <span className="text-sm">{tStr}</span>
                                 {appt && (
-                                   <div className="flex flex-col items-center w-full px-1">
-                                     <span className="uppercase text-[9px] font-black w-full text-center leading-tight break-words">{appt.customerName}</span>
+                                   <div className="flex flex-col items-center w-full overflow-hidden px-1">
+                                     <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
                                      <span className="text-[8px] text-charcoal font-bold">{appt.customerPhone}</span>
                                    </div>
                                  )}
@@ -1038,6 +1038,40 @@ export const BookingSystem = () => {
                             </>
                           );
                         })()}
+                      </div>
+
+                      {/* Agenda detallada del día */}
+                      <div className="mt-8 border-t border-white/5 pt-8">
+                        <h4 className="font-display font-bold uppercase text-crimson mb-4 flex items-center gap-2">
+                          <Database className="w-4 h-4" /> Agenda de {format(adminDate, 'EEEE dd/MM', { locale: es })}
+                        </h4>
+                        <div className="space-y-2">
+                          {adminAppts.filter(a => isSameDay(a.startTime.toDate(), adminDate))
+                            .sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis())
+                            .map(appt => (
+                              <div key={appt.id} className="flex justify-between items-center bg-zinc-900/50 p-3 border border-white/5">
+                                <div>
+                                  <p className="font-bold uppercase text-sm">{appt.customerName}</p>
+                                  <p className="text-[10px] text-charcoal">{appt.service}</p>
+                                  <a href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-crimson font-bold hover:underline">
+                                    {appt.customerPhone}
+                                  </a>
+                                </div>
+                                <div className="text-right flex items-center gap-4">
+                                  <div className="text-right">
+                                    <p className="font-display font-bold text-sm">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                                    <p className="text-[10px] text-charcoal uppercase">{Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} min</p>
+                                  </div>
+                                  <button onClick={() => handleCancelAppointment(appt)} className="text-crimson p-2 hover:bg-crimson/10 transition-colors">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          {adminAppts.filter(a => isSameDay(a.startTime.toDate(), adminDate)).length === 0 && (
+                            <p className="text-charcoal text-xs uppercase font-bold text-center py-4">Sin turnos para este día</p>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-4 mb-8">
