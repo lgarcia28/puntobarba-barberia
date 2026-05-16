@@ -1143,7 +1143,7 @@ export const BookingSystem = () => {
                     <input
                       ref={adminDateInputRef}
                       type="date"
-                      className="hidden pointer-events-none"
+                      className="sr-only pointer-events-none"
                       onChange={(e) => {
                         if (e.target.value) {
                           setAdminDate(new Date(e.target.value + 'T00:00:00'));
@@ -1155,7 +1155,7 @@ export const BookingSystem = () => {
                       ref={blockingEndDateInputRef}
                       type="date"
                       min={adminDate ? format(adminDate, 'yyyy-MM-dd') : undefined}
-                      className="hidden pointer-events-none"
+                      className="sr-only pointer-events-none"
                       onChange={(e) => {
                         if (e.target.value) {
                           setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
