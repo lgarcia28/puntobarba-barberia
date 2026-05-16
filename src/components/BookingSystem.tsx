@@ -842,54 +842,29 @@ export const BookingSystem = () => {
                   </div>
 
                   <div className="bg-black p-6 border border-white/5">
-                    {/* Off-screen date inputs — no touch area on screen, triggered only via ref */}
-                    <input
-                      ref={adminDateInputRef}
-                      type="date"
-                      value={format(adminDate, 'yyyy-MM-dd')}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setAdminDate(new Date(e.target.value + 'T00:00:00'));
-                          setSelectedTimesForBlocking([]);
-                        }
-                      }}
-                      style={{ position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
-                      tabIndex={-1}
-                    />
-                    <input
-                      ref={blockingEndDateInputRef}
-                      type="date"
-                      min={format(adminDate, 'yyyy-MM-dd')}
-                      value={blockingEndDate ? format(blockingEndDate, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
-                        }
-                      }}
-                      style={{ position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
-                      tabIndex={-1}
-                    />
-
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-3">
-                          {/* Date display button — only this opens the calendar */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (adminDateInputRef.current) {
-                                adminDateInputRef.current.style.pointerEvents = 'auto';
-                                adminDateInputRef.current.showPicker();
-                                adminDateInputRef.current.style.pointerEvents = 'none';
-                              }
-                            }}
-                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 text-left"
-                          >
-                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0" />
-                            {format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}
-                          </button>
 
-                          {/* Navigation buttons — only change day, never open calendar */}
+                          {/* Date label — clicking this label opens the native calendar on ALL browsers including iOS */}
+                          <label className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none">
+                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0 pointer-events-none" />
+                            <span className="pointer-events-none">{format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}</span>
+                            {/* sr-only: 1px clipped — zero visible touch area, triggered only by label click */}
+                            <input
+                              type="date"
+                              value={format(adminDate, 'yyyy-MM-dd')}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setAdminDate(new Date(e.target.value + 'T00:00:00'));
+                                  setSelectedTimesForBlocking([]);
+                                }
+                              }}
+                              className="sr-only"
+                            />
+                          </label>
+
+                          {/* Navigation buttons — completely separate from the date input */}
                           <div className="flex gap-2 items-center">
                             <button
                               type="button"
@@ -918,20 +893,21 @@ export const BookingSystem = () => {
                         </div>
 
                         {isRangeMode && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (blockingEndDateInputRef.current) {
-                                blockingEndDateInputRef.current.style.pointerEvents = 'auto';
-                                blockingEndDateInputRef.current.showPicker();
-                                blockingEndDateInputRef.current.style.pointerEvents = 'none';
-                              }
-                            }}
-                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 text-left"
-                          >
-                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0" />
-                            Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}
-                          </button>
+                          <label className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none">
+                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0 pointer-events-none" />
+                            <span className="pointer-events-none">Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}</span>
+                            <input
+                              type="date"
+                              min={format(adminDate, 'yyyy-MM-dd')}
+                              value={blockingEndDate ? format(blockingEndDate, 'yyyy-MM-dd') : ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setBlockingEndDate(new Date(e.target.value + 'T00:00:00'));
+                                }
+                              }}
+                              className="sr-only"
+                            />
+                          </label>
                         )}
                       </div>
 
