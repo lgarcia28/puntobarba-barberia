@@ -952,13 +952,46 @@ export const BookingSystem = () => {
                         {(() => {
                           const dayOfWeek = getDay(adminDate);
                           const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
-                          if (!daySchedule.isOpen) return <div className="col-span-full py-8 text-center text-charcoal">Cerrado este día</div>;
-                          const [startH, startM] = daySchedule.start.split(':').map(Number);
-                          const [endH, endM] = daySchedule.end.split(':').map(Number);
-                          return eachMinuteOfInterval({
-                            start: setMinutes(setHours(startOfDay(adminDate), startH), startM),
-                            end: setMinutes(setHours(startOfDay(adminDate), endH), endM)
-                          }, { step: 30 }).map(time => {
+                          
+                          // Get all appointments for this day that are NOT in the normal grid
+                          const [startH, startM] = daySchedule.isOpen ? daySchedule.start.split(':').map(Number) : [0, 0];
+                          const [endH, endM] = daySchedule.isOpen ? daySchedule.end.split(':').map(Number) : [23, 59];
+                          
+                          const gridStart = setMinutes(setHours(startOfDay(adminDate), startH), startM);
+                          const gridEnd = setMinutes(setHours(startOfDay(adminDate), endH), endM);
+                          
+                          const outOfHoursAppts = adminAppts.filter(a => {
+                            const t = a.startTime.toDate();
+                            return isSameDay(t, adminDate) && (isBefore(t, gridStart) || isAfter(t, gridEnd));
+                          });
+
+                          if (!daySchedule.isOpen && outOfHoursAppts.length === 0) {
+                            return <div className="col-span-full py-8 text-center text-charcoal">Cerrado este día</div>;
+                          }
+
+                          return (
+                            <>
+                              {outOfHoursAppts.length > 0 && (
+                                <div className="col-span-full mb-6 p-4 bg-crimson/10 border border-crimson/30">
+                                  <h5 className="text-crimson font-bold text-xs uppercase mb-3 flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4" /> Turnos fuera de horario configurado
+                                  </h5>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                    {outOfHoursAppts.map(appt => (
+                                      <div key={appt.id} className="bg-crimson/20 border border-crimson p-3 flex flex-col items-center gap-1">
+                                        <span className="text-sm font-bold">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
+                                        <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
+                                        <span className="text-[8px] font-bold">{appt.customerPhone}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {daySchedule.isOpen && eachMinuteOfInterval({
+                                start: gridStart,
+                                end: gridEnd
+                              }, { step: 30 }).map(time => {
                             const tStr = format(time, 'HH:mm');
                             const block = adminBlocks.find(b => format(b.startTime.toDate(), 'HH:mm') === tStr);
                             const appt = adminAppts.find(a => format(a.startTime.toDate(), 'HH:mm') === tStr);
@@ -995,7 +1028,9 @@ export const BookingSystem = () => {
                                 {!appt && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
                               </button>
                             );
-                          })
+                              })}
+                            </>
+                          );
                         })()}
                       </div>
                     ) : (
