@@ -846,12 +846,17 @@ export const BookingSystem = () => {
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-3">
 
-                          {/* Date label — clicking this label opens the native calendar on ALL browsers including iOS */}
-                          <label className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none">
+                          {/* Date label — label activates input on mobile; showPicker() handles desktop Chrome */}
+                          <label
+                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none"
+                            onClick={() => {
+                              try { adminDateInputRef.current?.showPicker(); } catch (_) {/* fallback: label activates input natively */}
+                            }}
+                          >
                             <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0 pointer-events-none" />
                             <span className="pointer-events-none">{format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}</span>
-                            {/* sr-only: 1px clipped — zero visible touch area, triggered only by label click */}
                             <input
+                              ref={adminDateInputRef}
                               type="date"
                               value={format(adminDate, 'yyyy-MM-dd')}
                               onChange={(e) => {
@@ -893,10 +898,16 @@ export const BookingSystem = () => {
                         </div>
 
                         {isRangeMode && (
-                          <label className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none">
+                          <label
+                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none"
+                            onClick={() => {
+                              try { blockingEndDateInputRef.current?.showPicker(); } catch (_) {}
+                            }}
+                          >
                             <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0 pointer-events-none" />
                             <span className="pointer-events-none">Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}</span>
                             <input
+                              ref={blockingEndDateInputRef}
                               type="date"
                               min={format(adminDate, 'yyyy-MM-dd')}
                               value={blockingEndDate ? format(blockingEndDate, 'yyyy-MM-dd') : ''}
