@@ -19,7 +19,7 @@ import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationTy
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -603,6 +603,17 @@ export const BookingSystem = () => {
     }
   };
 
+  const handleUpdateDuration = async (appt: any, newDuration: number) => {
+    try {
+      const newEndTime = addMinutes(appt.startTime.toDate(), newDuration);
+      const apptRef = doc(db, 'appointments', appt.id);
+      await updateDoc(apptRef, { endTime: Timestamp.fromDate(newEndTime) });
+      toast.success('Duración actualizada correctamente.');
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    }
+  };
+
   const handleUnblockTime = async () => {
     if (!selectedBarber || selectedTimesForBlocking.length === 0) return;
 
@@ -1005,11 +1016,31 @@ export const BookingSystem = () => {
                                         <div>
                                           <p className="font-bold uppercase text-sm">{appt.customerName}</p>
                                           <p className="text-xs text-charcoal">{appt.service} {appt.isFixed ? '(FIJO)' : ''}</p>
+                                          <a 
+                                            href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-crimson font-bold hover:underline flex items-center gap-1 mt-1"
+                                          >
+                                            <Phone className="w-3 h-3" /> {appt.customerPhone}
+                                          </a>
                                         </div>
                                         <div className="flex items-center gap-4">
                                           <div className="text-right">
                                             <p className="font-display font-bold text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                                            <p className="text-[10px] text-charcoal font-bold uppercase">
+                                              {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} min
+                                            </p>
                                           </div>
+                                          {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 && (
+                                            <button
+                                              onClick={() => handleUpdateDuration(appt, 30)}
+                                              className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                              title="Reducir a 30 minutos para liberar espacio"
+                                            >
+                                              Acortar a 30m
+                                            </button>
+                                          )}
                                           <button
                                             onClick={() => handleCancelAppointment(appt)}
                                             className="text-crimson hover:text-white p-2 transition-colors border border-white/5 hover:border-crimson"
