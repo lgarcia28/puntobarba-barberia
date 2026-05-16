@@ -985,7 +985,12 @@ export const BookingSystem = () => {
                                   }`}
                               >
                                 <span className="text-sm">{tStr}</span>
-                                {appt && <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>}
+                                {appt && (
+                                   <div className="flex flex-col items-center w-full overflow-hidden px-1">
+                                     <span className="uppercase text-[9px] font-black truncate w-full">{appt.customerName}</span>
+                                     <span className="text-[8px] text-charcoal font-bold">{appt.customerPhone}</span>
+                                   </div>
+                                 )}
                                 {block && <span className="uppercase text-[9px] font-black">Bloqueado</span>}
                                 {!appt && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
                               </button>
@@ -1032,13 +1037,21 @@ export const BookingSystem = () => {
                                               {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} min
                                             </p>
                                           </div>
-                                          {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 && (
+                                          {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 ? (
                                             <button
                                               onClick={() => handleUpdateDuration(appt, 30)}
                                               className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
                                               title="Reducir a 30 minutos para liberar espacio"
                                             >
                                               Acortar a 30m
+                                            </button>
+                                          ) : (
+                                            <button
+                                              onClick={() => handleUpdateDuration(appt, 60)}
+                                              className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                              title="Volver a 60 minutos"
+                                            >
+                                              Alargar a 60m
                                             </button>
                                           )}
                                           <button
