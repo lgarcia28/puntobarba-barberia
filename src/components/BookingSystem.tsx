@@ -862,16 +862,16 @@ export const BookingSystem = () => {
                                 }
                               }}
                             />
-                            <div className="flex gap-2 items-center mt-2">
-                             <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Día Anterior"><ChevronLeft /></button>
-                             <button onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Siguiente Día"><ChevronRight /></button>
-                             <button 
-                               onClick={() => { setAdminDate(startOfDay(new Date())); setSelectedTimesForBlocking([]); }} 
-                               className="px-3 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-[10px] font-black uppercase"
-                             >
-                               Hoy
-                             </button>
-                            </div>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                           <button onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Día Anterior"><ChevronLeft /></button>
+                           <button onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors" title="Siguiente Día"><ChevronRight /></button>
+                           <button 
+                             onClick={() => { setAdminDate(startOfDay(new Date())); setSelectedTimesForBlocking([]); }} 
+                             className="px-3 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-[10px] font-black uppercase"
+                           >
+                             Hoy
+                           </button>
                           </div>
                         </div>
 
@@ -966,7 +966,7 @@ export const BookingSystem = () => {
                           const gridStart = setMinutes(setHours(startOfDay(adminDate), startH), startM);
                           const gridEnd = setMinutes(setHours(startOfDay(adminDate), endH), endM);
                           
-                          const outOfHoursAppts = adminAppts.filter(a => {
+                          const outOfHoursAppts = adminAppts.filter((a: any) => {
                             const t = a.startTime.toDate();
                             return isSameDay(t, adminDate) && (isBefore(t, gridStart) || isAfter(t, gridEnd));
                           });
@@ -1046,9 +1046,9 @@ export const BookingSystem = () => {
                           <Database className="w-4 h-4" /> Agenda de {format(adminDate, 'EEEE dd/MM', { locale: es })}
                         </h4>
                         <div className="space-y-2">
-                          {adminAppts.filter(a => isSameDay(a.startTime.toDate(), adminDate))
-                            .sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis())
-                            .map(appt => (
+                          {adminAppts.filter((a: any) => isSameDay(a.startTime.toDate(), adminDate))
+                            .sort((a: any, b: any) => a.startTime.toMillis() - b.startTime.toMillis())
+                            .map((appt: any) => (
                               <div key={appt.id} className="flex justify-between items-center bg-zinc-900/50 p-3 border border-white/5">
                                 <div>
                                   <p className="font-bold uppercase text-sm">{appt.customerName}</p>
