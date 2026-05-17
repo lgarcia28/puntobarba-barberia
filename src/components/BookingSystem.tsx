@@ -1570,7 +1570,7 @@ export const BookingSystem = () => {
 
                 const processedAppts = finanzasAppts.map(appt => {
                   const barber = barbers.find(b => b.id === appt.barberId);
-                  const isJoseCut = barber?.email === 'jhbarber87@gmail.com' || barber?.name.toLowerCase().includes('jose');
+                  const isJoseCut = barber?.id === 'jose-hernandez' || barber?.email === 'jhbarber87@gmail.com' || barber?.email === 'resetart.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
                   const svcPrice = appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0);
                   
                   let joseShare = 0;
