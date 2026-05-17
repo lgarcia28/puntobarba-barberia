@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
-import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
+import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone } from 'lucide-react';
@@ -101,6 +101,7 @@ export const BookingSystem = () => {
   // Finanzas State
   const [finanzasDate, setFinanzasDate] = useState(new Date());
   const [finanzasAppts, setFinanzasAppts] = useState<any[]>([]);
+  const [finanzasViewMode, setFinanzasViewMode] = useState<'daily' | 'monthly'>('daily');
 
   useEffect(() => {
     getShopSettings().then((settings: any) => {
@@ -244,8 +245,14 @@ export const BookingSystem = () => {
   useEffect(() => {
     if (!isJose || activeAdminTab !== 'finanzas') return;
     
-    const start = startOfDay(finanzasDate);
-    const end = endOfDay(finanzasDate);
+    let start, end;
+    if (finanzasViewMode === 'monthly') {
+      start = startOfMonth(finanzasDate);
+      end = endOfMonth(finanzasDate);
+    } else {
+      start = startOfDay(finanzasDate);
+      end = endOfDay(finanzasDate);
+    }
 
     const qAppts = query(
       collection(db, 'appointments'),
@@ -1552,13 +1559,45 @@ export const BookingSystem = () => {
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-black p-6 border border-white/5 gap-4">
             <h3 className="font-display font-black uppercase text-2xl text-light-gray flex items-center gap-3">
-              <Database className="w-6 h-6 text-crimson" /> Libro Diario
+              <Database className="w-6 h-6 text-crimson" /> {finanzasViewMode === 'daily' ? 'Libro Diario' : 'Detalle Mensual'}
             </h3>
-            <div className="flex items-center gap-2 md:gap-4">
-              <button onClick={() => setFinanzasDate(addDays(finanzasDate, -1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-              <span className="font-bold uppercase tracking-widest text-sm">{format(finanzasDate, 'dd/MM/yyyy')}</span>
-              <button onClick={() => setFinanzasDate(addDays(finanzasDate, 1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronRight className="w-4 h-4" /></button>
-              <button onClick={() => setFinanzasDate(new Date())} className="px-4 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-xs font-black uppercase">Hoy</button>
+            <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+              <div className="flex bg-zinc-800 rounded-sm overflow-hidden border border-white/10 shrink-0">
+                <button 
+                  onClick={() => setFinanzasViewMode('daily')}
+                  className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'daily' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                >
+                  Diario
+                </button>
+                <button 
+                  onClick={() => setFinanzasViewMode('monthly')}
+                  className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'monthly' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                >
+                  Mensual
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : addMonths(finanzasDate, -1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                <div className="relative flex items-center justify-center min-w-[150px] bg-zinc-800/50 py-2 px-3 rounded-sm">
+                  <CalendarIcon className="w-4 h-4 text-charcoal mr-2" />
+                  <span className="font-bold uppercase tracking-widest text-xs text-center capitalize">
+                    {format(finanzasDate, finanzasViewMode === 'daily' ? "EEEE dd/MM/yyyy" : "MMMM yyyy", { locale: es })}
+                  </span>
+                  <input 
+                    type={finanzasViewMode === 'daily' ? 'date' : 'month'}
+                    value={format(finanzasDate, finanzasViewMode === 'daily' ? 'yyyy-MM-dd' : 'yyyy-MM')}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setFinanzasDate(parseISO(finanzasViewMode === 'daily' ? e.target.value : e.target.value + '-01'));
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                  />
+                </div>
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : addMonths(finanzasDate, 1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronRight className="w-4 h-4" /></button>
+              </div>
+              <button onClick={() => setFinanzasDate(new Date())} className="px-4 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-xs font-black uppercase hidden lg:block shrink-0">Hoy</button>
             </div>
           </div>
 
