@@ -82,7 +82,7 @@ export const BookingSystem = () => {
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [isJose, setIsJose] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar'>('agenda');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,6 +97,10 @@ export const BookingSystem = () => {
   // Edit Appointment Modal State
   const [editingAppt, setEditingAppt] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ customerName: '', customerPhone: '', service: '', customPrice: '' });
+
+  // Finanzas State
+  const [finanzasDate, setFinanzasDate] = useState(new Date());
+  const [finanzasAppts, setFinanzasAppts] = useState<any[]>([]);
 
   useEffect(() => {
     getShopSettings().then((settings: any) => {
@@ -235,6 +239,27 @@ export const BookingSystem = () => {
 
     return () => { unsubAppts(); unsubBlocks(); };
   }, [selectedBarber, adminDate, isBarberAdmin, adminViewMode]);
+
+  // Finanzas Data Fetching
+  useEffect(() => {
+    if (!isJose || activeAdminTab !== 'finanzas') return;
+    
+    const start = startOfDay(finanzasDate);
+    const end = endOfDay(finanzasDate);
+
+    const qAppts = query(
+      collection(db, 'appointments'),
+      where('startTime', '>=', Timestamp.fromDate(start)),
+      where('startTime', '<=', Timestamp.fromDate(end)),
+      where('status', '==', 'confirmed')
+    );
+
+    const unsubAppts = onSnapshot(qAppts, (snapshot) => {
+      setFinanzasAppts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'appointments'));
+
+    return () => unsubAppts();
+  }, [finanzasDate, isJose, activeAdminTab]);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -817,6 +842,12 @@ export const BookingSystem = () => {
                 className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
               >
                 Agendar Turno
+              </button>
+              <button
+                onClick={() => setActiveAdminTab('finanzas')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'finanzas' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Finanzas
               </button>
             </div>
           ) : (
@@ -1516,6 +1547,108 @@ export const BookingSystem = () => {
               </div>
             </div>
           )}
+
+      {isBarberAdmin && isJose && activeAdminTab === 'finanzas' && (
+        <div className="space-y-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-black p-6 border border-white/5 gap-4">
+            <h3 className="font-display font-black uppercase text-2xl text-light-gray flex items-center gap-3">
+              <Database className="w-6 h-6 text-crimson" /> Libro Diario
+            </h3>
+            <div className="flex items-center gap-2 md:gap-4">
+              <button onClick={() => setFinanzasDate(addDays(finanzasDate, -1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+              <span className="font-bold uppercase tracking-widest text-sm">{format(finanzasDate, 'dd/MM/yyyy')}</span>
+              <button onClick={() => setFinanzasDate(addDays(finanzasDate, 1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronRight className="w-4 h-4" /></button>
+              <button onClick={() => setFinanzasDate(new Date())} className="px-4 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-xs font-black uppercase">Hoy</button>
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 border border-white/5 p-6">
+            <div className="space-y-4">
+              {(() => {
+                let totalJoseCuts = 0;
+                let totalOthersCuts = 0;
+
+                const processedAppts = finanzasAppts.map(appt => {
+                  const barber = barbers.find(b => b.id === appt.barberId);
+                  const isJoseCut = barber?.email === 'jhbarber87@gmail.com' || barber?.name.toLowerCase().includes('jose');
+                  const svcPrice = appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0);
+                  
+                  let joseShare = 0;
+                  let barberShare = 0;
+
+                  if (isJoseCut) {
+                    joseShare = svcPrice;
+                    totalJoseCuts += svcPrice;
+                  } else {
+                    joseShare = svcPrice * 0.5;
+                    barberShare = svcPrice * 0.5;
+                    totalOthersCuts += svcPrice;
+                  }
+
+                  return { ...appt, barberName: barber?.name || 'Desconocido', isJoseCut, svcPrice, joseShare, barberShare };
+                }).sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
+
+                const totalRevenue = totalJoseCuts + totalOthersCuts;
+                const totalJoseEarns = totalJoseCuts + (totalOthersCuts * 0.5);
+
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                      <div className="bg-black p-6 border border-white/5">
+                        <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Recaudación Total</p>
+                        <p className="font-display font-black text-3xl text-light-gray">${totalRevenue.toLocaleString('es-AR')}</p>
+                      </div>
+                      <div className="bg-black p-6 border border-crimson/50">
+                        <p className="text-crimson font-bold uppercase tracking-widest text-xs mb-2">Cierre Caja Jose</p>
+                        <p className="font-display font-black text-3xl text-crimson">${totalJoseEarns.toLocaleString('es-AR')}</p>
+                        <p className="text-[10px] text-zinc-500 mt-2 font-bold uppercase">100% cortes propios + 50% otros</p>
+                      </div>
+                      <div className="bg-black p-6 border border-white/5">
+                        <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Comisión Otros Barberos</p>
+                        <p className="font-display font-black text-3xl text-zinc-400">${(totalOthersCuts * 0.5).toLocaleString('es-AR')}</p>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-black border-b border-white/10 uppercase text-[10px] text-charcoal font-bold">
+                          <tr>
+                            <th className="p-3">Hora</th>
+                            <th className="p-3">Cliente</th>
+                            <th className="p-3">Barbero</th>
+                            <th className="p-3">Servicio</th>
+                            <th className="p-3 text-right">Precio</th>
+                            <th className="p-3 text-right">Para Jose</th>
+                            <th className="p-3 text-right">Para Barbero</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {processedAppts.map(appt => (
+                            <tr key={appt.id} className="hover:bg-white/5 transition-colors">
+                              <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
+                              <td className="p-3 uppercase font-bold text-xs">{appt.customerName}</td>
+                              <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
+                              <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
+                              <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
+                              <td className="p-3 text-right text-crimson font-bold">${appt.joseShare.toLocaleString('es-AR')}</td>
+                              <td className="p-3 text-right text-zinc-400">${appt.barberShare.toLocaleString('es-AR')}</td>
+                            </tr>
+                          ))}
+                          {processedAppts.length === 0 && (
+                            <tr>
+                              <td colSpan={7} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este día</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
