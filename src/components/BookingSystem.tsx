@@ -94,6 +94,10 @@ export const BookingSystem = () => {
   const [myAppointments, setMyAppointments] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Edit Appointment Modal State
+  const [editingAppt, setEditingAppt] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ customerName: '', customerPhone: '', service: '', customPrice: '' });
+
   useEffect(() => {
     getShopSettings().then((settings: any) => {
       setShopSettings(settings);
@@ -614,6 +618,34 @@ export const BookingSystem = () => {
     }
   };
 
+  const handleSaveEditAppointment = async () => {
+    if (!editingAppt) return;
+    try {
+      const apptRef = doc(db, 'appointments', editingAppt.id);
+      const updates: any = {
+        customerName: editForm.customerName.trim(),
+        customerPhone: editForm.customerPhone.trim(),
+        service: editForm.service,
+      };
+      if (editForm.customPrice !== '') {
+        updates.customPrice = Number(editForm.customPrice);
+      } else {
+        updates.customPrice = null;
+      }
+      // If service changed, update endTime based on new duration
+      const svcDurations: Record<string, number> = { 'Corte': 30, 'Corte y Barba': 60, 'Barba': 30 };
+      const newDuration = svcDurations[editForm.service];
+      if (newDuration) {
+        updates.endTime = Timestamp.fromDate(addMinutes(editingAppt.startTime.toDate(), newDuration));
+      }
+      await updateDoc(apptRef, updates);
+      toast.success('Turno actualizado correctamente.');
+      setEditingAppt(null);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    }
+  };
+
   const handleUnblockTime = async () => {
     if (!selectedBarber || selectedTimesForBlocking.length === 0) return;
 
@@ -1107,7 +1139,22 @@ export const BookingSystem = () => {
                                       </button>
                                     )
                                   )}
-                                  <button onClick={() => handleCancelAppointment(appt)} className="text-crimson p-2 hover:bg-crimson/10 transition-colors">
+                                   <button
+                                     onClick={() => {
+                                       setEditingAppt(appt);
+                                       setEditForm({
+                                         customerName: appt.customerName,
+                                         customerPhone: appt.customerPhone,
+                                         service: appt.service,
+                                         customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
+                                       });
+                                     }}
+                                     className="text-charcoal hover:text-white p-2 hover:bg-white/10 transition-colors"
+                                     title="Editar turno"
+                                   >
+                                     <Edit2 className="w-4 h-4" />
+                                   </button>
+                                   <button onClick={() => handleCancelAppointment(appt)} className="text-crimson p-2 hover:bg-crimson/10 transition-colors">
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 </div>
@@ -1178,6 +1225,21 @@ export const BookingSystem = () => {
                                               </button>
                                             )
                                           )}
+                                          <button
+                                            onClick={() => {
+                                              setEditingAppt(appt);
+                                              setEditForm({
+                                                customerName: appt.customerName,
+                                                customerPhone: appt.customerPhone,
+                                                service: appt.service,
+                                                customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
+                                              });
+                                            }}
+                                            className="text-charcoal hover:text-white p-2 transition-colors border border-white/5 hover:border-white/30"
+                                            title="Editar Turno"
+                                          >
+                                            <Edit2 className="w-4 h-4" />
+                                          </button>
                                           <button
                                             onClick={() => handleCancelAppointment(appt)}
                                             className="text-crimson hover:text-white p-2 transition-colors border border-white/5 hover:border-crimson"
@@ -1841,5 +1903,109 @@ export const BookingSystem = () => {
         </div>
       )}
     </div>
+
+      {/* ── Edit Appointment Modal ── */}
+      <AnimatePresence>
+        {editingAppt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setEditingAppt(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 p-6 w-full max-w-md shadow-2xl"
+            >
+              <h3 className="font-display font-black uppercase text-xl mb-1 text-light-gray">Editar Turno</h3>
+              <p className="text-charcoal text-xs uppercase font-bold mb-6">
+                {editingAppt && format(editingAppt.startTime.toDate(), "EEEE dd/MM 'a las' HH:mm 'hs'", { locale: es })}
+              </p>
+
+              <div className="space-y-4">
+                {/* Nombre */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Nombre del Cliente</label>
+                  <input
+                    type="text"
+                    value={editForm.customerName}
+                    onChange={(e) => setEditForm({ ...editForm, customerName: e.target.value })}
+                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Teléfono */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={editForm.customerPhone}
+                    onChange={(e) => setEditForm({ ...editForm, customerPhone: e.target.value })}
+                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Servicio */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Tipo de Servicio</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['Corte', 'Corte y Barba', 'Barba'].map(svc => (
+                      <button
+                        key={svc}
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, service: svc })}
+                        className={`py-2 px-2 text-[10px] font-black uppercase border transition-all ${
+                          editForm.service === svc
+                            ? 'bg-crimson border-crimson text-white'
+                            : 'bg-black border-white/10 text-charcoal hover:border-white/30'
+                        }`}
+                      >
+                        {svc}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Precio personalizado */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">
+                    Precio Personalizado <span className="text-white/20 normal-case">(dejar vacío = precio estándar)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal font-bold text-sm">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.customPrice}
+                      onChange={(e) => setEditForm({ ...editForm, customPrice: e.target.value })}
+                      placeholder={String(SERVICES.find(s => s.name === editForm.service)?.price ?? '')}
+                      className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveEditAppointment}
+                  className="flex-1 bg-crimson py-3 font-display font-bold uppercase tracking-widest text-sm hover:bg-crimson/80 transition-all"
+                >
+                  Guardar Cambios
+                </button>
+                <button
+                  onClick={() => setEditingAppt(null)}
+                  className="px-6 py-3 border border-white/10 font-bold uppercase text-xs text-charcoal hover:border-white/30 hover:text-white transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
   );
 };
