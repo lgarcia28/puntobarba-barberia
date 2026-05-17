@@ -773,6 +773,7 @@ export const BookingSystem = () => {
   };
 
   return (
+    <>
     <div ref={containerRef} className="max-w-4xl mx-auto bg-zinc-900/50 border border-white/5 p-6 md:p-10 rounded-sm concrete-texture shadow-2xl">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-normal text-light-gray">
@@ -2007,5 +2008,6 @@ export const BookingSystem = () => {
           </motion.div>
         )}
       </AnimatePresence>
+    </>
   );
 };
