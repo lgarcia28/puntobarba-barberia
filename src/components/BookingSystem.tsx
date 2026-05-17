@@ -102,6 +102,7 @@ export const BookingSystem = () => {
   const [finanzasDate, setFinanzasDate] = useState(new Date());
   const [finanzasAppts, setFinanzasAppts] = useState<any[]>([]);
   const [finanzasViewMode, setFinanzasViewMode] = useState<'daily' | 'monthly'>('daily');
+  const finanzasDatePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getShopSettings().then((settings: any) => {
@@ -1561,30 +1562,53 @@ export const BookingSystem = () => {
             <h3 className="font-display font-black uppercase text-2xl text-light-gray flex items-center gap-3">
               <Database className="w-6 h-6 text-crimson" /> {finanzasViewMode === 'daily' ? 'Libro Diario' : 'Detalle Mensual'}
             </h3>
-            <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-              <div className="flex bg-zinc-800 rounded-sm overflow-hidden border border-white/10 shrink-0">
-                <button 
-                  onClick={() => setFinanzasViewMode('daily')}
-                  className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'daily' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
-                >
-                  Diario
-                </button>
-                <button 
-                  onClick={() => setFinanzasViewMode('monthly')}
-                  className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'monthly' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
-                >
-                  Mensual
+            
+            <div className="flex flex-col gap-4 w-full md:w-auto mt-2 md:mt-0">
+              {/* Controles Superiores: Diario/Mensual y Hoy */}
+              <div className="flex justify-between items-center w-full gap-2">
+                <div className="flex bg-zinc-800 rounded-sm overflow-hidden border border-white/10 shrink-0">
+                  <button 
+                    onClick={() => setFinanzasViewMode('daily')}
+                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'daily' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                  >
+                    Diario
+                  </button>
+                  <button 
+                    onClick={() => setFinanzasViewMode('monthly')}
+                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'monthly' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                  >
+                    Mensual
+                  </button>
+                </div>
+                <button onClick={() => setFinanzasDate(new Date())} className="px-4 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-xs font-black uppercase shrink-0">
+                  Hoy
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : addMonths(finanzasDate, -1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                <div className="relative flex items-center justify-center min-w-[150px] bg-zinc-800/50 py-2 px-3 rounded-sm">
-                  <CalendarIcon className="w-4 h-4 text-charcoal mr-2" />
-                  <span className="font-bold uppercase tracking-widest text-xs text-center capitalize">
+              {/* Controles de Fecha: Flechas y Calendario */}
+              <div className="flex items-center justify-between gap-2 w-full">
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : addMonths(finanzasDate, -1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                <div 
+                  className="relative flex items-center justify-center flex-1 bg-zinc-800/50 py-3 px-3 rounded-sm cursor-pointer hover:bg-zinc-800 transition-colors"
+                  onClick={() => {
+                    try {
+                      if (finanzasDatePickerRef.current && typeof finanzasDatePickerRef.current.showPicker === 'function') {
+                        finanzasDatePickerRef.current.showPicker();
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                >
+                  <CalendarIcon className="w-4 h-4 text-charcoal mr-2 shrink-0" />
+                  <span className="font-bold uppercase tracking-widest text-[11px] md:text-xs text-center capitalize line-clamp-1">
                     {format(finanzasDate, finanzasViewMode === 'daily' ? "EEEE dd/MM/yyyy" : "MMMM yyyy", { locale: es })}
                   </span>
                   <input 
+                    ref={finanzasDatePickerRef}
                     type={finanzasViewMode === 'daily' ? 'date' : 'month'}
                     value={format(finanzasDate, finanzasViewMode === 'daily' ? 'yyyy-MM-dd' : 'yyyy-MM')}
                     onChange={(e) => {
@@ -1593,11 +1617,14 @@ export const BookingSystem = () => {
                       }
                     }}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                    style={typeof window !== 'undefined' && 'showPicker' in HTMLInputElement.prototype ? { pointerEvents: 'none' } : {}}
                   />
                 </div>
-                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : addMonths(finanzasDate, 1))} className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"><ChevronRight className="w-4 h-4" /></button>
+
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : addMonths(finanzasDate, 1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-              <button onClick={() => setFinanzasDate(new Date())} className="px-4 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-xs font-black uppercase hidden lg:block shrink-0">Hoy</button>
             </div>
           </div>
 
