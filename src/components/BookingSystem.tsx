@@ -680,7 +680,12 @@ export const BookingSystem = () => {
   };
 
   const handleUnblockTime = async () => {
-    if (!selectedBarber || selectedTimesForBlocking.length === 0) return;
+    if (!selectedBarber) return;
+    if (!isRangeMode && selectedTimesForBlocking.length === 0) return;
+    if (isRangeMode && !blockingEndDate) {
+      alert('Por favor selecciona una fecha de fin (Hasta) para el desbloqueo de rango.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -692,6 +697,23 @@ export const BookingSystem = () => {
       for (const date of datesToUnblock) {
         const start = startOfDay(date);
         const end = endOfDay(date);
+        
+        let timesToUnblock = selectedTimesForBlocking;
+        
+        if (isRangeMode && selectedTimesForBlocking.length === 0) {
+          const dayOfWeek = getDay(date);
+          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+          
+          if (!daySchedule.isOpen) continue;
+          
+          const [startH, startM] = daySchedule.start.split(':').map(Number);
+          const [endH, endM] = daySchedule.end.split(':').map(Number);
+          
+          timesToUnblock = eachMinuteOfInterval({
+            start: setMinutes(setHours(startOfDay(date), startH), startM),
+            end: setMinutes(setHours(startOfDay(date), endH), endM)
+          }, { step: 30 }).map(t => format(t, 'HH:mm'));
+        }
 
         // Fetch all blocks for this date to find matches
         const q = query(
@@ -703,7 +725,7 @@ export const BookingSystem = () => {
         const snapshot = await getDocs(q);
         const dayBlocks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        for (const timeStr of selectedTimesForBlocking) {
+        for (const timeStr of timesToUnblock) {
           const [hours, minutes] = timeStr.split(':').map(Number);
           const startTime = setMinutes(setHours(startOfDay(date), hours), minutes);
           const tStr = format(startTime, 'HH:mm');
@@ -726,7 +748,12 @@ export const BookingSystem = () => {
   };
 
   const handleBlockTime = async () => {
-    if (!selectedBarber || selectedTimesForBlocking.length === 0) return;
+    if (!selectedBarber) return;
+    if (!isRangeMode && selectedTimesForBlocking.length === 0) return;
+    if (isRangeMode && !blockingEndDate) {
+      alert('Por favor selecciona una fecha de fin (Hasta) para el bloqueo de rango.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -738,9 +765,27 @@ export const BookingSystem = () => {
       const cancelledAppointments: any[] = [];
 
       for (const date of datesToBlock) {
-        // Fetch appointments for this date to check for cancellations
         const start = startOfDay(date);
         const end = endOfDay(date);
+        
+        let timesToBlock = selectedTimesForBlocking;
+        
+        if (isRangeMode && selectedTimesForBlocking.length === 0) {
+          const dayOfWeek = getDay(date);
+          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+          
+          if (!daySchedule.isOpen) continue;
+          
+          const [startH, startM] = daySchedule.start.split(':').map(Number);
+          const [endH, endM] = daySchedule.end.split(':').map(Number);
+          
+          timesToBlock = eachMinuteOfInterval({
+            start: setMinutes(setHours(startOfDay(date), startH), startM),
+            end: setMinutes(setHours(startOfDay(date), endH), endM)
+          }, { step: 30 }).map(t => format(t, 'HH:mm'));
+        }
+
+        // Fetch appointments for this date to check for cancellations
         const q = query(
           collection(db, 'appointments'),
           where('barberId', '==', selectedBarber.id),
@@ -751,7 +796,7 @@ export const BookingSystem = () => {
         const snapshot = await getDocs(q);
         const dayAppts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        for (const timeStr of selectedTimesForBlocking) {
+        for (const timeStr of timesToBlock) {
           const [hours, minutes] = timeStr.split(':').map(Number);
           const startTime = setMinutes(setHours(startOfDay(date), hours), minutes);
           const endTime = addMinutes(startTime, 30);
@@ -1097,8 +1142,19 @@ export const BookingSystem = () => {
                                 end: gridEnd
                               }, { step: 30 }).map(time => {
                             const tStr = format(time, 'HH:mm');
-                            const block = adminBlocks.find(b => format(b.startTime.toDate(), 'HH:mm') === tStr);
-                            const appt = adminAppts.find(a => format(a.startTime.toDate(), 'HH:mm') === tStr);
+                            const slotStart = time;
+                            const slotEnd = addMinutes(time, 30);
+                            
+                            const block = adminBlocks.find(b => {
+                              const bStart = b.startTime.toDate();
+                              const bEnd = b.endTime.toDate();
+                              return isBefore(slotStart, bEnd) && isAfter(slotEnd, bStart);
+                            });
+                            const appt = adminAppts.find(a => {
+                              const aStart = a.startTime.toDate();
+                              const aEnd = a.endTime.toDate();
+                              return isBefore(slotStart, aEnd) && isAfter(slotEnd, aStart);
+                            });
                             const isSelected = selectedTimesForBlocking.includes(tStr);
 
                             return (
@@ -1304,20 +1360,20 @@ export const BookingSystem = () => {
 
                     <button
                         onClick={handleBlockTime}
-                        disabled={selectedTimesForBlocking.length === 0 || loading}
+                        disabled={(!isRangeMode && selectedTimesForBlocking.length === 0) || loading}
                         className="flex-1 bg-crimson py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-crimson/80 transition-all"
                       >
                         {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : null}
-                        Bloquear / Cancelar Seleccionados ({selectedTimesForBlocking.length})
+                        {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Bloquear Rango Completo' : `Bloquear / Cancelar Seleccionados (${selectedTimesForBlocking.length})`}
                       </button>
 
-                      {selectedTimesForBlocking.length > 0 && (
+                      {(selectedTimesForBlocking.length > 0 || isRangeMode) && (
                         <button
                           onClick={handleUnblockTime}
                           disabled={loading}
                           className="bg-white text-black px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-50"
                         >
-                          Desbloquear Seleccionados
+                          {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Desbloquear Rango Completo' : 'Desbloquear Seleccionados'}
                         </button>
                       )}
                     </div>
