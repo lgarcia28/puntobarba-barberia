@@ -890,7 +890,7 @@ export const BookingSystem = () => {
                             <button
                               type="button"
                               onClick={() => { setAdminDate(startOfDay(new Date())); setSelectedTimesForBlocking([]); }}
-                              className="px-3 py-2 bg-zinc-800 hover:bg-white hover:text-black transition-all text-[10px] font-black uppercase"
+                              className="ml-auto px-5 py-2.5 bg-zinc-800 hover:bg-white hover:text-black transition-all text-xs font-black uppercase tracking-widest"
                             >
                               Hoy
                             </button>
@@ -1088,6 +1088,25 @@ export const BookingSystem = () => {
                                     <p className="font-display font-bold text-sm">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
                                     <p className="text-[10px] text-charcoal uppercase">{Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} min</p>
                                   </div>
+                                  {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 ? (
+                                    <button
+                                      onClick={() => handleUpdateDuration(appt, 30)}
+                                      className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                      title="Reducir a 30 minutos para liberar espacio"
+                                    >
+                                      Acortar a 30m
+                                    </button>
+                                  ) : (
+                                    appt.service === 'Corte y Barba' && (
+                                      <button
+                                        onClick={() => handleUpdateDuration(appt, 60)}
+                                        className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                        title="Volver a 60 minutos"
+                                      >
+                                        Deshacer
+                                      </button>
+                                    )
+                                  )}
                                   <button onClick={() => handleCancelAppointment(appt)} className="text-crimson p-2 hover:bg-crimson/10 transition-colors">
                                     <Trash2 className="w-4 h-4" />
                                   </button>
