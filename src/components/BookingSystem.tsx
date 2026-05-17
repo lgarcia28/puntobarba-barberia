@@ -1593,15 +1593,6 @@ export const BookingSystem = () => {
                 
                 <div 
                   className="relative flex items-center justify-center flex-1 bg-zinc-800/50 py-3 px-3 rounded-sm cursor-pointer hover:bg-zinc-800 transition-colors"
-                  onClick={() => {
-                    try {
-                      if (finanzasDatePickerRef.current && typeof finanzasDatePickerRef.current.showPicker === 'function') {
-                        finanzasDatePickerRef.current.showPicker();
-                      }
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  }}
                 >
                   <CalendarIcon className="w-4 h-4 text-charcoal mr-2 shrink-0" />
                   <span className="font-bold uppercase tracking-widest text-[11px] md:text-xs text-center capitalize line-clamp-1">
@@ -1616,8 +1607,16 @@ export const BookingSystem = () => {
                         setFinanzasDate(parseISO(finanzasViewMode === 'daily' ? e.target.value : e.target.value + '-01'));
                       }
                     }}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                    style={typeof window !== 'undefined' && 'showPicker' in HTMLInputElement.prototype ? { pointerEvents: 'none' } : {}}
+                    onClick={(e) => {
+                      try {
+                        if (typeof e.currentTarget.showPicker === 'function') {
+                          e.currentTarget.showPicker();
+                        }
+                      } catch (err) {
+                        // Ignorar: navegadores móviles usan su propio evento click nativo
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                   />
                 </div>
 
