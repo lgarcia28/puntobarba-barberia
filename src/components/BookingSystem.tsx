@@ -270,7 +270,7 @@ export const BookingSystem = () => {
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'appointments'));
 
     return () => unsubAppts();
-  }, [finanzasDate, isJose, activeAdminTab]);
+  }, [finanzasDate, isJose, activeAdminTab, finanzasViewMode]);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
