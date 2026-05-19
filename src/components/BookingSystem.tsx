@@ -101,7 +101,7 @@ export const BookingSystem = () => {
   // Finanzas State
   const [finanzasDate, setFinanzasDate] = useState(new Date());
   const [finanzasAppts, setFinanzasAppts] = useState<any[]>([]);
-  const [finanzasViewMode, setFinanzasViewMode] = useState<'daily' | 'monthly'>('daily');
+  const [finanzasViewMode, setFinanzasViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const finanzasDatePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -250,6 +250,9 @@ export const BookingSystem = () => {
     if (finanzasViewMode === 'monthly') {
       start = startOfMonth(finanzasDate);
       end = endOfMonth(finanzasDate);
+    } else if (finanzasViewMode === 'weekly') {
+      start = startOfWeek(finanzasDate, { weekStartsOn: 1 });
+      end = endOfWeek(finanzasDate, { weekStartsOn: 1 });
     } else {
       start = startOfDay(finanzasDate);
       end = endOfDay(finanzasDate);
@@ -549,6 +552,13 @@ export const BookingSystem = () => {
   };
 
   const handleCancelAppointment = async (appt: any) => {
+    if (!isBarberAdmin) {
+      const timeDiff = appt.startTime.toDate().getTime() - new Date().getTime();
+      if (timeDiff <= 2 * 60 * 60 * 1000) {
+        toast.error('No se puede cancelar o reprogramar un turno con menos de 2 horas de anticipación.');
+        return;
+      }
+    }
     if (appt.isFixed && appt.groupId) {
       const isSeries = window.confirm(
         'Este es un turno fijo semanal.\n\n¿Deseas cancelar TODA LA SERIE de turnos futuros?\n(Haz clic en Aceptar para cancelar todos, o Cancelar para la siguiente opción)'
@@ -1616,7 +1626,7 @@ export const BookingSystem = () => {
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-black p-6 border border-white/5 gap-4">
             <h3 className="font-display font-black uppercase text-2xl text-light-gray flex items-center gap-3">
-              <Database className="w-6 h-6 text-crimson" /> {finanzasViewMode === 'daily' ? 'Libro Diario' : 'Detalle Mensual'}
+              <Database className="w-6 h-6 text-crimson" /> {finanzasViewMode === 'daily' ? 'Libro Diario' : finanzasViewMode === 'weekly' ? 'Detalle Semanal' : 'Detalle Mensual'}
             </h3>
             
             <div className="flex flex-col gap-4 w-full md:w-auto mt-2 md:mt-0">
@@ -1628,6 +1638,12 @@ export const BookingSystem = () => {
                     className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'daily' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
                   >
                     Diario
+                  </button>
+                  <button 
+                    onClick={() => setFinanzasViewMode('weekly')}
+                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'weekly' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                  >
+                    Semanal
                   </button>
                   <button 
                     onClick={() => setFinanzasViewMode('monthly')}
@@ -1643,7 +1659,7 @@ export const BookingSystem = () => {
 
               {/* Controles de Fecha: Flechas y Calendario */}
               <div className="flex items-center justify-between gap-2 w-full">
-                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : addMonths(finanzasDate, -1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : finanzasViewMode === 'weekly' ? addDays(finanzasDate, -7) : addMonths(finanzasDate, -1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 
@@ -1652,15 +1668,15 @@ export const BookingSystem = () => {
                 >
                   <CalendarIcon className="w-4 h-4 text-charcoal mr-2 shrink-0" />
                   <span className="font-bold uppercase tracking-widest text-[11px] md:text-xs text-center capitalize line-clamp-1">
-                    {format(finanzasDate, finanzasViewMode === 'daily' ? "EEEE dd/MM/yyyy" : "MMMM yyyy", { locale: es })}
+                    {format(finanzasDate, finanzasViewMode === 'daily' ? "EEEE dd/MM/yyyy" : finanzasViewMode === 'weekly' ? "'Semana del' dd/MM/yyyy" : "MMMM yyyy", { locale: es })}
                   </span>
                   <input 
                     ref={finanzasDatePickerRef}
-                    type={finanzasViewMode === 'daily' ? 'date' : 'month'}
-                    value={format(finanzasDate, finanzasViewMode === 'daily' ? 'yyyy-MM-dd' : 'yyyy-MM')}
+                    type={finanzasViewMode === 'monthly' ? 'month' : 'date'}
+                    value={format(finanzasDate, finanzasViewMode === 'monthly' ? 'yyyy-MM' : 'yyyy-MM-dd')}
                     onChange={(e) => {
                       if (e.target.value) {
-                        setFinanzasDate(parseISO(finanzasViewMode === 'daily' ? e.target.value : e.target.value + '-01'));
+                        setFinanzasDate(parseISO(finanzasViewMode === 'monthly' ? e.target.value + '-01' : e.target.value));
                       }
                     }}
                     onClick={(e) => {
@@ -1676,7 +1692,7 @@ export const BookingSystem = () => {
                   />
                 </div>
 
-                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : addMonths(finanzasDate, 1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : finanzasViewMode === 'weekly' ? addDays(finanzasDate, 7) : addMonths(finanzasDate, 1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -1829,27 +1845,44 @@ export const BookingSystem = () => {
                             <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
                           </div>
                           <div className="flex gap-2 mt-0 md:mt-2">
-                             <button
-                               onClick={() => handleCancelAppointment(appt)}
-                               className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-3 py-2 hover:border-crimson hover:text-crimson transition-colors"
-                             >
-                               Cancelar
-                             </button>
-                             <button
-                               onClick={() => {
-                                  if (window.confirm('Para reprogramar, elige tu nuevo horario. El turno actual se cancelará automáticamente cuando confirmes el nuevo. ¿Continuar?')) {
-                                      setSelectedBarber(b || null);
-                                      setSelectedService(SERVICES.find(s => s.name === appt.service) || null);
-                                      setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
-                                      setReschedulingApptId(appt.id);
-                                      setStep(3); // Go to date selection
-                                      setBookingTab('agendar');
-                                  }
-                               }}
-                               className="text-[10px] font-bold uppercase tracking-widest bg-crimson text-white px-3 py-2 hover:bg-crimson/80 transition-colors"
-                             >
-                               Reprogramar
-                             </button>
+                             {(() => {
+                               const timeDiff = appt.startTime.toDate().getTime() - new Date().getTime();
+                               const canCancel = isBarberAdmin || timeDiff > 2 * 60 * 60 * 1000;
+                               
+                               if (!canCancel) {
+                                 return (
+                                   <span className="text-[10px] font-bold uppercase text-charcoal tracking-widest px-3 py-2 border border-white/5 whitespace-nowrap">
+                                     No cancelable (&lt; 2hs)
+                                   </span>
+                                 );
+                               }
+
+                               return (
+                                 <>
+                                   <button
+                                     onClick={() => handleCancelAppointment(appt)}
+                                     className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-3 py-2 hover:border-crimson hover:text-crimson transition-colors"
+                                   >
+                                     Cancelar
+                                   </button>
+                                   <button
+                                     onClick={() => {
+                                        if (window.confirm('Para reprogramar, elige tu nuevo horario. El turno actual se cancelará automáticamente cuando confirmes el nuevo. ¿Continuar?')) {
+                                            setSelectedBarber(b || null);
+                                            setSelectedService(SERVICES.find(s => s.name === appt.service) || null);
+                                            setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+                                            setReschedulingApptId(appt.id);
+                                            setStep(3); // Go to date selection
+                                            setBookingTab('agendar');
+                                        }
+                                     }}
+                                     className="text-[10px] font-bold uppercase tracking-widest bg-crimson text-white px-3 py-2 hover:bg-crimson/80 transition-colors"
+                                   >
+                                     Reprogramar
+                                   </button>
+                                 </>
+                               );
+                             })()}
                           </div>
                         </div>
                       </div>

@@ -2,8 +2,58 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import dotenv from "dotenv";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import fs from 'fs';
 
 dotenv.config();
+
+let firebaseApp;
+let db: any;
+try {
+  const firebaseConfig = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf-8'));
+  firebaseApp = initializeApp(firebaseConfig);
+  db = getFirestore(firebaseApp);
+} catch (e) {
+  console.error("No se pudo inicializar Firebase en el servidor:", e);
+}
+
+async function sendWhatsAppMessage(phone: string, message: string) {
+  let formattedPhone = phone.replace(/\D/g, "");
+  if (formattedPhone.length === 10) {
+    formattedPhone = "549" + formattedPhone;
+  } else if (formattedPhone.startsWith("54") && formattedPhone.length === 12) {
+    formattedPhone = "549" + formattedPhone.substring(2);
+  } else if (formattedPhone.startsWith("0")) {
+    formattedPhone = "549" + formattedPhone.substring(1);
+  }
+
+  const GREEN_API_ID = process.env.GREEN_API_ID;
+  const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN;
+  const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
+
+  if (N8N_WEBHOOK_URL) {
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: formattedPhone, message })
+    });
+    if (!response.ok) throw new Error("Error enviando al webhook de n8n");
+    return { success: true, method: "n8n" };
+  } else if (GREEN_API_ID && GREEN_API_TOKEN) {
+    const url = `https://api.green-api.com/waInstance${GREEN_API_ID}/sendMessage/${GREEN_API_TOKEN}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chatId: `${formattedPhone}@c.us`, message })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Error en Green API");
+    return { success: true, method: "green_api", data };
+  } else {
+    throw new Error("API de mensajes no configurada");
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -11,16 +61,14 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Define API routes FIRST
   app.post("/api/send-whatsapp", async (req, res) => {
     try {
-      const { phone, customerName, service, barber, date, time } = req.body;
+      const { phone, customerName, service, barber, date, time, action } = req.body;
       
       if (!phone || !customerName || !date || !time) {
         return res.status(400).json({ error: "Faltan datos requeridos" });
       }
 
-      // Extraer el primer nombre y asegurar mayúscula inicial
       let firstName = customerName.trim().split(" ")[0];
       if (firstName) {
         firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
@@ -28,79 +76,88 @@ async function startServer() {
         firstName = "Cliente";
       }
 
-      // Format phone number to E.164 without '+' (e.g., 549341...)
-      let formattedPhone = phone.replace(/\D/g, "");
-      
-      // En Argentina, WhatsApp requiere el formato 549 + código de área + número
-      // Si el usuario ingresa 10 dígitos (ej: 3416055274), le agregamos 549
-      if (formattedPhone.length === 10) {
-        formattedPhone = "549" + formattedPhone;
-      } else if (formattedPhone.startsWith("54") && formattedPhone.length === 12) {
-        // Si ingresaron 54 + 10 dígitos pero les faltó el 9
-        formattedPhone = "549" + formattedPhone.substring(2);
-      } else if (formattedPhone.startsWith("0")) {
-        // Si arrancan con 0 (ej: 0341...), sacamos el 0 y agregamos 549
-        formattedPhone = "549" + formattedPhone.substring(1);
-      }
-
-      // Para Green API directamente:
-      const GREEN_API_ID = process.env.GREEN_API_ID;
-      const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN;
-      
-      // Para un Webhook de n8n:
-      const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
-
-      const message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
-
-      if (N8N_WEBHOOK_URL) {
-        // Opción 1: Enviar a n8n
-        const response = await fetch(N8N_WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone: formattedPhone,
-            message: message,
-            customerName,
-            date,
-            time,
-            service,
-            barber
-          })
-        });
-        
-        if (!response.ok) throw new Error("Error enviando al webhook de n8n");
-        return res.status(200).json({ success: true, method: "n8n" });
-
-      } else if (GREEN_API_ID && GREEN_API_TOKEN) {
-        // Opción 2: Enviar directo a Green API
-        // El formato de chatId en Green API suele ser número + @c.us
-        const url = `https://api.green-api.com/waInstance${GREEN_API_ID}/sendMessage/${GREEN_API_TOKEN}`;
-        
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chatId: `${formattedPhone}@c.us`,
-            message: message
-          })
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Error en Green API");
-        return res.status(200).json({ success: true, method: "green_api", data });
-
+      let message = "";
+      if (action === 'cancel_single' || action === 'cancel_series') {
+        message = `Hola ${firstName},\nLamentamos informarte que tu turno en ResetART para el día ${date} a las ${time} HS ha sido cancelado.\n\nSi deseas reprogramar, puedes hacerlo desde nuestra web.`;
+      } else if (action === 'reschedule') {
+        message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido reprogramado con éxito.\n\n📅 Nueva Fecha: ${date}\n⏰ Nueva Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
       } else {
-        console.warn("Falta configuración de WhatsApp en .env (N8N_WEBHOOK_URL o credenciales de Green API)");
-        return res.status(500).json({ error: "API de mensajes no configurada" });
+        message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
       }
 
+      const result = await sendWhatsAppMessage(phone, message);
+      return res.status(200).json(result);
     } catch (error: any) {
       console.error("Error sending message:", error.message);
       res.status(500).json({ error: "Error enviando el mensaje", details: error.message });
     }
   });
 
-  // Vite middleware for development (must be AFTER api routes)
+  if (db) {
+    // Check reminders every 5 minutes
+    setInterval(async () => {
+      try {
+        const now = new Date();
+        const q = query(
+          collection(db, 'appointments'),
+          where('status', '==', 'confirmed'),
+          where('startTime', '>=', Timestamp.fromDate(now))
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        for (const docSnap of snapshot.docs) {
+          const appt = docSnap.data();
+          if (appt.reminderSent) continue;
+          
+          const startTime = appt.startTime.toDate();
+          const startHour = startTime.getHours();
+          const startMinutes = startTime.getMinutes();
+          const timeFloat = startHour + startMinutes / 60;
+          
+          let shouldSend = false;
+          
+          if (timeFloat >= 12) {
+            const diffHours = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+            if (diffHours <= 4 && diffHours > 0) {
+              shouldSend = true;
+            }
+          } else {
+            const diffHours = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+            const isPreviousDay = now.getDate() === new Date(startTime.getTime() - 24*60*60*1000).getDate() && now.getMonth() === startTime.getMonth();
+            const isPast9PM = now.getHours() >= 21;
+            
+            if (isPreviousDay && isPast9PM) {
+              shouldSend = true;
+            } else if (diffHours <= 12 && now.getDate() === startTime.getDate()) {
+              shouldSend = true;
+            }
+          }
+          
+          if (shouldSend) {
+            let firstName = (appt.customerName || "Cliente").trim().split(" ")[0];
+            if (firstName) firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            
+            const dateStr = `${startTime.getDate().toString().padStart(2, '0')}/${(startTime.getMonth() + 1).toString().padStart(2, '0')}/${startTime.getFullYear()}`;
+            const timeStr = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+            
+            const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
+            
+            try {
+              await sendWhatsAppMessage(appt.customerPhone, message);
+              await updateDoc(doc(db, 'appointments', docSnap.id), { reminderSent: true });
+              console.log(`Recordatorio enviado a ${appt.customerPhone} para el turno de las ${timeStr}`);
+            } catch (waErr) {
+              console.error(`Error enviando recordatorio a ${appt.customerPhone}:`, waErr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error en cron de recordatorios:", err);
+      }
+    }, 5 * 60 * 1000);
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -114,8 +171,6 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
-
-
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
