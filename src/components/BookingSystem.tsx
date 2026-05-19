@@ -1667,8 +1667,8 @@ export const BookingSystem = () => {
                   className="relative flex items-center justify-center flex-1 bg-zinc-800/50 py-3 px-3 rounded-sm cursor-pointer hover:bg-zinc-800 transition-colors"
                 >
                   <CalendarIcon className="w-4 h-4 text-charcoal mr-2 shrink-0" />
-                  <span className="font-bold uppercase tracking-widest text-[11px] md:text-xs text-center capitalize line-clamp-1">
-                    {format(finanzasDate, finanzasViewMode === 'daily' ? "EEEE dd/MM/yyyy" : finanzasViewMode === 'weekly' ? "'Semana del' dd/MM/yyyy" : "MMMM yyyy", { locale: es })}
+                  <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-center capitalize line-clamp-1">
+                    {format(finanzasDate, finanzasViewMode === 'daily' ? "EEEE dd/MM/yyyy" : finanzasViewMode === 'weekly' ? "'Sem.' dd/MM/yyyy" : "MMMM yyyy", { locale: es })}
                   </span>
                   <input 
                     ref={finanzasDatePickerRef}
