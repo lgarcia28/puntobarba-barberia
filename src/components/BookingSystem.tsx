@@ -1833,18 +1833,18 @@ export const BookingSystem = () => {
                   {myAppointments.map(appt => {
                     const b = barbers.find(b => b.id === appt.barberId);
                     return (
-                      <div key={appt.id} className="p-4 border border-white/5 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div key={appt.id} className="p-4 border border-white/5 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
                         <div>
                           <p className="font-display font-bold uppercase text-lg">{appt.service}</p>
                           <p className="text-charcoal text-sm">con {b ? b.name : 'Barbero'}</p>
                           {appt.isFixed && <p className="text-xs text-crimson font-bold uppercase mt-1">Turno Fijo</p>}
                         </div>
-                        <div className="text-left md:text-right flex-1 md:flex-none w-full md:w-auto flex justify-between md:flex-col items-center md:items-end">
+                        <div className="text-left md:text-right w-full md:w-auto flex flex-col items-start md:items-end">
                           <div>
-                            <p className="font-display font-bold text-crimson capitalize whitespace-nowrap text-sm md:text-base">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
+                            <p className="font-display font-bold text-crimson capitalize whitespace-nowrap">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
                             <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
                           </div>
-                          <div className="flex gap-2 mt-0 md:mt-2">
+                          <div className="flex gap-2 mt-3 md:mt-2 w-full md:w-auto justify-start md:justify-end">
                              {(() => {
                                const timeDiff = appt.startTime.toDate().getTime() - new Date().getTime();
                                const canCancel = isBarberAdmin || timeDiff > 2 * 60 * 60 * 1000;
