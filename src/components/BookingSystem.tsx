@@ -1841,7 +1841,7 @@ export const BookingSystem = () => {
                         </div>
                         <div className="text-left md:text-right flex-1 md:flex-none w-full md:w-auto flex justify-between md:flex-col items-center md:items-end">
                           <div>
-                            <p className="font-display font-bold text-crimson capitalize">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
+                            <p className="font-display font-bold text-crimson capitalize whitespace-nowrap text-sm md:text-base">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
                             <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
                           </div>
                           <div className="flex gap-2 mt-0 md:mt-2">
