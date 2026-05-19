@@ -3,7 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import dotenv from "dotenv";
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp, getDoc } from 'firebase/firestore';
 import fs from 'fs';
 
 dotenv.config();
@@ -141,7 +141,19 @@ async function startServer() {
             const dateStr = `${startTime.getDate().toString().padStart(2, '0')}/${(startTime.getMonth() + 1).toString().padStart(2, '0')}/${startTime.getFullYear()}`;
             const timeStr = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
             
-            const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
+            let barberName = "Barbero";
+            if (appt.barberId) {
+              try {
+                const barberDoc = await getDoc(doc(db, 'barbers', appt.barberId));
+                if (barberDoc.exists()) {
+                  barberName = barberDoc.data().name || "Barbero";
+                }
+              } catch (e) {
+                console.error("Error obteniendo barbero:", e);
+              }
+            }
+
+            const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
             
             try {
               await sendWhatsAppMessage(appt.customerPhone, message);
