@@ -111,25 +111,39 @@ async function startServer() {
           if (appt.reminderSent) continue;
           
           const startTime = appt.startTime.toDate();
-          const startHour = startTime.getHours();
-          const startMinutes = startTime.getMinutes();
+          
+          // Obtener la fecha y hora exacta en la zona horaria de Argentina (UTC-3)
+          const argStartTime = new Date(startTime.getTime() - 3 * 3600000);
+          const argNow = new Date(now.getTime() - 3 * 3600000);
+          
+          const startHour = argStartTime.getUTCHours();
+          const startMinutes = argStartTime.getUTCMinutes();
           const timeFloat = startHour + startMinutes / 60;
           
           let shouldSend = false;
+          const diffHours = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
           
           if (timeFloat >= 12) {
-            const diffHours = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+            // Turnos de tarde: recordatorio 4 horas antes
             if (diffHours <= 4 && diffHours > 0) {
               shouldSend = true;
             }
           } else {
-            const diffHours = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-            const isPreviousDay = now.getDate() === new Date(startTime.getTime() - 24*60*60*1000).getDate() && now.getMonth() === startTime.getMonth();
-            const isPast9PM = now.getHours() >= 21;
+            // Turnos de mañana: recordatorio el día anterior después de las 21hs, o el mismo día si hay menos de 12hs
+            const previousDayDate = new Date(argStartTime.getTime() - 24 * 3600000);
+            const isPreviousDay = argNow.getUTCDate() === previousDayDate.getUTCDate() && 
+                                  argNow.getUTCMonth() === previousDayDate.getUTCMonth() &&
+                                  argNow.getUTCFullYear() === previousDayDate.getUTCFullYear();
+            
+            const isPast9PM = argNow.getUTCHours() >= 21;
+            
+            const isSameDay = argNow.getUTCDate() === argStartTime.getUTCDate() &&
+                              argNow.getUTCMonth() === argStartTime.getUTCMonth() &&
+                              argNow.getUTCFullYear() === argStartTime.getUTCFullYear();
             
             if (isPreviousDay && isPast9PM) {
               shouldSend = true;
-            } else if (diffHours <= 12 && now.getDate() === startTime.getDate()) {
+            } else if (isSameDay && diffHours <= 12 && diffHours > 0) {
               shouldSend = true;
             }
           }
@@ -138,8 +152,8 @@ async function startServer() {
             let firstName = (appt.customerName || "Cliente").trim().split(" ")[0];
             if (firstName) firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
             
-            const dateStr = `${startTime.getDate().toString().padStart(2, '0')}/${(startTime.getMonth() + 1).toString().padStart(2, '0')}/${startTime.getFullYear()}`;
-            const timeStr = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+            const dateStr = `${argStartTime.getUTCDate().toString().padStart(2, '0')}/${(argStartTime.getUTCMonth() + 1).toString().padStart(2, '0')}/${argStartTime.getUTCFullYear()}`;
+            const timeStr = `${argStartTime.getUTCHours().toString().padStart(2, '0')}:${argStartTime.getUTCMinutes().toString().padStart(2, '0')}`;
             
             let barberName = "Barbero";
             if (appt.barberId) {
