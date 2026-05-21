@@ -13,7 +13,7 @@ let db: any;
 try {
   const firebaseConfig = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf-8'));
   firebaseApp = initializeApp(firebaseConfig);
-  db = getFirestore(firebaseApp);
+  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 } catch (e) {
   console.error("No se pudo inicializar Firebase en el servidor:", e);
 }
