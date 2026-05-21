@@ -89,26 +89,31 @@ export async function processReminders(db: any) {
       const diffHours = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
       
       if (timeFloat >= 12) {
-        // Turnos de tarde: recordatorio 4 horas antes
+        // Turnos de tarde (12:00 hs en adelante): recordatorio 4 horas antes
         if (diffHours <= 4 && diffHours > 0) {
           shouldSend = true;
         }
       } else {
-        // Turnos de mañana: recordatorio el día anterior después de las 21hs, o el mismo día si hay menos de 12hs
+        // Turnos de mañana (antes de las 12:00 hs): el día anterior entre las 20:30 y las 21:30 hs
         const previousDayDate = new Date(argStartTime.getTime() - 24 * 3600000);
         const isPreviousDay = argNow.getUTCDate() === previousDayDate.getUTCDate() && 
                               argNow.getUTCMonth() === previousDayDate.getUTCMonth() &&
                               argNow.getUTCFullYear() === previousDayDate.getUTCFullYear();
         
-        const isPast9PM = argNow.getUTCHours() >= 21;
+        const nowHour = argNow.getUTCHours();
+        const nowMinutes = argNow.getUTCMinutes();
+        const nowFloat = nowHour + nowMinutes / 60;
+        
+        const isBetweenWindow = nowFloat >= 20.5 && nowFloat <= 21.5; // Entre las 20:30 y las 21:30 hs
         
         const isSameDay = argNow.getUTCDate() === argStartTime.getUTCDate() &&
                           argNow.getUTCMonth() === argStartTime.getUTCMonth() &&
                           argNow.getUTCFullYear() === argStartTime.getUTCFullYear();
         
-        if (isPreviousDay && isPast9PM) {
+        if (isPreviousDay && isBetweenWindow) {
           shouldSend = true;
         } else if (isSameDay && diffHours <= 12 && diffHours > 0) {
+          // Respaldo para reservas de último momento hechas el mismo día
           shouldSend = true;
         }
       }
