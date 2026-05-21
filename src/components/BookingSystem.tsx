@@ -8,6 +8,7 @@ import {
   Timestamp,
   runTransaction,
   doc,
+  getDoc,
   getDocs,
   updateDoc,
   orderBy,
@@ -183,6 +184,9 @@ export const BookingSystem = () => {
 
   useEffect(() => {
     if (!selectedBarber) return;
+
+    setAppointments([]);
+    setBlocks([]);
 
     const start = startOfDay(selectedDate);
     const end = endOfDay(selectedDate);
@@ -412,8 +416,26 @@ export const BookingSystem = () => {
         let booksCount = 0;
         let lastDateBooked = baseStartTime;
 
-        // Si estamos reprogramando, cancelamos el turno anterior
+        // Si estamos reprogramando, liberamos sus slots y cancelamos el turno anterior
         if (reschedulingApptId) {
+          const oldSnapshot = await getDoc(doc(db, 'appointments', reschedulingApptId));
+          if (oldSnapshot.exists()) {
+            const oldApptData = oldSnapshot.data();
+            if (oldApptData && oldApptData.status === 'confirmed') {
+              const oldStart = oldApptData.startTime.toDate();
+              const oldEnd = oldApptData.endTime.toDate();
+              const oldBarberId = oldApptData.barberId;
+              const oldDuration = Math.round((oldEnd.getTime() - oldStart.getTime()) / (60 * 1000));
+              const oldIntervalsCount = Math.ceil(oldDuration / 30);
+              const oldSlotDateStr = format(oldStart, 'yyyy-MM-dd');
+              for (let i = 0; i < oldIntervalsCount; i++) {
+                const slotTime = addMinutes(oldStart, i * 30);
+                const timeStr = format(slotTime, 'HH:mm');
+                const slotId = `${oldBarberId}_${oldSlotDateStr}_${timeStr}`;
+                batch.delete(doc(db, 'slots', slotId));
+              }
+            }
+          }
           batch.update(doc(db, 'appointments', reschedulingApptId), { status: 'cancelled' });
         }
 
@@ -453,6 +475,22 @@ export const BookingSystem = () => {
               isFixed: true,
               groupId: groupId
             });
+
+            // Escribir los slots para el turno fijo
+            const durationMin = selectedService.duration;
+            const intervalsCount = Math.ceil(durationMin / 30);
+            const slotDateStr = format(currentStartTime, 'yyyy-MM-dd');
+            for (let i = 0; i < intervalsCount; i++) {
+              const slotTime = addMinutes(currentStartTime, i * 30);
+              const timeStr = format(slotTime, 'HH:mm');
+              const slotId = `${selectedBarber.id}_${slotDateStr}_${timeStr}`;
+              batch.set(doc(db, 'slots', slotId), {
+                barberId: selectedBarber.id,
+                startTime: Timestamp.fromDate(slotTime),
+                appointmentId: apptRef.id
+              });
+            }
+
             booksCount++;
             lastDateBooked = currentStartTime;
           }
@@ -491,27 +529,59 @@ export const BookingSystem = () => {
 
       } else {
         await runTransaction(db, async (transaction) => {
-          // Double check availability inside transaction for concurrency control
-          const q = query(
-            collection(db, 'appointments'),
-            where('barberId', '==', selectedBarber.id),
-            where('startTime', '>=', Timestamp.fromDate(startOfDay(selectedDate))),
-            where('startTime', '<=', Timestamp.fromDate(endOfDay(selectedDate))),
-            where('status', '==', 'confirmed')
-          );
-          const snapshot = await getDocs(q);
-          const existingAppts = snapshot.docs.map(d => d.data());
+          // Calcular los slots de 30 minutos requeridos por el servicio
+          const durationMin = selectedService.duration;
+          const intervalsCount = Math.ceil(durationMin / 30);
+          const slotTimeKeys: string[] = [];
+          const slotDateStr = format(baseStartTime, 'yyyy-MM-dd');
 
-          const isOccupied = existingAppts.some(appt => {
-            const apptStart = (appt as any).startTime.toDate();
-            const apptEnd = (appt as any).endTime.toDate();
-            return (isBefore(baseStartTime, apptEnd) && isAfter(baseEndTime, apptStart));
+          for (let i = 0; i < intervalsCount; i++) {
+            const slotTime = addMinutes(baseStartTime, i * 30);
+            const timeStr = format(slotTime, 'HH:mm');
+            slotTimeKeys.push(`${selectedBarber.id}_${slotDateStr}_${timeStr}`);
+          }
+
+          // Si estamos reprogramando, calculamos los slots del turno anterior para permitirlos
+          const oldSlotsToFree: string[] = [];
+          if (reschedulingApptId) {
+            const oldSnapshot = await transaction.get(doc(db, 'appointments', reschedulingApptId));
+            if (oldSnapshot.exists()) {
+              const oldApptData = oldSnapshot.data();
+              if (oldApptData && oldApptData.status === 'confirmed') {
+                const oldStart = oldApptData.startTime.toDate();
+                const oldEnd = oldApptData.endTime.toDate();
+                const oldBarberId = oldApptData.barberId;
+                const oldDuration = Math.round((oldEnd.getTime() - oldStart.getTime()) / (60 * 1000));
+                const oldIntervalsCount = Math.ceil(oldDuration / 30);
+                const oldSlotDateStr = format(oldStart, 'yyyy-MM-dd');
+                for (let i = 0; i < oldIntervalsCount; i++) {
+                  const slotTime = addMinutes(oldStart, i * 30);
+                  const timeStr = format(slotTime, 'HH:mm');
+                  oldSlotsToFree.push(`${oldBarberId}_${oldSlotDateStr}_${timeStr}`);
+                }
+              }
+            }
+          }
+
+          // Comprobar la disponibilidad real e indiscutible leyendo los slots en la transacción
+          const slotDocRefs = slotTimeKeys.map(key => doc(db, 'slots', key));
+          const slotSnapshots = await Promise.all(slotDocRefs.map(ref => transaction.get(ref)));
+
+          const isOccupied = slotSnapshots.some((snap, idx) => {
+            if (!snap.exists()) return false;
+            const key = slotTimeKeys[idx];
+            // Si el slot pertenece al turno que estamos reprogramando, no está ocupado
+            if (oldSlotsToFree.includes(key)) {
+              return false;
+            }
+            return true;
           });
 
           if (isOccupied) {
             throw new Error('Turno ya ocupado. Por favor elige otro horario.');
           }
 
+          // Crear el documento del turno
           const apptRef = doc(collection(db, 'appointments'));
           transaction.set(apptRef, {
             barberId: selectedBarber.id,
@@ -524,8 +594,20 @@ export const BookingSystem = () => {
             createdAt: Timestamp.now()
           });
 
-          // Si estamos reprogramando, cancelamos el turno anterior
+          // Escribir los slots individuales ocupados en Firestore
+          slotDocRefs.forEach((ref, idx) => {
+            transaction.set(ref, {
+              barberId: selectedBarber.id,
+              startTime: Timestamp.fromDate(addMinutes(baseStartTime, idx * 30)),
+              appointmentId: apptRef.id
+            });
+          });
+
+          // Si estamos reprogramando, liberamos sus slots y cancelamos el turno anterior
           if (reschedulingApptId) {
+            oldSlotsToFree.forEach(key => {
+              transaction.delete(doc(db, 'slots', key));
+            });
             transaction.update(doc(db, 'appointments', reschedulingApptId), { status: 'cancelled' });
           }
         });
@@ -586,7 +668,24 @@ export const BookingSystem = () => {
           const snapshot = await getDocs(q);
           const batch = writeBatch(db);
           snapshot.docs.forEach(d => {
+             const data = d.data() as any;
              batch.update(d.ref, { status: 'cancelled' });
+
+             // Liberar los slots para cada turno de la serie cancelado
+             if (data.status === 'confirmed') {
+               const start = data.startTime.toDate();
+               const end = data.endTime.toDate();
+               const durationMin = Math.round((end.getTime() - start.getTime()) / (60 * 1000));
+               const intervalsCount = Math.ceil(durationMin / 30);
+               const slotDateStr = format(start, 'yyyy-MM-dd');
+
+               for (let i = 0; i < intervalsCount; i++) {
+                 const slotTime = addMinutes(start, i * 30);
+                 const timeStr = format(slotTime, 'HH:mm');
+                 const slotId = `${data.barberId}_${slotDateStr}_${timeStr}`;
+                 batch.delete(doc(db, 'slots', slotId));
+               }
+             }
           });
           await batch.commit();
           toast.success('Serie de turnos cancelada correctamente.');
@@ -630,8 +729,24 @@ export const BookingSystem = () => {
     }
 
     try {
-      const apptRef = doc(db, 'appointments', appt.id);
-      await updateDoc(apptRef, { status: 'cancelled' });
+      await runTransaction(db, async (transaction) => {
+        const apptRef = doc(db, 'appointments', appt.id);
+        transaction.update(apptRef, { status: 'cancelled' });
+
+        // Liberar slots ocupados
+        const start = appt.startTime.toDate();
+        const end = appt.endTime.toDate();
+        const durationMin = Math.round((end.getTime() - start.getTime()) / (60 * 1000));
+        const intervalsCount = Math.ceil(durationMin / 30);
+        const slotDateStr = format(start, 'yyyy-MM-dd');
+
+        for (let i = 0; i < intervalsCount; i++) {
+          const slotTime = addMinutes(start, i * 30);
+          const timeStr = format(slotTime, 'HH:mm');
+          const slotId = `${appt.barberId}_${slotDateStr}_${timeStr}`;
+          transaction.delete(doc(db, 'slots', slotId));
+        }
+      });
       toast.success('Turno cancelado correctamente.');
       
       try {
@@ -834,6 +949,20 @@ export const BookingSystem = () => {
             const apptRef = doc(db, 'appointments', apptToCancel.id);
             batch.update(apptRef, { status: 'cancelled' });
             cancelledAppointments.push(apptToCancel);
+
+            // Liberar slots ocupados por el turno cancelado debido al bloqueo
+            const start = (apptToCancel as any).startTime.toDate();
+            const end = (apptToCancel as any).endTime.toDate();
+            const durationMin = Math.round((end.getTime() - start.getTime()) / (60 * 1000));
+            const intervalsCount = Math.ceil(durationMin / 30);
+            const slotDateStr = format(start, 'yyyy-MM-dd');
+
+            for (let i = 0; i < intervalsCount; i++) {
+              const slotTime = addMinutes(start, i * 30);
+              const timeStr = format(slotTime, 'HH:mm');
+              const slotId = `${(apptToCancel as any).barberId}_${slotDateStr}_${timeStr}`;
+              batch.delete(doc(db, 'slots', slotId));
+            }
           }
 
           // Use deterministic ID to avoid duplicates

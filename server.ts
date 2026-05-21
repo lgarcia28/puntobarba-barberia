@@ -3,7 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import dotenv from "dotenv";
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp, getDoc, runTransaction } from 'firebase/firestore';
 import fs from 'fs';
 
 dotenv.config();
@@ -119,34 +119,53 @@ export async function processReminders(db: any) {
       }
       
       if (shouldSend) {
-        let firstName = (appt.customerName || "Cliente").trim().split(" ")[0];
-        if (firstName) firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-        
-        const dateStr = `${argStartTime.getUTCDate().toString().padStart(2, '0')}/${(argStartTime.getUTCMonth() + 1).toString().padStart(2, '0')}/${argStartTime.getUTCFullYear()}`;
-        const timeStr = `${argStartTime.getUTCHours().toString().padStart(2, '0')}:${argStartTime.getUTCMinutes().toString().padStart(2, '0')}`;
-        
-        let barberName = "Barbero";
-        if (appt.barberId) {
-          try {
-            const barberDoc = await getDoc(doc(db, 'barbers', appt.barberId));
-            if (barberDoc.exists()) {
-              barberName = barberDoc.data().name || "Barbero";
-            }
-          } catch (e) {
-            console.error("Error obteniendo barbero:", e);
-          }
+        let transactionSuccess = false;
+        try {
+          transactionSuccess = await runTransaction(db, async (transaction) => {
+            const apptRef = doc(db, 'appointments', docSnap.id);
+            const freshDoc = await transaction.get(apptRef);
+            if (!freshDoc.exists()) return false;
+            
+            const freshAppt = freshDoc.data();
+            if (freshAppt.reminderSent) return false;
+            
+            transaction.update(apptRef, { reminderSent: true });
+            return true;
+          });
+        } catch (tErr) {
+          console.error(`Error en transacción para recordatorio ${docSnap.id}:`, tErr);
+          continue;
         }
 
-        const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
-        
-        try {
-          await sendWhatsAppMessage(appt.customerPhone, message);
-          await updateDoc(doc(db, 'appointments', docSnap.id), { reminderSent: true });
-          console.log(`Recordatorio enviado a ${appt.customerPhone} para el turno de las ${timeStr}`);
-          results.sent.push(`${appt.customerPhone} (${timeStr})`);
-        } catch (waErr: any) {
-          console.error(`Error enviando recordatorio a ${appt.customerPhone}:`, waErr);
-          results.errors.push(`${appt.customerPhone}: ${waErr.message || String(waErr)}`);
+        if (transactionSuccess) {
+          let firstName = (appt.customerName || "Cliente").trim().split(" ")[0];
+          if (firstName) firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+          
+          const dateStr = `${argStartTime.getUTCDate().toString().padStart(2, '0')}/${(argStartTime.getUTCMonth() + 1).toString().padStart(2, '0')}/${argStartTime.getUTCFullYear()}`;
+          const timeStr = `${argStartTime.getUTCHours().toString().padStart(2, '0')}:${argStartTime.getUTCMinutes().toString().padStart(2, '0')}`;
+          
+          let barberName = "Barbero";
+          if (appt.barberId) {
+            try {
+              const barberDoc = await getDoc(doc(db, 'barbers', appt.barberId));
+              if (barberDoc.exists()) {
+                barberName = barberDoc.data().name || "Barbero";
+              }
+            } catch (e) {
+              console.error("Error obteniendo barbero:", e);
+            }
+          }
+
+          const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
+          
+          try {
+            await sendWhatsAppMessage(appt.customerPhone, message);
+            console.log(`Recordatorio enviado a ${appt.customerPhone} para el turno de las ${timeStr}`);
+            results.sent.push(`${appt.customerPhone} (${timeStr})`);
+          } catch (waErr: any) {
+            console.error(`Error enviando recordatorio a ${appt.customerPhone}:`, waErr);
+            results.errors.push(`${appt.customerPhone}: ${waErr.message || String(waErr)}`);
+          }
         }
       }
     }
