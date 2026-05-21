@@ -81,7 +81,8 @@ service cloud.firestore {
       allow read: if true;
       allow create: if true; // Allow public booking
       allow update: if (isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId))) || 
-                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && request.resource.data.status == 'cancelled');
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && request.resource.data.status == 'cancelled') ||
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reminderSent']));
       allow delete: if isAdmin();
     }
 

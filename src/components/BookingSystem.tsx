@@ -110,6 +110,18 @@ export const BookingSystem = () => {
     });
   }, []);
 
+  // Trigger pending WhatsApp reminders check in background on load
+  useEffect(() => {
+    fetch('/api/cron-reminders')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.sent && data.sent.length > 0) {
+          console.log(`[Reminders Cron] Automatically processed and sent ${data.sent.length} reminders.`);
+        }
+      })
+      .catch(err => console.error('[Reminders Cron] Error processing background reminders:', err));
+  }, []);
+
   // Fetch Barbers from Firestore
   useEffect(() => {
     const q = query(collection(db, 'barbers'));

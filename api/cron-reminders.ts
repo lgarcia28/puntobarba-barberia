@@ -1,22 +1,10 @@
-import express from "express";
-import { createServer as createViteServer } from "vite";
-import path from "path";
-import dotenv from "dotenv";
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp, getDoc } from 'firebase/firestore';
 import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
 
 dotenv.config();
-
-let firebaseApp;
-let db: any;
-try {
-  const firebaseConfig = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf-8'));
-  firebaseApp = initializeApp(firebaseConfig);
-  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
-} catch (e) {
-  console.error("No se pudo inicializar Firebase en el servidor:", e);
-}
 
 async function sendWhatsAppMessage(phone: string, message: string) {
   let formattedPhone = phone.replace(/\D/g, "");
@@ -55,11 +43,24 @@ async function sendWhatsAppMessage(phone: string, message: string) {
   }
 }
 
-export async function processReminders(db: any) {
-  const results: { sent: string[], errors: string[] } = { sent: [], errors: [] };
-  if (!db) {
-    throw new Error("Base de datos no inicializada");
+export default async function handler(req: any, res: any) {
+  // Allow both GET and POST requests for triggering the cron
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
+
+  let db: any;
+  try {
+    const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+    const firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    const firebaseApp = initializeApp(firebaseConfig);
+    db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+  } catch (e: any) {
+    console.error("No se pudo inicializar Firebase en el endpoint cron:", e);
+    return res.status(500).json({ error: "Error al inicializar base de datos", details: e.message });
+  }
+
+  const results: { sent: string[], errors: string[] } = { sent: [], errors: [] };
 
   try {
     const now = new Date();
@@ -145,106 +146,10 @@ export async function processReminders(db: any) {
         }
       }
     }
-  } catch (err: any) {
-    console.error("Error en processReminders:", err);
-    throw err;
+    
+    return res.status(200).json({ success: true, ...results });
+  } catch (error: any) {
+    console.error("Error en handler de cron-reminders:", error);
+    return res.status(500).json({ error: "Error interno al enviar recordatorios", details: error.message });
   }
-  return results;
 }
-
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
-
-  app.use(express.json());
-
-  app.post("/api/send-whatsapp", async (req, res) => {
-    try {
-      const { phone, customerName, service, barber, date, time, action } = req.body;
-      
-      if (!phone || !customerName || !date || !time) {
-        return res.status(400).json({ error: "Faltan datos requeridos" });
-      }
-
-      let firstName = customerName.trim().split(" ")[0];
-      if (firstName) {
-        firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-      } else {
-        firstName = "Cliente";
-      }
-
-      let message = "";
-      if (action === 'cancel_single' || action === 'cancel_series') {
-        message = `Hola ${firstName},\nLamentamos informarte que tu turno en ResetART para el día ${date} a las ${time} HS ha sido cancelado.\n\nSi deseas reprogramar, puedes hacerlo desde nuestra web.`;
-      } else if (action === 'reschedule') {
-        message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido reprogramado con éxito.\n\n📅 Nueva Fecha: ${date}\n⏰ Nueva Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
-      } else {
-        message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
-      }
-
-      const result = await sendWhatsAppMessage(phone, message);
-      return res.status(200).json(result);
-    } catch (error: any) {
-      console.error("Error sending message:", error.message);
-      res.status(500).json({ error: "Error enviando el mensaje", details: error.message });
-    }
-  });
-
-  // Endpoints públicos para disparar recordatorios por Cron (GET y POST)
-  app.get("/api/cron-reminders", async (req, res) => {
-    try {
-      if (!db) {
-        return res.status(500).json({ error: "Base de datos no inicializada en el servidor" });
-      }
-      const results = await processReminders(db);
-      return res.status(200).json({ success: true, ...results });
-    } catch (error: any) {
-      console.error("Error en endpoint cron-reminders (GET):", error.message);
-      res.status(500).json({ error: "Error procesando recordatorios", details: error.message });
-    }
-  });
-
-  app.post("/api/cron-reminders", async (req, res) => {
-    try {
-      if (!db) {
-        return res.status(500).json({ error: "Base de datos no inicializada en el servidor" });
-      }
-      const results = await processReminders(db);
-      return res.status(200).json({ success: true, ...results });
-    } catch (error: any) {
-      console.error("Error en endpoint cron-reminders (POST):", error.message);
-      res.status(500).json({ error: "Error procesando recordatorios", details: error.message });
-    }
-  });
-
-  if (db) {
-    // Check reminders every 5 minutes
-    setInterval(async () => {
-      try {
-        await processReminders(db);
-      } catch (err) {
-        console.error("Error en cron de recordatorios por interval:", err);
-      }
-    }, 5 * 60 * 1000);
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-startServer();
