@@ -444,21 +444,37 @@ export const BookingSystem = () => {
         const intervalDays = fixedInterval === 'weekly' ? 7 : 14;
 
         while (isBefore(currentStartTime, endDate) || isSameDay(currentStartTime, endDate)) {
-          // Check availability
-          const q = query(
+          // Check availability (both appointments and blocks)
+          const qAppts = query(
             collection(db, 'appointments'),
             where('barberId', '==', selectedBarber.id),
             where('startTime', '>=', Timestamp.fromDate(startOfDay(currentStartTime))),
             where('startTime', '<=', Timestamp.fromDate(endOfDay(currentStartTime))),
             where('status', '==', 'confirmed')
           );
-          const snapshot = await getDocs(q);
-          const existingAppts = snapshot.docs.map(d => d.data());
+          const qBlocks = query(
+            collection(db, 'blocks'),
+            where('barberId', '==', selectedBarber.id),
+            where('startTime', '>=', Timestamp.fromDate(startOfDay(currentStartTime))),
+            where('startTime', '<=', Timestamp.fromDate(endOfDay(currentStartTime)))
+          );
+
+          const [snapAppts, snapBlocks] = await Promise.all([
+            getDocs(qAppts),
+            getDocs(qBlocks)
+          ]);
+
+          const existingAppts = snapAppts.docs.map(d => d.data());
+          const existingBlocks = snapBlocks.docs.map(d => d.data());
           
           const isOccupied = existingAppts.some(appt => {
             const apptStart = (appt as any).startTime.toDate();
             const apptEnd = (appt as any).endTime.toDate();
             return (isBefore(currentStartTime, apptEnd) && isAfter(currentEndTime, apptStart));
+          }) || existingBlocks.some(block => {
+            const blockStart = (block as any).startTime.toDate();
+            const blockEnd = (block as any).endTime.toDate();
+            return (isBefore(currentStartTime, blockEnd) && isAfter(currentEndTime, blockStart));
           });
 
           if (!isOccupied) {
@@ -533,12 +549,14 @@ export const BookingSystem = () => {
           const durationMin = selectedService.duration;
           const intervalsCount = Math.ceil(durationMin / 30);
           const slotTimeKeys: string[] = [];
+          const blockKeys: string[] = [];
           const slotDateStr = format(baseStartTime, 'yyyy-MM-dd');
 
           for (let i = 0; i < intervalsCount; i++) {
             const slotTime = addMinutes(baseStartTime, i * 30);
             const timeStr = format(slotTime, 'HH:mm');
             slotTimeKeys.push(`${selectedBarber.id}_${slotDateStr}_${timeStr}`);
+            blockKeys.push(`block_${selectedBarber.id}_${slotTime.getTime()}`);
           }
 
           // Si estamos reprogramando, calculamos los slots del turno anterior para permitirlos
@@ -563,9 +581,12 @@ export const BookingSystem = () => {
             }
           }
 
-          // Comprobar la disponibilidad real e indiscutible leyendo los slots en la transacción
+          // Comprobar la disponibilidad real e indiscutible leyendo los slots y bloques en la transacción
           const slotDocRefs = slotTimeKeys.map(key => doc(db, 'slots', key));
+          const blockDocRefs = blockKeys.map(key => doc(db, 'blocks', key));
+          
           const slotSnapshots = await Promise.all(slotDocRefs.map(ref => transaction.get(ref)));
+          const blockSnapshots = await Promise.all(blockDocRefs.map(ref => transaction.get(ref)));
 
           const isOccupied = slotSnapshots.some((snap, idx) => {
             if (!snap.exists()) return false;
@@ -575,10 +596,10 @@ export const BookingSystem = () => {
               return false;
             }
             return true;
-          });
+          }) || blockSnapshots.some(snap => snap.exists());
 
           if (isOccupied) {
-            throw new Error('Turno ya ocupado. Por favor elige otro horario.');
+            throw new Error('Turno ya ocupado o bloqueado. Por favor elige otro horario.');
           }
 
           // Crear el documento del turno
@@ -2013,6 +2034,8 @@ export const BookingSystem = () => {
                                             setSelectedService(SERVICES.find(s => s.name === appt.service) || null);
                                             setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
                                             setReschedulingApptId(appt.id);
+                                            setSelectedDate(startOfDay(new Date()));
+                                            setSelectedTime(null);
                                             setStep(3); // Go to date selection
                                             setBookingTab('agendar');
                                         }

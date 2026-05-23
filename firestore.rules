@@ -36,7 +36,9 @@ service cloud.firestore {
     }
 
     function isBarber(barberId) {
-      return isAuthenticated() && (request.auth.uid == barberId || get(/databases/$(database)/documents/barbers/$(request.auth.uid)).data.id == barberId);
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/barbers/$(barberId)) && 
+             get(/databases/$(database)/documents/barbers/$(barberId)).data.email == request.auth.token.email;
     }
 
     function isValidEmail(email) {
