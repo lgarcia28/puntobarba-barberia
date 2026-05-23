@@ -920,11 +920,69 @@ export const BookingSystem = () => {
 
     setLoading(true);
     try {
-      const batch = writeBatch(db);
       const datesToBlock = isRangeMode && blockingEndDate
         ? eachDayOfInterval({ start: startOfDay(adminDate), end: startOfDay(blockingEndDate) })
         : [adminDate];
 
+      // Pre-check for confirmed appointments to prevent accidental cancellation
+      const confirmedApptsToCancel: any[] = [];
+      for (const date of datesToBlock) {
+        const start = startOfDay(date);
+        const end = endOfDay(date);
+        let timesToBlock = selectedTimesForBlocking;
+        
+        if (isRangeMode && selectedTimesForBlocking.length === 0) {
+          const dayOfWeek = getDay(date);
+          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+          if (!daySchedule.isOpen) continue;
+          const [startH, startM] = daySchedule.start.split(':').map(Number);
+          const [endH, endM] = daySchedule.end.split(':').map(Number);
+          timesToBlock = eachMinuteOfInterval({
+            start: setMinutes(setHours(startOfDay(date), startH), startM),
+            end: setMinutes(setHours(startOfDay(date), endH), endM)
+          }, { step: 30 }).map(t => format(t, 'HH:mm'));
+        }
+
+        // Query confirmed appointments for this day
+        const q = query(
+          collection(db, 'appointments'),
+          where('barberId', '==', selectedBarber.id),
+          where('startTime', '>=', Timestamp.fromDate(start)),
+          where('startTime', '<=', Timestamp.fromDate(end)),
+          where('status', '==', 'confirmed')
+        );
+        const snapshot = await getDocs(q);
+        const dayAppts = snapshot.docs.map(d => ({ id: d.id, ...d.data() as any }));
+
+        for (const timeStr of timesToBlock) {
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          const startTime = setMinutes(setHours(startOfDay(date), hours), minutes);
+          const endTime = addMinutes(startTime, 30);
+          
+          const appt = dayAppts.find(appt => {
+            const apptStart = appt.startTime.toDate();
+            const apptEnd = appt.endTime.toDate();
+            return (isBefore(startTime, apptEnd) && isAfter(endTime, apptStart));
+          });
+          
+          if (appt && !confirmedApptsToCancel.some(a => a.id === appt.id)) {
+            confirmedApptsToCancel.push(appt);
+          }
+        }
+      }
+
+      if (confirmedApptsToCancel.length > 0) {
+        const namesList = confirmedApptsToCancel.map(a => `${a.customerName} (${format(a.startTime.toDate(), 'HH:mm')} HS)`).join(', ');
+        const confirmProceed = window.confirm(
+          `⚠️ ¡ATENCIÓN! Al bloquear estos horarios, se CANCELARÁN automáticamente los siguientes turnos confirmados:\n\n${namesList}\n\n¿Estás seguro de que deseas proceder con el bloqueo y cancelar estos turnos?`
+        );
+        if (!confirmProceed) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      const batch = writeBatch(db);
       const cancelledAppointments: any[] = [];
 
       for (const date of datesToBlock) {
@@ -1005,14 +1063,34 @@ export const BookingSystem = () => {
 
       await batch.commit();
 
-      // Simulate sending messages
+      // Enviar WhatsApp de cancelación real a los clientes afectados
       if (cancelledAppointments.length > 0) {
-        const messages = cancelledAppointments.map(appt => {
-          const dateStr = format(appt.startTime.toDate(), "eeee d 'de' MMMM", { locale: es });
+        const messages: string[] = [];
+        for (const appt of cancelledAppointments) {
+          const dateStr = format(appt.startTime.toDate(), 'dd/MM/yyyy');
           const timeStr = format(appt.startTime.toDate(), 'HH:mm');
-          return `Mensaje enviado a ${appt.customerName} (${appt.customerPhone}):\n"Hola ${appt.customerName}, lamentamos informarte que tu turno del día ${dateStr} a las ${timeStr} ha sido cancelado por motivos de fuerza mayor. Puedes reprogramar tu turno aquí: ${window.location.origin}"`;
-        });
-        alert(`Se han bloqueado los horarios y cancelado ${cancelledAppointments.length} turnos.\n\n${messages.join('\n\n')}`);
+          
+          try {
+            await fetch('/api/send-whatsapp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: appt.customerPhone,
+                customerName: appt.customerName,
+                service: appt.service,
+                barber: selectedBarber.name,
+                date: dateStr,
+                time: timeStr,
+                action: 'cancel_single'
+              })
+            });
+            messages.push(`Notificación enviada a ${appt.customerName} (${appt.customerPhone}) para su turno de las ${timeStr} HS.`);
+          } catch (waErr) {
+            console.error('Error al enviar WhatsApp de cancelación por bloqueo:', waErr);
+            messages.push(`Error al notificar a ${appt.customerName} (${appt.customerPhone}).`);
+          }
+        }
+        alert(`Se han bloqueado los horarios y cancelado ${cancelledAppointments.length} turnos confirmados.\n\n${messages.join('\n')}`);
       } else {
         alert('Horarios bloqueados correctamente.');
       }
