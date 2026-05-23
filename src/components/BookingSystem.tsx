@@ -123,6 +123,11 @@ export const BookingSystem = () => {
       .catch(err => console.error('[Reminders Cron] Error processing background reminders:', err));
   }, []);
 
+  // Reset selected time when barber or service changes to prevent stale booking hours
+  useEffect(() => {
+    setSelectedTime(null);
+  }, [selectedBarber, selectedService]);
+
   // Fetch Barbers from Firestore
   useEffect(() => {
     const q = query(collection(db, 'barbers'));
