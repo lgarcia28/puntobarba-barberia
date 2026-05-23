@@ -27,6 +27,7 @@ import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -67,7 +68,15 @@ export default function App() {
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
             <a 
               href="#reserva" 
-              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95"
+              onClick={() => setBookingTab('mis-turnos')}
+              className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-crimson hover:text-crimson transition-all active:scale-95 text-light-gray"
+            >
+              Mis Turnos
+            </a>
+            <a 
+              href="#reserva" 
+              onClick={() => setBookingTab('agendar')}
+              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95 text-white"
             >
               Reservar
             </a>
@@ -89,13 +98,28 @@ export default function App() {
             <a href="#cortes" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cortes</a>
             <a href="#cursos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cursos</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
-            <a 
-              href="#reserva" 
-              onClick={() => setIsMenuOpen(false)}
-              className="bg-red-600 w-full py-3 font-bold uppercase tracking-widest text-center"
-            >
-              Reservar
-            </a>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <a 
+                href="#reserva" 
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setBookingTab('mis-turnos');
+                }}
+                className="border border-white/10 py-3 font-bold uppercase tracking-widest text-center text-xs text-light-gray hover:border-crimson hover:text-white transition-all bg-black/50"
+              >
+                Mis Turnos
+              </a>
+              <a 
+                href="#reserva" 
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setBookingTab('agendar');
+                }}
+                className="bg-red-600 py-3 font-bold uppercase tracking-widest text-center text-xs text-white"
+              >
+                Reservar
+              </a>
+            </div>
           </motion.div>
         )}
       </nav>
@@ -132,13 +156,21 @@ export default function App() {
               <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-6">
                 <a 
                   href="#reserva" 
-                  className="bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/20 text-center"
+                  onClick={() => setBookingTab('agendar')}
+                  className="bg-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/20 text-center"
                 >
                   Reservar Turno
                 </a>
                 <a 
+                  href="#reserva" 
+                  onClick={() => setBookingTab('mis-turnos')}
+                  className="bg-black/50 backdrop-blur-sm border border-white/20 px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:border-crimson hover:text-crimson transition-all active:scale-95 text-center text-light-gray"
+                >
+                  Mis Turnos
+                </a>
+                <a 
                   href="#cursos"
-                  className="bg-charcoal/30 backdrop-blur-sm px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-charcoal/50 transition-all active:scale-95 border border-white/10 text-center"
+                  className="bg-charcoal/30 backdrop-blur-sm px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-charcoal/50 transition-all active:scale-95 border border-white/10 text-center"
                 >
                   Ver Cursos
                 </a>
@@ -233,7 +265,7 @@ export default function App() {
               <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-normal text-light-gray">Agenda tu Turno</h2>
               <p className="text-charcoal text-lg md:text-2xl font-display mt-4 uppercase tracking-widest">Sistema de gestión en tiempo real</p>
             </div>
-            <BookingSystem />
+             <BookingSystem bookingTab={bookingTab} setBookingTab={setBookingTab} />
           </div>
         </section>
 

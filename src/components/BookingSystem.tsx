@@ -34,8 +34,13 @@ interface Barber {
   bio?: string;
 }
 
+interface BookingSystemProps {
+  bookingTab?: 'agendar' | 'mis-turnos';
+  setBookingTab?: (tab: 'agendar' | 'mis-turnos') => void;
+}
+
 // --- Booking System Component ---
-export const BookingSystem = () => {
+export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab }: BookingSystemProps = {}) => {
   const [step, setStep] = useState(1);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -90,7 +95,9 @@ export const BookingSystem = () => {
   const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
 
   // Mis Turnos State
-  const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
+  const [localBookingTab, setLocalBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
+  const bookingTab = propBookingTab !== undefined ? propBookingTab : localBookingTab;
+  const setBookingTab = propSetBookingTab !== undefined ? propSetBookingTab : setLocalBookingTab;
   const [searchPhone, setSearchPhone] = useState('');
   const [myAppointments, setMyAppointments] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -2034,22 +2041,28 @@ export const BookingSystem = () => {
 
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
-          {!isBarberAdmin && (
-            <div className="flex gap-4 border-b border-white/5 pb-4 mb-8">
+            <div className="flex gap-4 border-b border-white/5 pb-6 mb-8">
               <button
                 onClick={() => setBookingTab('agendar')}
-                className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`px-5 py-3 font-display font-bold text-xs uppercase tracking-widest transition-all border ${
+                  bookingTab === 'agendar'
+                    ? 'bg-crimson border-crimson text-white shadow-lg shadow-crimson/20'
+                    : 'bg-black/50 border-white/5 text-charcoal hover:border-white/20 hover:text-white'
+                }`}
               >
-                Agendar Turno
+                Reservar Turno
               </button>
               <button
                 onClick={() => setBookingTab('mis-turnos')}
-                className={`text-xs font-bold uppercase tracking-widest ${bookingTab === 'mis-turnos' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`px-5 py-3 font-display font-bold text-xs uppercase tracking-widest transition-all border ${
+                  bookingTab === 'mis-turnos'
+                    ? 'bg-crimson border-crimson text-white shadow-lg shadow-crimson/20'
+                    : 'bg-black/50 border-white/5 text-charcoal hover:border-white/20 hover:text-white'
+                }`}
               >
                 Mis Turnos
               </button>
             </div>
-          )}
 
           {bookingTab === 'mis-turnos' ? (
             <div className="bg-black p-6 border border-white/5">
