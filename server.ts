@@ -19,13 +19,27 @@ try {
 }
 
 async function sendWhatsAppMessage(phone: string, message: string) {
-  let formattedPhone = phone.replace(/\D/g, "");
-  if (formattedPhone.length === 10) {
-    formattedPhone = "549" + formattedPhone;
-  } else if (formattedPhone.startsWith("54") && formattedPhone.length === 12) {
-    formattedPhone = "549" + formattedPhone.substring(2);
-  } else if (formattedPhone.startsWith("0")) {
-    formattedPhone = "549" + formattedPhone.substring(1);
+  let clean = phone.replace(/\D/g, "");
+  if (clean.startsWith("00")) {
+    clean = clean.substring(2);
+  }
+  if (clean.startsWith("0") && clean.length > 5) {
+    clean = clean.substring(1);
+  }
+
+  let formattedPhone = clean;
+  if (clean.startsWith("34") && clean.length === 11) {
+    formattedPhone = clean;
+  } else if (clean.length === 9 && (clean.startsWith("6") || clean.startsWith("7"))) {
+    formattedPhone = "34" + clean;
+  } else if (clean.length === 10) {
+    formattedPhone = "549" + clean;
+  } else if (clean.startsWith("54") && !clean.startsWith("549") && clean.length === 12) {
+    formattedPhone = "549" + clean.substring(2);
+  } else if (clean.startsWith("549") && clean.length === 13) {
+    formattedPhone = clean;
+  } else if (clean.length >= 10) {
+    formattedPhone = clean;
   }
 
   const GREEN_API_ID = process.env.GREEN_API_ID;

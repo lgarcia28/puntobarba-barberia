@@ -34,6 +34,41 @@ interface Barber {
   bio?: string;
 }
 
+export const normalizePhone = (phone: string): string => {
+  let clean = phone.replace(/\D/g, "");
+  if (clean.startsWith("00")) {
+    clean = clean.substring(2);
+  }
+  if (clean.startsWith("0") && clean.length > 5) {
+    clean = clean.substring(1);
+  }
+
+  // Spain handling (mobile numbers starting with 6 or 7)
+  if (clean.startsWith("34") && clean.length === 11) {
+    return clean;
+  }
+  if (clean.length === 9 && (clean.startsWith("6") || clean.startsWith("7"))) {
+    return "34" + clean;
+  }
+
+  // Argentina handling
+  if (clean.length === 10) {
+    return "549" + clean;
+  }
+  if (clean.startsWith("54") && !clean.startsWith("549") && clean.length === 12) {
+    return "549" + clean.substring(2);
+  }
+  if (clean.startsWith("549") && clean.length === 13) {
+    return clean;
+  }
+
+  // Other countries
+  if (clean.length >= 10) {
+    return clean;
+  }
+  return clean;
+};
+
 interface BookingSystemProps {
   bookingTab?: 'agendar' | 'mis-turnos';
   setBookingTab?: (tab: 'agendar' | 'mis-turnos') => void;
@@ -387,9 +422,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     if (!searchPhone) return;
     setIsSearching(true);
     try {
+      const cleanPhone = normalizePhone(searchPhone);
       const q = query(
         collection(db, 'appointments'),
-        where('customerPhone', '==', searchPhone),
+        where('customerPhone', '==', cleanPhone),
         where('startTime', '>=', Timestamp.now())
       );
       const snapshot = await getDocs(q);
@@ -494,7 +530,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             batch.set(apptRef, {
               barberId: selectedBarber.id,
               customerName: customerInfo.name,
-              customerPhone: customerInfo.phone,
+              customerPhone: normalizePhone(customerInfo.phone),
               service: selectedService.name,
               startTime: Timestamp.fromDate(currentStartTime),
               endTime: Timestamp.fromDate(currentEndTime),
@@ -619,7 +655,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           transaction.set(apptRef, {
             barberId: selectedBarber.id,
             customerName: customerInfo.name,
-            customerPhone: customerInfo.phone,
+            customerPhone: normalizePhone(customerInfo.phone),
             service: selectedService.name,
             startTime: Timestamp.fromDate(baseStartTime),
             endTime: Timestamp.fromDate(baseEndTime),
@@ -827,7 +863,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       const apptRef = doc(db, 'appointments', editingAppt.id);
       const updates: any = {
         customerName: editForm.customerName.trim(),
-        customerPhone: editForm.customerPhone.trim(),
+        customerPhone: normalizePhone(editForm.customerPhone.trim()),
         service: editForm.service,
       };
       if (editForm.customPrice !== '') {

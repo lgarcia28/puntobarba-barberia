@@ -12,15 +12,28 @@ export default async function handler(req, res) {
 
     const firstName = customerName.split(' ')[0].toUpperCase();
 
-    // Limpiar el número de teléfono
-    let formattedPhone = phone.replace(/\D/g, "");
+    // Limpiar el número de teléfono con soporte internacional completo
+    let clean = phone.replace(/\D/g, "");
+    if (clean.startsWith("00")) {
+      clean = clean.substring(2);
+    }
+    if (clean.startsWith("0") && clean.length > 5) {
+      clean = clean.substring(1);
+    }
 
-    if (formattedPhone.length === 10) {
-      formattedPhone = "549" + formattedPhone;
-    } else if (formattedPhone.startsWith("54") && !formattedPhone.startsWith("549") && formattedPhone.length === 12) {
-      formattedPhone = "549" + formattedPhone.substring(2);
-    } else if (formattedPhone.startsWith("0")) {
-      formattedPhone = "549" + formattedPhone.substring(1);
+    let formattedPhone = clean;
+    if (clean.startsWith("34") && clean.length === 11) {
+      formattedPhone = clean;
+    } else if (clean.length === 9 && (clean.startsWith("6") || clean.startsWith("7"))) {
+      formattedPhone = "34" + clean;
+    } else if (clean.length === 10) {
+      formattedPhone = "549" + clean;
+    } else if (clean.startsWith("54") && !clean.startsWith("549") && clean.length === 12) {
+      formattedPhone = "549" + clean.substring(2);
+    } else if (clean.startsWith("549") && clean.length === 13) {
+      formattedPhone = clean;
+    } else if (clean.length >= 10) {
+      formattedPhone = clean;
     }
 
     // Para Green API directamente:
