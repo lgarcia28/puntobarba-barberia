@@ -69,6 +69,40 @@ export const normalizePhone = (phone: string): string => {
   return clean;
 };
 
+export const getPhoneVariations = (phone: string): string[] => {
+  const clean = phone.replace(/\D/g, "");
+  const variations = new Set<string>();
+
+  if (!clean) return [];
+
+  // 1. Raw clean digits
+  variations.add(clean);
+
+  // 2. Fully normalized phone
+  const normalized = normalizePhone(phone);
+  variations.add(normalized);
+
+  // 3. If normalized starts with "549" and has 13 digits
+  if (normalized.startsWith("549") && normalized.length === 13) {
+    const local = normalized.substring(3); // 10 digits
+    variations.add(local);
+    variations.add("0" + local); // e.g. 03416055274
+    if (local.startsWith("341")) {
+      variations.add("34115" + local.substring(3)); // e.g. 341156055274
+    }
+  }
+
+  // 4. If normalized starts with "34" (Spain) and has 11 digits
+  if (normalized.startsWith("34") && normalized.length === 11) {
+    variations.add(normalized.substring(2)); // 9 digits
+  }
+
+  // 5. Raw input trimmed
+  variations.add(phone.trim());
+
+  return Array.from(variations).filter(Boolean);
+};
+
 interface BookingSystemProps {
   bookingTab?: 'agendar' | 'mis-turnos';
   setBookingTab?: (tab: 'agendar' | 'mis-turnos') => void;
@@ -422,10 +456,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     if (!searchPhone) return;
     setIsSearching(true);
     try {
-      const cleanPhone = normalizePhone(searchPhone);
+      const variations = getPhoneVariations(searchPhone);
       const q = query(
         collection(db, 'appointments'),
-        where('customerPhone', '==', cleanPhone),
+        where('customerPhone', 'in', variations),
         where('startTime', '>=', Timestamp.now())
       );
       const snapshot = await getDocs(q);
