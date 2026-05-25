@@ -32,6 +32,7 @@ interface Barber {
   photo: string;
   role: string;
   bio?: string;
+  schedule?: any;
 }
 
 export const normalizePhone = (phone: string): string => {
@@ -162,6 +163,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
+  const [scheduleTargetId, setScheduleTargetId] = useState<string>('general');
+  const [editingSchedule, setEditingSchedule] = useState<any>(DEFAULT_SCHEDULE);
+  const [useGeneralScheduleForBarber, setUseGeneralScheduleForBarber] = useState<boolean>(true);
+
+  const getBarberDaySchedule = (barber: Barber | null, dayOfWeek: number) => {
+    if (barber && barber.schedule && barber.schedule[dayOfWeek]) {
+      return barber.schedule[dayOfWeek];
+    }
+    return shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+  };
 
   // Mis Turnos State
   const [localBookingTab, setLocalBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
@@ -184,6 +195,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   useEffect(() => {
     getShopSettings().then((settings: any) => {
       setShopSettings(settings);
+      setEditingSchedule(settings?.schedule || DEFAULT_SCHEDULE);
     });
   }, []);
 
@@ -393,7 +405,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     if (!selectedBarber || !selectedService) return [];
 
     const dayOfWeek = getDay(selectedDate);
-    const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+    const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
     if (!daySchedule.isOpen) return [];
 
     const slots = [];
@@ -942,7 +954,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         
         if (isRangeMode && selectedTimesForBlocking.length === 0) {
           const dayOfWeek = getDay(date);
-          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+          const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
           
           if (!daySchedule.isOpen) continue;
           
@@ -1010,7 +1022,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         
         if (isRangeMode && selectedTimesForBlocking.length === 0) {
           const dayOfWeek = getDay(date);
-          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+          const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
           if (!daySchedule.isOpen) continue;
           const [startH, startM] = daySchedule.start.split(':').map(Number);
           const [endH, endM] = daySchedule.end.split(':').map(Number);
@@ -1070,7 +1082,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         
         if (isRangeMode && selectedTimesForBlocking.length === 0) {
           const dayOfWeek = getDay(date);
-          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+          const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
           
           if (!daySchedule.isOpen) continue;
           
@@ -1395,7 +1407,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <button
                         onClick={() => {
                           const dayOfWeek = getDay(adminDate);
-                          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                          const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
                           if (!daySchedule.isOpen) return;
                           const [startH, startM] = daySchedule.start.split(':').map(Number);
                           const [endH, endM] = daySchedule.end.split(':').map(Number);
@@ -1414,7 +1426,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       >
                         {(() => {
                           const dayOfWeek = getDay(adminDate);
-                          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                          const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
                           if (!daySchedule.isOpen) return 'Deseleccionar Todo';
                           const [startH, startM] = daySchedule.start.split(':').map(Number);
                           const [endH, endM] = daySchedule.end.split(':').map(Number);
@@ -1432,7 +1444,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mb-8">
                         {(() => {
                           const dayOfWeek = getDay(adminDate);
-                          const daySchedule = shopSettings?.schedule?.[dayOfWeek] || DEFAULT_SCHEDULE[dayOfWeek as keyof typeof DEFAULT_SCHEDULE];
+                          const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
                           
                           // Get all appointments for this day that are NOT in the normal grid
                           const [startH, startM] = daySchedule.isOpen ? daySchedule.start.split(':').map(Number) : [0, 0];
@@ -1871,78 +1883,155 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
       {isBarberAdmin && activeAdminTab === 'horarios' && (
         <div className="space-y-6">
-              <div className="bg-black p-6 border border-white/5">
-                <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-crimson" /> Horarios de Atención Generales
-                </h3>
-                <div className="space-y-4">
-                  {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((dayName, index) => {
-                    const daySchedule = shopSettings?.schedule?.[index] || DEFAULT_SCHEDULE[index as keyof typeof DEFAULT_SCHEDULE];
-                    return (
-                      <div key={index} className="flex items-center gap-4 p-4 bg-zinc-900 border border-white/5">
-                        <div className="w-32 font-bold uppercase text-sm">{dayName}</div>
-                        <label className="flex items-center gap-2 text-xs uppercase cursor-pointer">
+          <div className="bg-black p-6 border border-white/5">
+            <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-crimson" /> Configuración de Horarios
+            </h3>
+
+            {/* Selector of Target: General vs Barbers */}
+            <div className="mb-6">
+              <label className="block text-xs uppercase font-bold text-zinc-400 mb-2">Configurar horarios para:</label>
+              <select
+                value={scheduleTargetId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setScheduleTargetId(val);
+                  if (val === 'general') {
+                    setEditingSchedule(shopSettings?.schedule || DEFAULT_SCHEDULE);
+                    setUseGeneralScheduleForBarber(true);
+                  } else {
+                    const selectedB = barbers.find(b => b.id === val);
+                    if (selectedB?.schedule) {
+                      setEditingSchedule(selectedB.schedule);
+                      setUseGeneralScheduleForBarber(false);
+                    } else {
+                      setEditingSchedule(shopSettings?.schedule || DEFAULT_SCHEDULE);
+                      setUseGeneralScheduleForBarber(true);
+                    }
+                  }
+                }}
+                className="w-full bg-zinc-900 border border-white/10 p-3 text-sm rounded text-white focus:outline-none focus:border-crimson transition-colors"
+              >
+                <option value="general">Generales de la Barbería</option>
+                {barbers.map(b => (
+                  <option key={b.id} value={b.id}>Barbero: {b.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* If it's a barber, show the option to use General Schedules or Custom Schedules */}
+            {scheduleTargetId !== 'general' && (
+              <div className="mb-6 p-4 bg-zinc-900/40 border border-white/5 rounded space-y-3">
+                <label className="flex items-center gap-3 text-sm cursor-pointer text-zinc-300 select-none hover:text-white transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={useGeneralScheduleForBarber}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setUseGeneralScheduleForBarber(checked);
+                      if (checked) {
+                        setEditingSchedule(shopSettings?.schedule || DEFAULT_SCHEDULE);
+                      } else {
+                        const selectedB = barbers.find(b => b.id === scheduleTargetId);
+                        setEditingSchedule(selectedB?.schedule || shopSettings?.schedule || DEFAULT_SCHEDULE);
+                      }
+                    }}
+                    className="w-4 h-4 accent-crimson rounded border-white/10"
+                  />
+                  <span className="font-display font-medium uppercase text-xs tracking-wider">Usar los horarios generales de la barbería</span>
+                </label>
+                <p className="text-zinc-400 text-xs leading-relaxed">
+                  Si está activado, este barbero usará automáticamente los horarios generales. Desactívalo para configurar un horario personalizado exclusivo para este barbero.
+                </p>
+              </div>
+            )}
+
+            {/* Render the Schedule Grid */}
+            {(!useGeneralScheduleForBarber || scheduleTargetId === 'general') && (
+              <div className="space-y-4 mb-6 animate-fadeIn">
+                {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((dayName, index) => {
+                  const daySchedule = editingSchedule?.[index] || DEFAULT_SCHEDULE[index as keyof typeof DEFAULT_SCHEDULE];
+                  return (
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-zinc-900 border border-white/5 rounded hover:border-white/10 transition-colors">
+                      <div className="w-32 font-bold uppercase text-sm text-zinc-200">{dayName}</div>
+                      <div className="flex flex-wrap items-center gap-6">
+                        <label className="flex items-center gap-2 text-xs uppercase cursor-pointer text-zinc-300 hover:text-white select-none transition-colors">
                           <input
                             type="checkbox"
                             checked={daySchedule.isOpen}
                             onChange={(e) => {
-                              const newSchedule = { ...shopSettings.schedule };
+                              const newSchedule = { ...editingSchedule };
                               newSchedule[index] = { ...daySchedule, isOpen: e.target.checked };
-                              setShopSettings({ ...shopSettings, schedule: newSchedule });
+                              setEditingSchedule(newSchedule);
                             }}
-                            className="accent-crimson"
+                            className="accent-crimson w-4 h-4"
                           />
                           Abierto
                         </label>
                         {daySchedule.isOpen && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-zinc-300">
                             <input
                               type="time"
                               value={daySchedule.start}
                               onChange={(e) => {
-                                const newSchedule = { ...shopSettings.schedule };
+                                const newSchedule = { ...editingSchedule };
                                 newSchedule[index] = { ...daySchedule, start: e.target.value };
-                                setShopSettings({ ...shopSettings, schedule: newSchedule });
+                                setEditingSchedule(newSchedule);
                               }}
-                              className="bg-black border border-white/10 p-2 text-xs"
+                              className="bg-black border border-white/10 p-2 text-xs rounded text-white focus:outline-none focus:border-crimson transition-colors"
                             />
                             <span>a</span>
                             <input
                               type="time"
                               value={daySchedule.end}
                               onChange={(e) => {
-                                const newSchedule = { ...shopSettings.schedule };
+                                const newSchedule = { ...editingSchedule };
                                 newSchedule[index] = { ...daySchedule, end: e.target.value };
-                                setShopSettings({ ...shopSettings, schedule: newSchedule });
+                                setEditingSchedule(newSchedule);
                               }}
-                              className="bg-black border border-white/10 p-2 text-xs"
+                              className="bg-black border border-white/10 p-2 text-xs rounded text-white focus:outline-none focus:border-crimson transition-colors"
                             />
                           </div>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={async () => {
-                    setLoading(true);
-                    try {
-                      await updateShopSettings(shopSettings);
-                      toast.success('Horarios guardados correctamente.');
-                    } catch (err) {
-                      toast.error('Error al guardar los horarios.');
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading}
-                  className="w-full mt-6 bg-crimson py-4 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all disabled:opacity-50"
-                >
-                  {loading ? 'Guardando...' : 'Guardar Horarios'}
-                </button>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          )}
+            )}
+
+            <button
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  if (scheduleTargetId === 'general') {
+                    await updateShopSettings({ schedule: editingSchedule });
+                    setShopSettings({ ...shopSettings, schedule: editingSchedule });
+                    toast.success('Horarios generales guardados correctamente.');
+                  } else {
+                    const barberData: any = {};
+                    if (useGeneralScheduleForBarber) {
+                      barberData.schedule = null;
+                    } else {
+                      barberData.schedule = editingSchedule;
+                    }
+                    await updateBarber(scheduleTargetId, barberData);
+                    toast.success('Horarios del barbero guardados correctamente.');
+                  }
+                } catch (err) {
+                  toast.error('Error al guardar los horarios.');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="w-full bg-crimson py-4 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all disabled:opacity-50 text-white rounded"
+            >
+              {loading ? 'Guardando...' : 'Guardar Horarios'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {isBarberAdmin && isJose && activeAdminTab === 'finanzas' && (
         <div className="space-y-8">
