@@ -190,6 +190,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [finanzasDate, setFinanzasDate] = useState(new Date());
   const [finanzasAppts, setFinanzasAppts] = useState<any[]>([]);
   const [finanzasViewMode, setFinanzasViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [selectedFinanzasBarberId, setSelectedFinanzasBarberId] = useState<string | null>(null);
   const finanzasDatePickerRef = useRef<HTMLInputElement>(null);
 
   // Registro Rápido (Walk-in) y Cobro de Turnos State
@@ -2474,10 +2475,25 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <div className="mb-8 border-t border-white/5 pt-6">
                       <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center gap-2">
                         <User className="w-4 h-4" /> Desglose por Barbero
+                        {selectedFinanzasBarberId && (
+                          <span className="text-[9px] text-zinc-500 font-normal normal-case italic">
+                            (Haz clic en el barbero activo para limpiar el filtro)
+                          </span>
+                        )}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {barberStats.map(b => (
-                          <div key={b.id} className="bg-black p-5 border border-white/5 flex items-center justify-between">
+                          <button
+                            key={b.id}
+                            onClick={() => setSelectedFinanzasBarberId(selectedFinanzasBarberId === b.id ? null : b.id)}
+                            className={`p-5 border transition-all text-left flex items-center justify-between cursor-pointer select-none rounded-sm ${
+                              selectedFinanzasBarberId === b.id 
+                                ? 'bg-crimson/10 border-crimson shadow-md shadow-crimson/5' 
+                                : selectedFinanzasBarberId !== null
+                                  ? 'bg-black/40 border-white/5 opacity-40 hover:opacity-80 hover:border-white/10'
+                                  : 'bg-black border-white/5 hover:border-white/15'
+                            }`}
+                          >
                             <div className="flex items-center gap-3">
                               <img src={b.photo} alt={b.name} className="w-10 h-10 rounded-full grayscale object-cover" referrerPolicy="no-referrer" />
                               <div>
@@ -2494,65 +2510,88 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               </p>
                               <p className="text-[8px] text-zinc-500 font-bold uppercase">Caja Bruta: ${b.totalEarned.toLocaleString('es-AR')}</p>
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto border-t border-white/5 pt-6">
-                      <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center gap-2">
-                        <Database className="w-4 h-4" /> Detalle de Transacciones
-                      </h4>
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-black border-b border-white/10 uppercase text-[10px] text-charcoal font-bold">
-                          <tr>
-                            <th className="p-3">Hora</th>
-                            <th className="p-3">Cliente</th>
-                            <th className="p-3">Barbero</th>
-                            <th className="p-3">Servicio</th>
-                            <th className="p-3">Estado</th>
-                            <th className="p-3 text-right">Precio</th>
-                            <th className="p-3 text-right">Para Jose</th>
-                            <th className="p-3 text-right">Para Barbero</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                          {processedAppts.map(appt => (
-                            <tr key={appt.id} className="hover:bg-white/5 transition-colors">
-                              <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
-                              <td className="p-3 uppercase font-bold text-xs">
-                                {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-crimson/20 text-crimson border border-crimson/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
-                              </td>
-                              <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
-                              <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
-                              <td className="p-3">
-                                {appt.completed ? (
-                                  <span className="text-emerald-400 font-bold uppercase text-[9px] flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" /> Cobrado
-                                  </span>
-                                ) : (
-                                  <span className="text-charcoal font-bold uppercase text-[9px]">
-                                    Pendiente
-                                  </span>
-                                )}
-                              </td>
-                              <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
-                              <td className="p-3 text-right text-crimson font-bold">
-                                {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
-                              </td>
-                              <td className="p-3 text-right text-zinc-400 font-bold">
-                                {appt.completed ? (appt.isJoseCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
-                              </td>
-                            </tr>
-                          ))}
-                          {processedAppts.length === 0 && (
-                            <tr>
-                              <td colSpan={8} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este periodo</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                    {(() => {
+                      const filteredAppts = selectedFinanzasBarberId 
+                        ? processedAppts.filter(appt => appt.barberId === selectedFinanzasBarberId)
+                        : processedAppts;
+                      
+                      return (
+                        <div className="overflow-x-auto border-t border-white/5 pt-6">
+                          <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center justify-between w-full">
+                            <span className="flex items-center gap-2">
+                              <Database className="w-4 h-4" /> Detalle de Transacciones
+                              {selectedFinanzasBarberId && (
+                                <span className="text-[10px] bg-crimson/20 text-crimson border border-crimson/30 px-2 py-0.5 font-bold uppercase tracking-wider rounded-sm ml-2">
+                                  Filtrado por: {barbers.find(barb => barb.id === selectedFinanzasBarberId)?.name}
+                                </span>
+                              )}
+                            </span>
+                            {selectedFinanzasBarberId && (
+                              <button 
+                                onClick={() => setSelectedFinanzasBarberId(null)}
+                                className="text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1 hover:bg-white hover:text-black transition-colors rounded-sm"
+                              >
+                                Ver Todos
+                              </button>
+                            )}
+                          </h4>
+                          <table className="w-full text-left text-sm">
+                            <thead className="bg-black border-b border-white/10 uppercase text-[10px] text-charcoal font-bold">
+                              <tr>
+                                <th className="p-3">Hora</th>
+                                <th className="p-3">Cliente</th>
+                                <th className="p-3">Barbero</th>
+                                <th className="p-3">Servicio</th>
+                                <th className="p-3">Estado</th>
+                                <th className="p-3 text-right">Precio</th>
+                                <th className="p-3 text-right">Para Jose</th>
+                                <th className="p-3 text-right">Para Barbero</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {filteredAppts.map(appt => (
+                                <tr key={appt.id} className="hover:bg-white/5 transition-colors">
+                                  <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
+                                  <td className="p-3 uppercase font-bold text-xs">
+                                    {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-crimson/20 text-crimson border border-crimson/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
+                                  </td>
+                                  <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
+                                  <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
+                                  <td className="p-3">
+                                    {appt.completed ? (
+                                      <span className="text-emerald-400 font-bold uppercase text-[9px] flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3" /> Cobrado
+                                      </span>
+                                    ) : (
+                                      <span className="text-charcoal font-bold uppercase text-[9px]">
+                                        Pendiente
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
+                                  <td className="p-3 text-right text-crimson font-bold">
+                                    {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
+                                  </td>
+                                  <td className="p-3 text-right text-zinc-400 font-bold">
+                                    {appt.completed ? (appt.isJoseCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                              {filteredAppts.length === 0 && (
+                                <tr>
+                                  <td colSpan={8} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este barbero</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()}
                   </>
                 );
               })()}
