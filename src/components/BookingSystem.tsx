@@ -192,6 +192,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [finanzasViewMode, setFinanzasViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const finanzasDatePickerRef = useRef<HTMLInputElement>(null);
 
+  // Registro Rápido (Walk-in) y Cobro de Turnos State
+  const [showQuickLog, setShowQuickLog] = useState(false);
+  const [quickLogService, setQuickLogService] = useState<any>(null);
+  const [quickLogPrice, setQuickLogPrice] = useState('');
+  const [quickLogClientName, setQuickLogClientName] = useState('');
+  const [completingAppt, setCompletingAppt] = useState<any | null>(null);
+  const [completingPrice, setCompletingPrice] = useState('');
+
   useEffect(() => {
     getShopSettings().then((settings: any) => {
       setShopSettings(settings);
@@ -931,6 +939,76 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }
   };
 
+  const handleSaveQuickCut = async () => {
+    if (!selectedBarber) {
+      toast.error('Por favor selecciona un barbero primero.');
+      return;
+    }
+    if (!quickLogService) {
+      toast.error('Por favor selecciona un servicio.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const price = quickLogPrice !== '' ? Number(quickLogPrice) : quickLogService.price;
+      const now = new Date();
+      const endTime = addMinutes(now, quickLogService.duration);
+
+      await addDoc(collection(db, 'appointments'), {
+        barberId: selectedBarber.id,
+        customerName: quickLogClientName.trim() || 'Cliente al paso',
+        customerPhone: '',
+        service: quickLogService.name,
+        startTime: Timestamp.fromDate(now),
+        endTime: Timestamp.fromDate(endTime),
+        status: 'confirmed',
+        completed: true,
+        isWalkIn: true,
+        customPrice: price,
+        createdAt: Timestamp.now()
+      });
+
+      toast.success('Corte rápido registrado con éxito.');
+      
+      // Reset form
+      setQuickLogService(null);
+      setQuickLogPrice('');
+      setQuickLogClientName('');
+      setShowQuickLog(false);
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Error al registrar el corte rápido.');
+      handleFirestoreError(err, OperationType.CREATE, 'appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteAppointment = async () => {
+    if (!completingAppt) return;
+    setLoading(true);
+    try {
+      const price = completingPrice !== '' ? Number(completingPrice) : null;
+      const apptRef = doc(db, 'appointments', completingAppt.id);
+      
+      await updateDoc(apptRef, {
+        completed: true,
+        customPrice: price
+      });
+
+      toast.success('Turno cobrado y completado con éxito.');
+      setCompletingAppt(null);
+      setCompletingPrice('');
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Error al registrar el cobro del turno.');
+      handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUnblockTime = async () => {
     if (!selectedBarber) return;
     if (!isRangeMode && selectedTimesForBlocking.length === 0) return;
@@ -1285,6 +1363,92 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
               {selectedBarber && (
                 <div className="space-y-8">
+                  {/* Panel de Registro Rápido (Walk-in) */}
+                  <div className="bg-zinc-950 border border-white/5 p-6 rounded-sm">
+                    <button
+                      onClick={() => setShowQuickLog(!showQuickLog)}
+                      className="w-full flex justify-between items-center text-sm font-bold uppercase tracking-widest text-light-gray hover:text-crimson transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Scissors className="w-4 h-4 text-crimson" /> Registrar Venta Rápida (Sin Turno / Walk-in)
+                      </span>
+                      <span className="text-xl">{showQuickLog ? '−' : '+'}</span>
+                    </button>
+
+                    <AnimatePresence>
+                      {showQuickLog && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden mt-6 space-y-4"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Cliente */}
+                            <div>
+                              <label className="block text-[9px] font-black uppercase text-charcoal mb-1">Nombre del Cliente (Opcional)</label>
+                              <input
+                                type="text"
+                                placeholder="Cliente al paso"
+                                value={quickLogClientName}
+                                onChange={(e) => setQuickLogClientName(e.target.value)}
+                                className="w-full bg-black border border-white/10 px-3 py-2.5 text-xs text-light-gray focus:border-crimson outline-none transition-colors"
+                              />
+                            </div>
+
+                            {/* Servicio */}
+                            <div>
+                              <label className="block text-[9px] font-black uppercase text-charcoal mb-1">Seleccionar Servicio</label>
+                              <div className="grid grid-cols-3 gap-1">
+                                {SERVICES.map(svc => (
+                                  <button
+                                    key={svc.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setQuickLogService(svc);
+                                      setQuickLogPrice(String(svc.price));
+                                    }}
+                                    className={`py-2 px-1 text-[9px] font-black uppercase border transition-all ${
+                                      quickLogService?.id === svc.id
+                                        ? 'bg-crimson border-crimson text-white'
+                                        : 'bg-black border-white/10 text-charcoal hover:border-white/30'
+                                    }`}
+                                  >
+                                    {svc.name.replace('de pelo', '')}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Precio Cobrado */}
+                            <div>
+                              <label className="block text-[9px] font-black uppercase text-charcoal mb-1">Precio Cobrado ($)</label>
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal font-bold text-xs">$</span>
+                                  <input
+                                    type="number"
+                                    value={quickLogPrice}
+                                    onChange={(e) => setQuickLogPrice(e.target.value)}
+                                    placeholder="0"
+                                    className="w-full bg-black border border-white/10 pl-6 pr-3 py-2 text-xs text-light-gray focus:border-crimson outline-none transition-colors"
+                                  />
+                                </div>
+                                <button
+                                  onClick={handleSaveQuickCut}
+                                  disabled={loading || !quickLogService}
+                                  className="bg-crimson text-white px-5 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-crimson/80 transition-all disabled:opacity-40"
+                                >
+                                  Registrar
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   {/* Analytics Dashboard */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-black p-6 border border-white/5 flex flex-col justify-center">
@@ -1549,11 +1713,24 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             .map((appt: any) => (
                               <div key={appt.id} className="flex justify-between items-center bg-zinc-900/50 p-3 border border-white/5">
                                 <div>
-                                  <p className="font-bold uppercase text-sm">{appt.customerName}</p>
-                                  <p className="text-[10px] text-charcoal">{appt.service}</p>
-                                  <a href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-crimson font-bold hover:underline">
-                                    {appt.customerPhone}
-                                  </a>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-bold uppercase text-sm">{appt.customerName}</p>
+                                    {appt.completed ? (
+                                      <span className="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
+                                        <CheckCircle2 className="w-2.5 h-2.5" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                      </span>
+                                    ) : (
+                                      <span className="bg-zinc-800/80 border border-white/10 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                        Pendiente
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-charcoal">{appt.service} {appt.isWalkIn ? '(WALK-IN)' : ''}</p>
+                                  {appt.customerPhone && (
+                                    <a href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-crimson font-bold hover:underline">
+                                      {appt.customerPhone}
+                                    </a>
+                                  )}
                                 </div>
                                 <div className="text-right flex items-center gap-4">
                                   <div className="text-right">
@@ -1594,6 +1771,18 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                    >
                                      <Edit2 className="w-4 h-4" />
                                    </button>
+                                   {!appt.completed && (
+                                     <button
+                                       onClick={() => {
+                                         setCompletingAppt(appt);
+                                         setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
+                                       }}
+                                       className="bg-crimson/20 border border-crimson/40 hover:bg-crimson hover:text-white text-crimson px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm"
+                                       title="Registrar cobro de este corte"
+                                     >
+                                       Cobrar
+                                     </button>
+                                   )}
                                    <button onClick={() => handleCancelAppointment(appt)} className="text-crimson p-2 hover:bg-crimson/10 transition-colors">
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1628,16 +1817,29 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     {dayAppts.map(appt => (
                                       <div key={appt.id} className="flex justify-between items-center bg-black p-3 border border-white/5">
                                         <div>
-                                          <p className="font-bold uppercase text-sm">{appt.customerName}</p>
-                                          <p className="text-xs text-charcoal">{appt.service} {appt.isFixed ? '(FIJO)' : ''}</p>
-                                          <a 
-                                            href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-xs text-crimson font-bold hover:underline flex items-center gap-1 mt-1"
-                                          >
-                                            <Phone className="w-3 h-3" /> {appt.customerPhone}
-                                          </a>
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <p className="font-bold uppercase text-sm">{appt.customerName}</p>
+                                            {appt.completed ? (
+                                              <span className="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
+                                                <CheckCircle2 className="w-2.5 h-2.5" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                              </span>
+                                            ) : (
+                                              <span className="bg-zinc-800/80 border border-white/10 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                                Pendiente
+                                              </span>
+                                            )}
+                                          </div>
+                                          <p className="text-xs text-charcoal">{appt.service} {appt.isFixed ? '(FIJO)' : ''} {appt.isWalkIn ? '(WALK-IN)' : ''}</p>
+                                          {appt.customerPhone && (
+                                            <a 
+                                              href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="text-xs text-crimson font-bold hover:underline flex items-center gap-1 mt-1"
+                                            >
+                                              <Phone className="w-3 h-3" /> {appt.customerPhone}
+                                            </a>
+                                          )}
                                         </div>
                                         <div className="flex items-center gap-4">
                                           <div className="text-right">
@@ -1680,6 +1882,18 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                           >
                                             <Edit2 className="w-4 h-4" />
                                           </button>
+                                          {!appt.completed && (
+                                            <button
+                                              onClick={() => {
+                                                setCompletingAppt(appt);
+                                                setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
+                                              }}
+                                              className="bg-crimson/20 border border-crimson/40 hover:bg-crimson hover:text-white text-crimson px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm"
+                                              title="Registrar cobro de este corte"
+                                            >
+                                              Cobrar
+                                            </button>
+                                          )}
                                           <button
                                             onClick={() => handleCancelAppointment(appt)}
                                             className="text-crimson hover:text-white p-2 transition-colors border border-white/5 hover:border-crimson"
@@ -2115,6 +2329,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               {(() => {
                 let totalJoseCuts = 0;
                 let totalOthersCuts = 0;
+                
+                let totalJosePending = 0;
+                let totalOthersPending = 0;
 
                 const processedAppts = finanzasAppts.map(appt => {
                   const barber = barbers.find(b => b.id === appt.barberId);
@@ -2124,40 +2341,111 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   let joseShare = 0;
                   let barberShare = 0;
 
-                  if (isJoseCut) {
-                    joseShare = svcPrice;
-                    totalJoseCuts += svcPrice;
+                  if (appt.completed) {
+                    if (isJoseCut) {
+                      joseShare = svcPrice;
+                      totalJoseCuts += svcPrice;
+                    } else {
+                      joseShare = svcPrice * 0.5;
+                      barberShare = svcPrice * 0.5;
+                      totalOthersCuts += svcPrice;
+                    }
                   } else {
-                    joseShare = svcPrice * 0.5;
-                    barberShare = svcPrice * 0.5;
-                    totalOthersCuts += svcPrice;
+                    if (isJoseCut) {
+                      totalJosePending += svcPrice;
+                    } else {
+                      totalOthersPending += svcPrice;
+                    }
                   }
 
                   return { ...appt, barberName: barber?.name || 'Desconocido', isJoseCut, svcPrice, joseShare, barberShare };
                 }).sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
 
-                const totalRevenue = totalJoseCuts + totalOthersCuts;
-                const totalJoseEarns = totalJoseCuts + (totalOthersCuts * 0.5);
+                const totalRevenuePaid = totalJoseCuts + totalOthersCuts;
+                const totalJoseEarnsPaid = totalJoseCuts + (totalOthersCuts * 0.5);
+                const totalOthersEarnsPaid = totalOthersCuts * 0.5;
+
+                const totalPendingRevenue = totalJosePending + totalOthersPending;
+                const totalEstimatedRevenue = totalRevenuePaid + totalPendingRevenue;
+
+                // Desglose individual por barbero (solo cobrados/completados)
+                const barberStats = barbers.map(barber => {
+                  const barberAppts = processedAppts.filter(a => a.barberId === barber.id);
+                  const completedAppts = barberAppts.filter(a => a.completed);
+                  const pendingAppts = barberAppts.filter(a => !a.completed);
+
+                  const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'jhbarber87@gmail.com' || barber.email === 'resetart.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+
+                  const totalEarnedVal = completedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
+                  const commissionVal = isJoseBarber ? totalEarnedVal : totalEarnedVal * 0.5;
+
+                  return {
+                    id: barber.id,
+                    name: barber.name,
+                    photo: barber.photo,
+                    isJoseBarber,
+                    cutsCount: completedAppts.length,
+                    pendingCount: pendingAppts.length,
+                    totalEarned: totalEarnedVal,
+                    commission: commissionVal
+                  };
+                });
 
                 return (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                       <div className="bg-black p-6 border border-white/5">
-                        <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Recaudación Total</p>
-                        <p className="font-display font-black text-3xl text-light-gray">${totalRevenue.toLocaleString('es-AR')}</p>
+                        <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Recaudación Cobrada</p>
+                        <p className="font-display font-black text-3xl text-light-gray">${totalRevenuePaid.toLocaleString('es-AR')}</p>
+                        <p className="text-[9px] text-zinc-500 mt-2 font-bold uppercase">
+                          Pendiente: ${totalPendingRevenue.toLocaleString('es-AR')} | Total Est.: ${totalEstimatedRevenue.toLocaleString('es-AR')}
+                        </p>
                       </div>
                       <div className="bg-black p-6 border border-crimson/50">
                         <p className="text-crimson font-bold uppercase tracking-widest text-xs mb-2">Cierre Caja Jose</p>
-                        <p className="font-display font-black text-3xl text-crimson">${totalJoseEarns.toLocaleString('es-AR')}</p>
-                        <p className="text-[10px] text-zinc-500 mt-2 font-bold uppercase">100% cortes propios + 50% otros</p>
+                        <p className="font-display font-black text-3xl text-crimson">${totalJoseEarnsPaid.toLocaleString('es-AR')}</p>
+                        <p className="text-[9px] text-zinc-500 mt-2 font-bold uppercase">100% cortes propios + 50% otros</p>
                       </div>
                       <div className="bg-black p-6 border border-white/5">
                         <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Comisión Otros Barberos</p>
-                        <p className="font-display font-black text-3xl text-zinc-400">${(totalOthersCuts * 0.5).toLocaleString('es-AR')}</p>
+                        <p className="font-display font-black text-3xl text-zinc-400">${totalOthersEarnsPaid.toLocaleString('es-AR')}</p>
+                        <p className="text-[9px] text-zinc-500 mt-2 font-bold uppercase">50% de comisión acumulada</p>
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    {/* Desglose por Barbero */}
+                    <div className="mb-8 border-t border-white/5 pt-6">
+                      <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center gap-2">
+                        <User className="w-4 h-4" /> Desglose por Barbero
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {barberStats.map(b => (
+                          <div key={b.id} className="bg-black p-5 border border-white/5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <img src={b.photo} alt={b.name} className="w-10 h-10 rounded-full grayscale object-cover" referrerPolicy="no-referrer" />
+                              <div>
+                                <p className="font-display font-bold uppercase text-xs text-light-gray">{b.name}</p>
+                                <p className="text-[10px] text-charcoal uppercase font-bold">
+                                  {b.cutsCount} cortes cobrados {b.pendingCount > 0 ? `(${b.pendingCount} pend.)` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[9px] text-charcoal font-bold uppercase">{b.isJoseBarber ? 'Dueño (100%)' : 'Comisión (50%)'}</p>
+                              <p className="font-display font-black text-lg text-light-gray">
+                                ${b.commission.toLocaleString('es-AR')}
+                              </p>
+                              <p className="text-[8px] text-zinc-500 font-bold uppercase">Caja Bruta: ${b.totalEarned.toLocaleString('es-AR')}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto border-t border-white/5 pt-6">
+                      <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center gap-2">
+                        <Database className="w-4 h-4" /> Detalle de Transacciones
+                      </h4>
                       <table className="w-full text-left text-sm">
                         <thead className="bg-black border-b border-white/10 uppercase text-[10px] text-charcoal font-bold">
                           <tr>
@@ -2165,6 +2453,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             <th className="p-3">Cliente</th>
                             <th className="p-3">Barbero</th>
                             <th className="p-3">Servicio</th>
+                            <th className="p-3">Estado</th>
                             <th className="p-3 text-right">Precio</th>
                             <th className="p-3 text-right">Para Jose</th>
                             <th className="p-3 text-right">Para Barbero</th>
@@ -2174,17 +2463,34 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           {processedAppts.map(appt => (
                             <tr key={appt.id} className="hover:bg-white/5 transition-colors">
                               <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
-                              <td className="p-3 uppercase font-bold text-xs">{appt.customerName}</td>
+                              <td className="p-3 uppercase font-bold text-xs">
+                                {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-crimson/20 text-crimson border border-crimson/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
+                              </td>
                               <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
                               <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
+                              <td className="p-3">
+                                {appt.completed ? (
+                                  <span className="text-emerald-400 font-bold uppercase text-[9px] flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Cobrado
+                                  </span>
+                                ) : (
+                                  <span className="text-charcoal font-bold uppercase text-[9px]">
+                                    Pendiente
+                                  </span>
+                                )}
+                              </td>
                               <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
-                              <td className="p-3 text-right text-crimson font-bold">${appt.joseShare.toLocaleString('es-AR')}</td>
-                              <td className="p-3 text-right text-zinc-400">${appt.barberShare.toLocaleString('es-AR')}</td>
+                              <td className="p-3 text-right text-crimson font-bold">
+                                {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
+                              </td>
+                              <td className="p-3 text-right text-zinc-400 font-bold">
+                                {appt.completed ? (appt.isJoseCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
+                              </td>
                             </tr>
                           ))}
                           {processedAppts.length === 0 && (
                             <tr>
-                              <td colSpan={7} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este día</td>
+                              <td colSpan={8} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este periodo</td>
                             </tr>
                           )}
                         </tbody>
@@ -2706,6 +3012,62 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 <button
                   onClick={() => setEditingAppt(null)}
                   className="px-6 py-3 border border-white/10 font-bold uppercase text-xs text-charcoal hover:border-white/30 hover:text-white transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {completingAppt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setCompletingAppt(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 p-6 w-full max-w-sm shadow-2xl"
+            >
+              <h3 className="font-display font-black uppercase text-xl mb-1 text-light-gray">Registrar Cobro</h3>
+              <p className="text-charcoal text-xs uppercase font-bold mb-6">
+                Turno de {completingAppt.customerName} a las {format(completingAppt.startTime.toDate(), "HH:mm 'hs'")}
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Precio Cobrado ($)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal font-bold text-sm">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={completingPrice}
+                      onChange={(e) => setCompletingPrice(e.target.value)}
+                      placeholder="Ingrese el monto cobrado"
+                      className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleCompleteAppointment}
+                  disabled={loading}
+                  className="flex-1 bg-crimson py-3 font-display font-bold uppercase tracking-widest text-sm hover:bg-crimson/80 transition-all disabled:opacity-50"
+                >
+                  Confirmar Cobro
+                </button>
+                <button
+                  onClick={() => setCompletingAppt(null)}
+                  className="px-5 py-3 border border-white/10 font-bold uppercase text-xs text-charcoal hover:border-white/30 hover:text-white transition-all"
                 >
                   Cancelar
                 </button>
