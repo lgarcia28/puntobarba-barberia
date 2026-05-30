@@ -1711,36 +1711,66 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           {adminAppts.filter((a: any) => isSameDay(a.startTime.toDate(), adminDate))
                             .sort((a: any, b: any) => a.startTime.toMillis() - b.startTime.toMillis())
                             .map((appt: any) => (
-                              <div key={appt.id} className="flex justify-between items-center bg-zinc-900/50 p-3 border border-white/5">
-                                <div>
+                              <div key={appt.id} className="flex flex-col md:flex-row md:items-center justify-between bg-zinc-900/40 hover:bg-zinc-900/60 p-5 border border-white/5 rounded-md gap-5 transition-all">
+                                {/* Left Section: Details */}
+                                <div className="space-y-3 flex-1 w-full text-left">
+                                  {/* Time, Duration & Badges */}
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="font-bold uppercase text-sm">{appt.customerName}</p>
-                                    {appt.completed ? (
-                                      <span className="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
-                                        <CheckCircle2 className="w-2.5 h-2.5" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                    <div className="bg-zinc-800/80 px-2.5 py-1 rounded-sm border border-white/5 flex items-center gap-1.5">
+                                      <Clock className="w-3.5 h-3.5 text-crimson" />
+                                      <span className="font-display font-black text-sm tracking-wide text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
+                                    </div>
+                                    <span className="text-[9px] text-charcoal font-black uppercase tracking-wider bg-white/5 px-2 py-1 rounded-sm">
+                                      {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} MIN
+                                    </span>
+                                    {appt.isWalkIn && (
+                                      <span className="bg-amber-950/40 border border-amber-500/20 text-amber-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                        Walk-in
                                       </span>
-                                    ) : (
-                                      <span className="bg-zinc-800/80 border border-white/10 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
-                                        Pendiente
+                                    )}
+                                    {appt.isFixed && (
+                                      <span className="bg-indigo-950/40 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                        Fijo
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-[10px] text-charcoal">{appt.service} {appt.isWalkIn ? '(WALK-IN)' : ''}</p>
-                                  {appt.customerPhone && (
-                                    <a href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-crimson font-bold hover:underline">
-                                      {appt.customerPhone}
-                                    </a>
-                                  )}
-                                </div>
-                                <div className="text-right flex items-center gap-4">
-                                  <div className="text-right">
-                                    <p className="font-display font-bold text-sm">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
-                                    <p className="text-[10px] text-charcoal uppercase">{Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} min</p>
+
+                                  {/* Client Details */}
+                                  <div className="space-y-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="font-bold text-sm uppercase text-light-gray tracking-wide">{appt.customerName}</h4>
+                                      {appt.completed ? (
+                                        <span className="bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
+                                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                        </span>
+                                      ) : (
+                                        <span className="bg-zinc-800/60 border border-white/5 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                          Pendiente
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-charcoal font-bold uppercase">
+                                      <span>{appt.service}</span>
+                                      {appt.customerPhone && (
+                                        <a 
+                                          href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer" 
+                                          className="text-crimson hover:underline flex items-center gap-1"
+                                        >
+                                          <Phone className="w-3 h-3" /> {appt.customerPhone}
+                                        </a>
+                                      )}
+                                    </div>
                                   </div>
+                                </div>
+
+                                {/* Right Section: Action Buttons */}
+                                <div className="flex flex-wrap items-center gap-2 border-t md:border-t-0 border-white/5 pt-3 md:pt-0 justify-end w-full md:w-auto">
                                   {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 ? (
                                     <button
                                       onClick={() => handleUpdateDuration(appt, 30)}
-                                      className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                      className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                       title="Reducir a 30 minutos para liberar espacio"
                                     >
                                       Acortar a 30m
@@ -1749,41 +1779,45 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     appt.service === 'Corte y Barba' && (
                                       <button
                                         onClick={() => handleUpdateDuration(appt, 60)}
-                                        className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                        className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                         title="Volver a 60 minutos"
                                       >
                                         Deshacer
                                       </button>
                                     )
                                   )}
-                                   <button
-                                     onClick={() => {
-                                       setEditingAppt(appt);
-                                       setEditForm({
-                                         customerName: appt.customerName,
-                                         customerPhone: appt.customerPhone,
-                                         service: appt.service,
-                                         customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
-                                       });
-                                     }}
-                                     className="text-charcoal hover:text-white p-2 hover:bg-white/10 transition-colors"
-                                     title="Editar turno"
-                                   >
-                                     <Edit2 className="w-4 h-4" />
-                                   </button>
-                                   {!appt.completed && (
-                                     <button
-                                       onClick={() => {
-                                         setCompletingAppt(appt);
-                                         setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
-                                       }}
-                                       className="bg-crimson/20 border border-crimson/40 hover:bg-crimson hover:text-white text-crimson px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm"
-                                       title="Registrar cobro de este corte"
-                                     >
-                                       Cobrar
-                                     </button>
-                                   )}
-                                   <button onClick={() => handleCancelAppointment(appt)} className="text-crimson p-2 hover:bg-crimson/10 transition-colors">
+                                  <button
+                                    onClick={() => {
+                                      setEditingAppt(appt);
+                                      setEditForm({
+                                        customerName: appt.customerName,
+                                        customerPhone: appt.customerPhone,
+                                        service: appt.service,
+                                        customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
+                                      });
+                                    }}
+                                    className="text-charcoal hover:text-white p-2 hover:bg-white/10 transition-colors border border-white/10 rounded-sm flex items-center justify-center"
+                                    title="Editar turno"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  {!appt.completed && (
+                                    <button
+                                      onClick={() => {
+                                        setCompletingAppt(appt);
+                                        setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
+                                      }}
+                                      className="flex-1 md:flex-none bg-crimson border border-crimson hover:bg-crimson/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-crimson/10 text-center"
+                                      title="Registrar cobro de este corte"
+                                    >
+                                      Cobrar
+                                    </button>
+                                  )}
+                                  <button 
+                                    onClick={() => handleCancelAppointment(appt)} 
+                                    className="text-crimson hover:bg-crimson/10 p-2 border border-white/10 transition-colors rounded-sm flex items-center justify-center"
+                                    title="Eliminar turno"
+                                  >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 </div>
@@ -1815,43 +1849,66 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 ) : (
                                   <div className="space-y-2">
                                     {dayAppts.map(appt => (
-                                      <div key={appt.id} className="flex justify-between items-center bg-black p-3 border border-white/5">
-                                        <div>
+                                      <div key={appt.id} className="flex flex-col md:flex-row md:items-center justify-between bg-zinc-900/40 hover:bg-zinc-900/60 p-5 border border-white/5 rounded-md gap-5 transition-all">
+                                        {/* Left Section: Details */}
+                                        <div className="space-y-3 flex-1 w-full text-left">
+                                          {/* Time, Duration & Badges */}
                                           <div className="flex flex-wrap items-center gap-2">
-                                            <p className="font-bold uppercase text-sm">{appt.customerName}</p>
-                                            {appt.completed ? (
-                                              <span className="bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
-                                                <CheckCircle2 className="w-2.5 h-2.5" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                            <div className="bg-zinc-800/80 px-2.5 py-1 rounded-sm border border-white/5 flex items-center gap-1.5">
+                                              <Clock className="w-3.5 h-3.5 text-crimson" />
+                                              <span className="font-display font-black text-sm tracking-wide text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
+                                            </div>
+                                            <span className="text-[9px] text-charcoal font-black uppercase tracking-wider bg-white/5 px-2 py-1 rounded-sm">
+                                              {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} MIN
+                                            </span>
+                                            {appt.isWalkIn && (
+                                              <span className="bg-amber-950/40 border border-amber-500/20 text-amber-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                                Walk-in
                                               </span>
-                                            ) : (
-                                              <span className="bg-zinc-800/80 border border-white/10 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
-                                                Pendiente
+                                            )}
+                                            {appt.isFixed && (
+                                              <span className="bg-indigo-950/40 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                                Fijo
                                               </span>
                                             )}
                                           </div>
-                                          <p className="text-xs text-charcoal">{appt.service} {appt.isFixed ? '(FIJO)' : ''} {appt.isWalkIn ? '(WALK-IN)' : ''}</p>
-                                          {appt.customerPhone && (
-                                            <a 
-                                              href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer"
-                                              className="text-xs text-crimson font-bold hover:underline flex items-center gap-1 mt-1"
-                                            >
-                                              <Phone className="w-3 h-3" /> {appt.customerPhone}
-                                            </a>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                          <div className="text-right">
-                                            <p className="font-display font-bold text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
-                                            <p className="text-[10px] text-charcoal font-bold uppercase">
-                                              {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} min
-                                            </p>
+
+                                          {/* Client Details */}
+                                          <div className="space-y-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                              <h4 className="font-bold text-sm uppercase text-light-gray tracking-wide">{appt.customerName}</h4>
+                                              {appt.completed ? (
+                                                <span className="bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
+                                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                                </span>
+                                              ) : (
+                                                <span className="bg-zinc-800/60 border border-white/5 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                                  Pendiente
+                                                </span>
+                                              )}
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-charcoal font-bold uppercase">
+                                              <span>{appt.service}</span>
+                                              {appt.customerPhone && (
+                                                <a 
+                                                  href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
+                                                  target="_blank" 
+                                                  rel="noopener noreferrer" 
+                                                  className="text-crimson hover:underline flex items-center gap-1"
+                                                >
+                                                  <Phone className="w-3 h-3" /> {appt.customerPhone}
+                                                </a>
+                                              )}
+                                            </div>
                                           </div>
+                                        </div>
+
+                                        {/* Right Section: Action Buttons */}
+                                        <div className="flex flex-wrap items-center gap-2 border-t md:border-t-0 border-white/5 pt-3 md:pt-0 justify-end w-full md:w-auto">
                                           {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 ? (
                                             <button
                                               onClick={() => handleUpdateDuration(appt, 30)}
-                                              className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                              className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                               title="Reducir a 30 minutos para liberar espacio"
                                             >
                                               Acortar a 30m
@@ -1860,7 +1917,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                             appt.service === 'Corte y Barba' && (
                                               <button
                                                 onClick={() => handleUpdateDuration(appt, 60)}
-                                                className="text-[9px] font-bold uppercase border border-white/5 px-2 py-1 hover:border-crimson hover:text-crimson transition-all"
+                                                className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                                 title="Volver a 60 minutos"
                                               >
                                                 Deshacer
@@ -1877,8 +1934,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                                 customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
                                               });
                                             }}
-                                            className="text-charcoal hover:text-white p-2 transition-colors border border-white/5 hover:border-white/30"
-                                            title="Editar Turno"
+                                            className="text-charcoal hover:text-white p-2 hover:bg-white/10 transition-colors border border-white/10 rounded-sm flex items-center justify-center"
+                                            title="Editar turno"
                                           >
                                             <Edit2 className="w-4 h-4" />
                                           </button>
@@ -1888,16 +1945,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                                 setCompletingAppt(appt);
                                                 setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
                                               }}
-                                              className="bg-crimson/20 border border-crimson/40 hover:bg-crimson hover:text-white text-crimson px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm"
+                                              className="flex-1 md:flex-none bg-crimson border border-crimson hover:bg-crimson/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-crimson/10 text-center"
                                               title="Registrar cobro de este corte"
                                             >
                                               Cobrar
                                             </button>
                                           )}
-                                          <button
-                                            onClick={() => handleCancelAppointment(appt)}
-                                            className="text-crimson hover:text-white p-2 transition-colors border border-white/5 hover:border-crimson"
-                                            title="Cancelar Turno"
+                                          <button 
+                                            onClick={() => handleCancelAppointment(appt)} 
+                                            className="text-crimson hover:bg-crimson/10 p-2 border border-white/10 transition-colors rounded-sm flex items-center justify-center"
+                                            title="Eliminar turno"
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </button>
