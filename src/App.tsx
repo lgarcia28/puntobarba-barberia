@@ -36,6 +36,55 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Efecto premium: convertir imágenes en blanco y negro a color al hacer scroll en móviles
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const mediaQuery = window.matchMedia('(max-w: 767px)');
+    let intersectionObserver: IntersectionObserver | null = null;
+    
+    const updateObservations = () => {
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
+      }
+      
+      if (!mediaQuery.matches) return;
+      
+      const elements = document.querySelectorAll('.grayscale, [class*="grayscale"]');
+      intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('!grayscale-0', '!opacity-100');
+          } else {
+            entry.target.classList.remove('!grayscale-0', '!opacity-100');
+          }
+        });
+      }, {
+        root: null,
+        rootMargin: '-10% 0px -10% 0px',
+        threshold: 0.1
+      });
+      
+      elements.forEach(el => intersectionObserver?.observe(el));
+    };
+    
+    // Observar mutaciones del DOM para capturar imágenes renderizadas dinámicamente (ej. pasos de reservas)
+    const mutationObserver = new MutationObserver(() => {
+      updateObservations();
+    });
+    
+    updateObservations();
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    
+    mediaQuery.addEventListener('change', updateObservations);
+    
+    return () => {
+      if (intersectionObserver) intersectionObserver.disconnect();
+      mutationObserver.disconnect();
+      mediaQuery.removeEventListener('change', updateObservations);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray">
       <Toaster 

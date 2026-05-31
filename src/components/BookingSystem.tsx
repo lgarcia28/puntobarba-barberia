@@ -143,6 +143,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const adminDateInputRef = useRef<HTMLInputElement>(null);
   const blockingEndDateInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const horariosRef = useRef<HTMLDivElement>(null);
+
+  const scrollToHorarios = () => {
+    setTimeout(() => {
+      horariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const isFirstMount = useRef(true);
 
@@ -2548,77 +2555,117 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       const filteredAppts = selectedFinanzasBarberId 
                         ? processedAppts.filter(appt => appt.barberId === selectedFinanzasBarberId)
                         : processedAppts;
+
+                      const filteredRevenue = filteredAppts.reduce((sum, a) => sum + (a.completed ? a.svcPrice : 0), 0);
+                      const filteredJoseShare = filteredAppts.reduce((sum, a) => sum + (a.completed ? a.joseShare : 0), 0);
+                      const filteredBarberShare = filteredAppts.reduce((sum, a) => sum + (a.completed ? (a.isJoseCut ? 0 : a.barberShare) : 0), 0);
+
+                      // Cómputo de lo que cobra cada barbero en el listado actual
+                      const individualBarberEarnings = barbers.map(barber => {
+                        const barberCompletedAppts = filteredAppts.filter(a => a.barberId === barber.id && a.completed);
+                        const totalEarnedVal = barberCompletedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
+                        const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'jhbarber87@gmail.com' || barber.email === 'resetart.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+                        const commissionVal = isJoseBarber ? totalEarnedVal : totalEarnedVal * 0.5;
+                        return {
+                          name: barber.name,
+                          commission: commissionVal
+                        };
+                      }).filter(b => b.commission > 0);
                       
                       return (
-                        <div className="overflow-x-auto border-t border-white/5 pt-6">
-                          <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center justify-between w-full">
-                            <span className="flex items-center gap-2">
-                              <Database className="w-4 h-4" /> Detalle de Transacciones
+                        <>
+                          <div className="overflow-x-auto border-t border-white/5 pt-6">
+                            <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center justify-between w-full">
+                              <span className="flex items-center gap-2">
+                                <Database className="w-4 h-4" /> Detalle de Transacciones
+                                {selectedFinanzasBarberId && (
+                                  <span className="text-[10px] bg-crimson/20 text-crimson border border-crimson/30 px-2 py-0.5 font-bold uppercase tracking-wider rounded-sm ml-2">
+                                    Filtrado por: {barbers.find(barb => barb.id === selectedFinanzasBarberId)?.name}
+                                  </span>
+                                )}
+                              </span>
                               {selectedFinanzasBarberId && (
-                                <span className="text-[10px] bg-crimson/20 text-crimson border border-crimson/30 px-2 py-0.5 font-bold uppercase tracking-wider rounded-sm ml-2">
-                                  Filtrado por: {barbers.find(barb => barb.id === selectedFinanzasBarberId)?.name}
-                                </span>
+                                <button 
+                                  onClick={() => setSelectedFinanzasBarberId(null)}
+                                  className="text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1 hover:bg-white hover:text-black transition-colors rounded-sm"
+                                >
+                                  Ver Todos
+                                </button>
                               )}
-                            </span>
-                            {selectedFinanzasBarberId && (
-                              <button 
-                                onClick={() => setSelectedFinanzasBarberId(null)}
-                                className="text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1 hover:bg-white hover:text-black transition-colors rounded-sm"
-                              >
-                                Ver Todos
-                              </button>
-                            )}
-                          </h4>
-                          <table className="w-full text-left text-sm">
-                            <thead className="bg-black border-b border-white/10 uppercase text-[10px] text-charcoal font-bold">
-                              <tr>
-                                <th className="p-3">Hora</th>
-                                <th className="p-3">Cliente</th>
-                                <th className="p-3">Barbero</th>
-                                <th className="p-3">Servicio</th>
-                                <th className="p-3">Estado</th>
-                                <th className="p-3 text-right">Precio</th>
-                                <th className="p-3 text-right">Para Jose</th>
-                                <th className="p-3 text-right">Para Barbero</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                              {filteredAppts.map(appt => (
-                                <tr key={appt.id} className="hover:bg-white/5 transition-colors">
-                                  <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
-                                  <td className="p-3 uppercase font-bold text-xs">
-                                    {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-crimson/20 text-crimson border border-crimson/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
-                                  </td>
-                                  <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
-                                  <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
-                                  <td className="p-3">
-                                    {appt.completed ? (
-                                      <span className="text-emerald-400 font-bold uppercase text-[9px] flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> Cobrado
-                                      </span>
-                                    ) : (
-                                      <span className="text-charcoal font-bold uppercase text-[9px]">
-                                        Pendiente
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
-                                  <td className="p-3 text-right text-crimson font-bold">
-                                    {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
-                                  </td>
-                                  <td className="p-3 text-right text-zinc-400 font-bold">
-                                    {appt.completed ? (appt.isJoseCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
-                                  </td>
-                                </tr>
-                              ))}
-                              {filteredAppts.length === 0 && (
+                            </h4>
+                            <table className="w-full text-left text-sm">
+                              <thead className="bg-black border-b border-white/10 uppercase text-[10px] text-charcoal font-bold">
                                 <tr>
-                                  <td colSpan={8} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este barbero</td>
+                                  <th className="p-3">Hora</th>
+                                  <th className="p-3">Cliente</th>
+                                  <th className="p-3">Barbero</th>
+                                  <th className="p-3">Servicio</th>
+                                  <th className="p-3">Estado</th>
+                                  <th className="p-3 text-right">Precio</th>
+                                  <th className="p-3 text-right">Para Jose</th>
+                                  <th className="p-3 text-right">Para Barbero</th>
                                 </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5">
+                                {filteredAppts.map(appt => (
+                                  <tr key={appt.id} className="hover:bg-white/5 transition-colors">
+                                    <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
+                                    <td className="p-3 uppercase font-bold text-xs">
+                                      {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-crimson/20 text-crimson border border-crimson/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
+                                    </td>
+                                    <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
+                                    <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
+                                    <td className="p-3">
+                                      {appt.completed ? (
+                                        <span className="text-emerald-400 font-bold uppercase text-[9px] flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" /> Cobrado
+                                        </span>
+                                      ) : (
+                                        <span className="text-charcoal font-bold uppercase text-[9px]">
+                                          Pendiente
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
+                                    <td className="p-3 text-right text-crimson font-bold">
+                                      {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
+                                    </td>
+                                    <td className="p-3 text-right text-zinc-400 font-bold">
+                                      {appt.completed ? (appt.isJoseCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
+                                    </td>
+                                  </tr>
+                                ))}
+                                {filteredAppts.length === 0 && (
+                                  <tr>
+                                    <td colSpan={8} className="p-6 text-center text-charcoal text-xs uppercase font-bold">No hay turnos registrados para este barbero</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Resumen del Listado Filtrado */}
+                          <div className="bg-black/60 border border-white/5 p-5 mt-4 rounded-sm space-y-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-3 gap-2">
+                              <h5 className="font-display font-bold text-xs tracking-widest text-crimson uppercase">Resumen de Listado</h5>
+                              <p className="text-xs text-charcoal font-bold uppercase">
+                                Total Cobrado en Turnos Listados: <span className="text-light-gray font-black">${filteredRevenue.toLocaleString('es-AR')}</span>
+                              </p>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                              {individualBarberEarnings.map(b => (
+                                <div key={b.name} className="bg-zinc-950 p-3 border border-white/5 flex justify-between items-center rounded-sm">
+                                  <span className="text-charcoal font-bold uppercase">{b.name}</span>
+                                  <span className="font-display font-black text-lg text-light-gray">${b.commission.toLocaleString('es-AR')}</span>
+                                </div>
+                              ))}
+                              {individualBarberEarnings.length === 0 && (
+                                <p className="col-span-full text-center text-charcoal italic text-[11px] py-2 uppercase font-bold">Sin ganancias cobradas en este listado</p>
                               )}
-                            </tbody>
-                          </table>
-                        </div>
+                            </div>
+                          </div>
+                        </>
                       );
                     })()}
                   </>
@@ -2848,6 +2895,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               if (isBefore(d, startOfDay(new Date()))) return;
                               setSelectedDate(d);
                               setSelectedTime(null);
+                              scrollToHorarios();
                             }
                           }}
                         />
@@ -2870,7 +2918,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           <button
                             key={i}
                             disabled={isPast}
-                            onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
+                            onClick={() => { setSelectedDate(date); setSelectedTime(null); scrollToHorarios(); }}
                             className={`py-2 md:py-3 border flex flex-col items-center transition-all ${
                               isPast
                                 ? 'border-white/5 bg-black/50 text-charcoal/30 cursor-not-allowed opacity-50'
@@ -2888,21 +2936,26 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       })}
                     </div>
 
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
-                      {getAvailableSlots().map(time => (
-                        <button
-                          key={time}
-                          onClick={() => setSelectedTime(time)}
-                          className={`py-3 border font-display font-bold text-lg transition-all ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                      {getAvailableSlots().length === 0 && (
-                        <p className="col-span-full text-center py-12 text-charcoal italic border border-dashed border-white/5">
-                          No hay horarios disponibles para este día.
-                        </p>
-                      )}
+                    <div ref={horariosRef} className="border-t border-white/5 pt-6">
+                      <h4 className="font-display font-black text-xl uppercase tracking-widest text-crimson mb-4 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-crimson" /> Horarios Disponibles
+                      </h4>
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                        {getAvailableSlots().map(time => (
+                          <button
+                            key={time}
+                            onClick={() => setSelectedTime(time)}
+                            className={`py-3 border font-display font-bold text-lg transition-all ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                        {getAvailableSlots().length === 0 && (
+                          <p className="col-span-full text-center py-12 text-charcoal italic border border-dashed border-white/5">
+                            No hay horarios disponibles para este día.
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {selectedTime && (
