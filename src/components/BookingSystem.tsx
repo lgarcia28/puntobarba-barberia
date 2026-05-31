@@ -2938,7 +2938,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                     <div ref={horariosRef} className="border-t border-white/5 pt-6">
                       <h4 className="font-display font-black text-xl uppercase tracking-widest text-crimson mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-crimson" /> Horarios Disponibles
+                        <Clock className="w-5 h-5 text-crimson" /> HORARIOS
                       </h4>
                       <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
                         {getAvailableSlots().map(time => (
