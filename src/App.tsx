@@ -54,9 +54,9 @@ export default function App() {
       intersectionObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('!grayscale-0', '!opacity-100');
+            entry.target.classList.add('reveal-color');
           } else {
-            entry.target.classList.remove('!grayscale-0', '!opacity-100');
+            entry.target.classList.remove('reveal-color');
           }
         });
       }, {

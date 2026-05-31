@@ -147,7 +147,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
   const scrollToHorarios = () => {
     setTimeout(() => {
-      horariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      horariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   };
 
