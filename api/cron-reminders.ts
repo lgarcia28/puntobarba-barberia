@@ -78,6 +78,17 @@ export default async function handler(req: any, res: any) {
 
   try {
     const now = new Date();
+    
+    // Obtener la hora actual en la zona horaria de Argentina (UTC-3)
+    const argNow = new Date(now.getTime() - 3 * 3600000);
+    const nowHour = argNow.getUTCHours();
+    
+    // El sistema no puede mandar ningún recordatorio desde las 22:00 a las 8:00 am (hora de Argentina)
+    if (nowHour >= 22 || nowHour < 8) {
+      console.log(`[Reminders Cron] Fuera de horario permitido (Hora actual Argentina: ${nowHour}hs). No se enviarán recordatorios.`);
+      return res.status(200).json({ success: true, sent: [], errors: [], info: `Silenced during night hours (22:00 - 08:00). Current hour: ${nowHour}hs` });
+    }
+
     const q = query(
       collection(db, 'appointments'),
       where('status', '==', 'confirmed'),

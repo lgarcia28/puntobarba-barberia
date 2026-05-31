@@ -35,6 +35,14 @@ interface Barber {
   schedule?: any;
 }
 
+export const addMinutesToTimeStr = (timeStr: string, minutes: number): string => {
+  const [h, m] = timeStr.split(':').map(Number);
+  const totalMinutes = h * 60 + m + minutes;
+  const newH = Math.floor(totalMinutes / 60) % 24;
+  const newM = totalMinutes % 60;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+};
+
 export const normalizePhone = (phone: string): string => {
   let clean = phone.replace(/\D/g, "");
   if (clean.startsWith("00")) {
@@ -435,6 +443,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
       if (isBefore(slotStart, new Date())) continue;
 
+      const slotStartStr = format(slotStart, 'HH:mm');
+      const slotEndStr = addMinutesToTimeStr(slotStartStr, selectedService.duration);
+
+      // El turno no puede terminar después del horario de cierre configurado
+      if (slotEndStr > daySchedule.end) continue;
+
       // Check if slot is occupied by appointment or block
       const isOccupied = appointments.some(appt => {
         const apptStart = appt.startTime.toDate();
@@ -459,12 +473,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           return (isBefore(midPoint, blockEnd) && isAfter(addMinutes(midPoint, 30), blockStart));
         });
 
-        if (!isOccupied && !isMidOccupied && isBefore(slotEnd, addMinutes(endTime, 1))) {
-          slots.push(format(slotStart, 'HH:mm'));
+        if (!isOccupied && !isMidOccupied) {
+          slots.push(slotStartStr);
         }
       } else {
-        if (!isOccupied && isBefore(slotEnd, addMinutes(endTime, 1))) {
-          slots.push(format(slotStart, 'HH:mm'));
+        if (!isOccupied) {
+          slots.push(slotStartStr);
         }
       }
     }
@@ -506,6 +520,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
     setLoading(true);
     setError(null);
+
+    const dayOfWeek = getDay(selectedDate);
+    const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
+    if (!daySchedule.isOpen) {
+      setError('La barbería está cerrada este día.');
+      setLoading(false);
+      return;
+    }
+
+    const slotEndStr = addMinutesToTimeStr(selectedTime, selectedService.duration);
+    if (slotEndStr > daySchedule.end) {
+      setError(`No es posible agendar este servicio a las ${selectedTime} ya que supera el horario de cierre de la barbería (${daySchedule.end}).`);
+      setLoading(false);
+      return;
+    }
 
     const [hours, minutes] = selectedTime.split(':').map(Number);
     const baseStartTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes);
