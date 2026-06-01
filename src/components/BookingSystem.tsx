@@ -16,11 +16,11 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -173,7 +173,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [isJose, setIsJose] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas'>('agenda');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -181,6 +181,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [scheduleTargetId, setScheduleTargetId] = useState<string>('general');
   const [editingSchedule, setEditingSchedule] = useState<any>(DEFAULT_SCHEDULE);
   const [useGeneralScheduleForBarber, setUseGeneralScheduleForBarber] = useState<boolean>(true);
+  const [services, setServices] = useState<any[]>(DEFAULT_SERVICES);
+  const [editingPrices, setEditingPrices] = useState<Record<string, string>>({});
+  const [savingPrices, setSavingPrices] = useState(false);
 
   const getBarberDaySchedule = (barber: Barber | null, dayOfWeek: number) => {
     if (barber && barber.schedule && barber.schedule[dayOfWeek]) {
@@ -220,6 +223,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     getShopSettings().then((settings: any) => {
       setShopSettings(settings);
       setEditingSchedule(settings?.schedule || DEFAULT_SCHEDULE);
+      if (settings?.services) {
+        setServices(settings.services);
+      }
     });
   }, []);
 
@@ -1046,6 +1052,40 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }
   };
 
+  const handlePriceChange = (svcId: string, val: string) => {
+    setEditingPrices(prev => ({
+      ...prev,
+      [svcId]: val
+    }));
+  };
+
+  const handleSavePrices = async () => {
+    if (!isJose) return;
+    setSavingPrices(true);
+    try {
+      const updatedServices = services.map(svc => {
+        const customPrice = editingPrices[svc.id];
+        return {
+          ...svc,
+          price: customPrice !== undefined && customPrice !== '' ? Number(customPrice) : svc.price
+        };
+      });
+
+      await updateShopSettings({
+        services: updatedServices
+      });
+
+      setServices(updatedServices);
+      setEditingPrices({});
+      toast.success('Precios actualizados correctamente.');
+    } catch (err: any) {
+      console.error('Error al guardar precios:', err);
+      toast.error('Error al guardar los precios.');
+    } finally {
+      setSavingPrices(false);
+    }
+  };
+
   const handleUnblockTime = async () => {
     if (!selectedBarber) return;
     if (!isRangeMode && selectedTimesForBlocking.length === 0) return;
@@ -1361,6 +1401,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               >
                 Finanzas
               </button>
+              <button
+                onClick={() => setActiveAdminTab('precios')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'precios' ? 'text-crimson' : 'text-charcoal'}`}
+              >
+                Precios Servicios
+              </button>
             </div>
           ) : (
             <div className="flex flex-wrap gap-4 border-b border-white/5 pb-4">
@@ -1437,7 +1483,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             <div>
                               <label className="block text-[9px] font-black uppercase text-charcoal mb-1">Seleccionar Servicio</label>
                               <div className="grid grid-cols-3 gap-1">
-                                {SERVICES.map(svc => (
+                                {services.map(svc => (
                                   <button
                                     key={svc.id}
                                     type="button"
@@ -1496,7 +1542,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Ingresos Estimados</p>
                       <p className="font-display font-black text-4xl text-crimson">
                         ${adminAppts.reduce((acc, appt) => {
-                          const svc = SERVICES.find(s => s.name === appt.service);
+                          const svc = services.find(s => s.name === appt.service);
                           return acc + (svc ? svc.price : 0);
                         }, 0).toLocaleString('es-AR')}
                       </p>
@@ -1778,7 +1824,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                       <h4 className="font-bold text-sm uppercase text-light-gray tracking-wide">{appt.customerName}</h4>
                                       {appt.completed ? (
                                         <span className="bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
-                                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
                                         </span>
                                       ) : (
                                         <span className="bg-zinc-800/60 border border-white/5 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
@@ -1842,7 +1888,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     <button
                                       onClick={() => {
                                         setCompletingAppt(appt);
-                                        setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
+                                        setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0)));
                                       }}
                                       className="flex-1 md:flex-none bg-crimson border border-crimson hover:bg-crimson/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-crimson/10 text-center"
                                       title="Registrar cobro de este corte"
@@ -1916,7 +1962,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                               <h4 className="font-bold text-sm uppercase text-light-gray tracking-wide">{appt.customerName}</h4>
                                               {appt.completed ? (
                                                 <span className="bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm flex items-center gap-1">
-                                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
+                                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> Cobrado (${(appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0)).toLocaleString('es-AR')})
                                                 </span>
                                               ) : (
                                                 <span className="bg-zinc-800/60 border border-white/5 text-charcoal px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
@@ -1980,7 +2026,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                             <button
                                               onClick={() => {
                                                 setCompletingAppt(appt);
-                                                setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0)));
+                                                setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0)));
                                               }}
                                               className="flex-1 md:flex-none bg-crimson border border-crimson hover:bg-crimson/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-crimson/10 text-center"
                                               title="Registrar cobro de este corte"
@@ -2430,7 +2476,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 const processedAppts = finanzasAppts.map(appt => {
                   const barber = barbers.find(b => b.id === appt.barberId);
                   const isJoseCut = barber?.id === 'jose-hernandez' || barber?.email === 'jhbarber87@gmail.com' || barber?.email === 'resetart.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
-                  const svcPrice = appt.customPrice != null ? appt.customPrice : (SERVICES.find(s => s.name === appt.service)?.price || 0);
+                  const svcPrice = appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0);
                   
                   let joseShare = 0;
                   let barberShare = 0;
@@ -2676,6 +2722,54 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         </div>
       )}
 
+      {isBarberAdmin && isJose && activeAdminTab === 'precios' && (
+        <div className="space-y-8">
+          <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
+              <DollarSign className="w-6 h-6 text-crimson" />
+              <div>
+                <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
+                  Precios de los Servicios
+                </h3>
+                <p className="text-xs text-charcoal font-bold uppercase">
+                  Modifica el precio de venta al público de cada servicio
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {services.map(svc => (
+                <div key={svc.id} className="bg-black/50 border border-white/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-display font-bold text-xl uppercase tracking-wide text-light-gray">{svc.name}</h4>
+                    <p className="text-[10px] text-charcoal font-bold uppercase">Duración estimada: {svc.duration} minutos</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 max-w-xs w-full">
+                    <span className="text-zinc-500 font-display font-bold text-lg">$</span>
+                    <input
+                      type="number"
+                      value={editingPrices[svc.id] !== undefined ? editingPrices[svc.id] : svc.price}
+                      onChange={(e) => handlePriceChange(svc.id, e.target.value)}
+                      className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-black text-lg focus:outline-none focus:border-crimson"
+                      placeholder="Precio"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={handleSavePrices}
+                disabled={savingPrices}
+                className="w-full bg-crimson hover:bg-crimson/80 transition-colors py-4 font-display font-bold uppercase tracking-widest text-lg text-white rounded"
+              >
+                {savingPrices ? 'Guardando...' : 'Guardar Precios'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
             <div className="flex gap-4 border-b border-white/5 pb-6 mb-8">
@@ -2764,7 +2858,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                      onClick={() => {
                                         if (window.confirm('Para reprogramar, elige tu nuevo horario. El turno actual se cancelará automáticamente cuando confirmes el nuevo. ¿Continuar?')) {
                                             setSelectedBarber(b || null);
-                                            setSelectedService(SERVICES.find(s => s.name === appt.service) || null);
+                                            setSelectedService(services.find(s => s.name === appt.service) || null);
                                             setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
                                             setReschedulingApptId(appt.id);
                                             setSelectedDate(startOfDay(new Date()));
@@ -2848,7 +2942,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <Scissors className="text-crimson" /> Elige el Servicio
                     </h3>
                     <div className="grid grid-cols-1 gap-4">
-                      {SERVICES.map(service => (
+                      {services.map(service => (
                         <button
                           key={service.id}
                           onClick={() => { setSelectedService(service); setStep(3); }}
@@ -3173,7 +3267,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       min="0"
                       value={editForm.customPrice}
                       onChange={(e) => setEditForm({ ...editForm, customPrice: e.target.value })}
-                      placeholder={String(SERVICES.find(s => s.name === editForm.service)?.price ?? '')}
+                      placeholder={String(services.find(s => s.name === editForm.service)?.price ?? '')}
                       className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
                     />
                   </div>
