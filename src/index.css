@@ -42,6 +42,6 @@
 
 /* Mobile scroll color reveal style */
 .reveal-color {
-  filter: grayscale(0) !important;
+  filter: none !important;
   opacity: 1 !important;
 }

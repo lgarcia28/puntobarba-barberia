@@ -40,48 +40,48 @@ export default function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const mediaQuery = window.matchMedia('(max-w: 767px)');
-    let intersectionObserver: IntersectionObserver | null = null;
+    // Detectar dispositivos táctiles (móviles/tablets) o pantallas con ancho menor a 768px
+    const isMobileDevice = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+    if (!isMobileDevice) return;
     
-    const updateObservations = () => {
-      if (intersectionObserver) {
-        intersectionObserver.disconnect();
-      }
-      
-      if (!mediaQuery.matches) return;
-      
-      const elements = document.querySelectorAll('.grayscale, [class*="grayscale"]');
-      intersectionObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('reveal-color');
-          } else {
-            entry.target.classList.remove('reveal-color');
-          }
-        });
-      }, {
-        root: null,
-        rootMargin: '-10% 0px -10% 0px',
-        threshold: 0.1
+    const observedElements = new Set<Element>();
+    
+    const intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-color');
+        } else {
+          entry.target.classList.remove('reveal-color');
+        }
       });
-      
-      elements.forEach(el => intersectionObserver?.observe(el));
-    };
-    
-    // Observar mutaciones del DOM para capturar imágenes renderizadas dinámicamente (ej. pasos de reservas)
-    const mutationObserver = new MutationObserver(() => {
-      updateObservations();
+    }, {
+      root: null,
+      rootMargin: '0px 0px -50px 0px', // Activa la revelación ligeramente antes de que entre del todo por abajo
+      threshold: 0.05
     });
     
-    updateObservations();
+    const scanAndObserve = () => {
+      const elements = document.querySelectorAll('.grayscale, [class*="grayscale"]');
+      elements.forEach(el => {
+        if (!observedElements.has(el)) {
+          observedElements.add(el);
+          intersectionObserver.observe(el);
+        }
+      });
+    };
+    
+    // Escaneo inicial
+    scanAndObserve();
+    
+    // Observar mutaciones del DOM para capturar imágenes dinámicas (ej. barberos que cargan después)
+    const mutationObserver = new MutationObserver(() => {
+      scanAndObserve();
+    });
     mutationObserver.observe(document.body, { childList: true, subtree: true });
     
-    mediaQuery.addEventListener('change', updateObservations);
-    
     return () => {
-      if (intersectionObserver) intersectionObserver.disconnect();
+      intersectionObserver.disconnect();
       mutationObserver.disconnect();
-      mediaQuery.removeEventListener('change', updateObservations);
     };
   }, []);
 
