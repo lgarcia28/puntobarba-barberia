@@ -2907,22 +2907,22 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
-                      <User className="text-crimson" /> Selecciona tu Barbero
+                    <h3 className="text-lg md:text-2xl font-display font-bold uppercase flex items-center gap-3">
+                      <User className="text-crimson w-5 h-5" /> Selecciona tu Barbero
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-3 gap-3 md:gap-6">
                       {barbers.map(barber => (
                         <button
                           key={barber.id}
                           onClick={() => { setSelectedBarber(barber); setStep(2); }}
-                          className="group relative aspect-square overflow-hidden border border-white/5 hover:border-crimson transition-all"
+                          className="group relative aspect-square overflow-hidden border border-white/5 hover:border-crimson transition-all cursor-pointer"
                         >
                           <img src={barber.photo} alt={barber.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" referrerPolicy="no-referrer" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                          <div className="absolute bottom-4 left-4 text-left">
-                            <p className="font-display font-black uppercase text-xl leading-none">{barber.name}</p>
+                          <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 text-left">
+                            <p className="font-display font-black uppercase text-xs sm:text-base md:text-xl leading-tight">{barber.name}</p>
                           </div>
                         </button>
                       ))}
@@ -2936,26 +2936,26 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <button onClick={() => setStep(1)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
+                    <button onClick={() => setStep(1)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
-                      <Scissors className="text-crimson" /> Elige el Servicio
+                    <h3 className="text-lg md:text-2xl font-display font-bold uppercase flex items-center gap-3">
+                      <Scissors className="text-crimson w-5 h-5" /> Elige el Servicio
                     </h3>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-2 md:gap-4">
                       {services.map(service => (
                         <button
                           key={service.id}
                           onClick={() => { setSelectedService(service); setStep(3); }}
-                          className="p-6 bg-black border border-white/5 hover:border-crimson transition-all flex justify-between items-center group"
+                          className="p-3 md:p-6 bg-black border border-white/5 hover:border-crimson transition-all flex justify-between items-center group cursor-pointer"
                         >
                           <div className="text-left">
-                            <p className="font-display font-black uppercase text-2xl group-hover:text-crimson transition-colors">{service.name}</p>
-                            <p className="text-charcoal font-bold uppercase tracking-widest text-xs">{service.duration} MINUTOS</p>
+                            <p className="font-display font-black uppercase text-sm sm:text-lg md:text-2xl group-hover:text-crimson transition-colors">{service.name}</p>
+                            <p className="text-charcoal font-bold uppercase tracking-widest text-[9px] sm:text-[10px] md:text-xs">{service.duration} MINUTOS</p>
                           </div>
-                          <p className="text-2xl font-display font-bold text-light-gray">${service.price.toLocaleString('es-AR')}</p>
+                          <p className="text-sm sm:text-lg md:text-2xl font-display font-bold text-light-gray">${service.price.toLocaleString('es-AR')}</p>
                         </button>
                       ))}
                     </div>
@@ -2968,18 +2968,18 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <button onClick={() => setStep(2)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
+                    <button onClick={() => setStep(2)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
-                        <CalendarIcon className="text-crimson" /> Selecciona el Día
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-lg md:text-2xl font-display font-bold uppercase flex items-center gap-3">
+                        <CalendarIcon className="text-crimson w-5 h-5" /> Selecciona el Día
                       </h3>
                       <div className="relative">
-                        <button className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-2 hover:border-crimson transition-colors uppercase text-xs font-bold">
-                          <CalendarIcon className="w-4 h-4 text-crimson" /> Elegir Día
+                        <button className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-3 py-1.5 hover:border-crimson transition-colors uppercase text-[10px] font-bold cursor-pointer">
+                          <CalendarIcon className="w-3.5 h-3.5 text-crimson" /> Elegir Día
                         </button>
                         <input
                           type="date"
@@ -2999,11 +2999,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-1 md:gap-2 pb-4">
+                    <div className="grid grid-cols-7 gap-1 md:gap-2 pb-2">
                       {Array.from({ length: 35 }).map((_, i) => {
                         const today = startOfDay(new Date());
                         const currentDayOfWeek = getDay(today);
-                        // getDay: 0 = Sunday, 1 = Monday, ...
                         const daysToSubtract = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
                         const date = addMinutes(today, (i - daysToSubtract) * 1440);
                         
@@ -3016,7 +3015,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             key={i}
                             disabled={isPast}
                             onClick={() => { setSelectedDate(date); setSelectedTime(null); setStep(4); }}
-                            className={`py-2 md:py-3 border flex flex-col items-center transition-all ${
+                            className={`py-1 sm:py-2 md:py-3 border flex flex-col items-center transition-all cursor-pointer ${
                               isPast
                                 ? 'border-white/5 bg-black/50 text-charcoal/30 cursor-not-allowed opacity-50'
                                 : isSelected
@@ -3026,8 +3025,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:bg-zinc-900'
                             }`}
                           >
-                            <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest">{format(date, 'EEE', { locale: es })}</span>
-                            <span className="text-lg md:text-xl font-display font-black">{format(date, 'dd')}</span>
+                            <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest">{format(date, 'EEE', { locale: es })}</span>
+                            <span className="text-sm sm:text-lg md:text-xl font-display font-black">{format(date, 'dd')}</span>
                           </button>
                         );
                       })}
@@ -3041,34 +3040,34 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <button onClick={() => setStep(3)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
+                    <button onClick={() => setStep(3)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <div className="text-center py-4 bg-zinc-900 border border-white/5 rounded-sm">
-                      <p className="text-charcoal text-xs font-bold uppercase tracking-[0.2em] mb-1">Día Seleccionado</p>
-                      <h4 className="font-display font-black text-2xl md:text-3xl uppercase text-white tracking-wide">
+                    <div className="text-center py-2.5 md:py-4 bg-zinc-900 border border-white/5 rounded-sm mb-2">
+                      <p className="text-charcoal text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">Día Seleccionado</p>
+                      <h4 className="font-display font-black text-base sm:text-xl md:text-3xl uppercase text-white tracking-wide">
                         {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
                       </h4>
                     </div>
 
-                    <div className="border-t border-white/5 pt-6">
-                      <h4 className="font-display font-black text-xl uppercase tracking-widest text-crimson mb-6 flex items-center gap-2">
+                    <div className="border-t border-white/5 pt-4">
+                      <h4 className="font-display font-black text-lg md:text-xl uppercase tracking-widest text-crimson mb-4 flex items-center gap-2">
                         <Clock className="w-5 h-5 text-crimson" /> HORARIOS
                       </h4>
-                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 md:gap-3">
                         {getAvailableSlots().map(time => (
                           <button
                             key={time}
                             onClick={() => { setSelectedTime(time); setStep(5); }}
-                            className={`py-3 border font-display font-bold text-lg transition-all ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
+                            className={`py-1.5 sm:py-2 md:py-3 border font-display font-bold text-sm sm:text-base md:text-lg transition-all cursor-pointer ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
                           >
                             {time}
                           </button>
                         ))}
                         {getAvailableSlots().length === 0 && (
-                          <p className="col-span-full text-center py-12 text-charcoal italic border border-dashed border-white/5">
+                          <p className="col-span-full text-center py-8 text-charcoal italic border border-dashed border-white/5 text-sm">
                             No hay horarios disponibles para este día.
                           </p>
                         )}
@@ -3083,39 +3082,39 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <button onClick={() => setStep(4)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
+                    <button onClick={() => setStep(4)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
-                      <CheckCircle2 className="text-crimson" /> Confirmar Datos
+                    <h3 className="text-lg md:text-2xl font-display font-bold uppercase flex items-center gap-3">
+                      <CheckCircle2 className="text-crimson w-5 h-5" /> Confirmar Datos
                     </h3>
 
-                    <form onSubmit={handleBooking} className="space-y-6">
-                      <div className="bg-black p-6 border border-white/5 space-y-4">
-                        <div className="flex justify-between border-b border-white/5 pb-4">
-                          <span className="text-charcoal uppercase text-xs font-bold tracking-widest">Servicio</span>
-                          <span className="font-display font-bold uppercase">{selectedService.name}</span>
+                    <form onSubmit={handleBooking} className="space-y-4">
+                      <div className="bg-black p-4 md:p-6 border border-white/5 space-y-2 md:space-y-4">
+                        <div className="flex justify-between border-b border-white/5 pb-2 md:pb-4">
+                          <span className="text-charcoal uppercase text-[10px] font-bold tracking-widest">Servicio</span>
+                          <span className="font-display font-bold uppercase text-sm md:text-base">{selectedService.name}</span>
                         </div>
-                        <div className="flex justify-between border-b border-white/5 pb-4">
-                          <span className="text-charcoal uppercase text-xs font-bold tracking-widest">Barbero</span>
-                          <span className="font-display font-bold uppercase">{selectedBarber.name}</span>
+                        <div className="flex justify-between border-b border-white/5 pb-2 md:pb-4">
+                          <span className="text-charcoal uppercase text-[10px] font-bold tracking-widest">Barbero</span>
+                          <span className="font-display font-bold uppercase text-sm md:text-base">{selectedBarber.name}</span>
                         </div>
-                        <div className="flex justify-between border-b border-white/5 pb-4">
-                          <span className="text-charcoal uppercase text-xs font-bold tracking-widest">Fecha</span>
-                          <span className="font-display font-bold uppercase">{format(selectedDate, 'dd/MM/yyyy')} - {selectedTime} HS</span>
+                        <div className="flex justify-between border-b border-white/5 pb-2 md:pb-4">
+                          <span className="text-charcoal uppercase text-[10px] font-bold tracking-widest">Fecha</span>
+                          <span className="font-display font-bold uppercase text-sm md:text-base">{format(selectedDate, 'dd/MM/yyyy')} - {selectedTime} HS</span>
                         </div>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <input
                           type="text"
                           placeholder="NOMBRE COMPLETO"
                           required
                           value={customerInfo.name}
                           onChange={e => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                          className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors"
+                          className="w-full bg-black border border-white/10 p-3 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors text-sm"
                         />
                         <input
                           type="tel"
@@ -3123,32 +3122,32 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           required
                           value={customerInfo.phone}
                           onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                          className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors"
+                          className="w-full bg-black border border-white/10 p-3 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors text-sm"
                         />
-                        <div className="space-y-4">
-                          <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 text-xs font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-3 transition-colors">
                             <input
                               type="checkbox"
                               checked={isFixedAppointment}
                               onChange={(e) => setIsFixedAppointment(e.target.checked)}
-                              className="w-5 h-5 accent-crimson"
+                              className="w-4 h-4 accent-crimson"
                             />
                             Turno Fijo (Reservar varias fechas por 1 mes)
                           </label>
 
                           {isFixedAppointment && (
-                            <div className="grid grid-cols-2 gap-4 ml-8 animate-in fade-in slide-in-from-left-2 duration-300">
+                            <div className="grid grid-cols-2 gap-3 ml-8 animate-in fade-in slide-in-from-left-2 duration-300">
                               <button
                                 type="button"
                                 onClick={() => setFixedInterval('weekly')}
-                                className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all ${fixedInterval === 'weekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                                className={`p-2 border text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'weekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
                               >
                                 Semanal (Cada 7 días)
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setFixedInterval('biweekly')}
-                                className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all ${fixedInterval === 'biweekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                                className={`p-2 border text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'biweekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
                               >
                                 Quincenal (Cada 15 días)
                               </button>
@@ -3158,15 +3157,15 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
 
                       {error && (
-                        <div className="p-4 bg-crimson/10 border border-crimson text-crimson text-sm font-bold uppercase flex items-center gap-3">
-                          <AlertCircle className="w-5 h-5" /> {error}
+                        <div className="p-3 bg-crimson/10 border border-crimson text-crimson text-xs font-bold uppercase flex items-center gap-3">
+                          <AlertCircle className="w-4 h-4" /> {error}
                         </div>
                       )}
 
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-crimson py-5 font-display font-bold uppercase tracking-widest text-lg shadow-xl shadow-crimson/20 disabled:opacity-50"
+                        className="w-full bg-crimson py-3.5 md:py-5 font-display font-bold uppercase tracking-widest text-sm md:text-lg shadow-xl shadow-crimson/20 disabled:opacity-50 cursor-pointer"
                       >
                         {loading ? 'PROCESANDO...' : 'CONFIRMAR TURNO'}
                       </button>
