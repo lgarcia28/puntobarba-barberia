@@ -1400,16 +1400,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           : "max-w-7xl mx-auto bg-zinc-900/50 border border-white/5 p-6 md:p-10 rounded-sm concrete-texture shadow-2xl"
       }
     >
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-normal text-light-gray">
+      <div className={`flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-8 ${isModal ? 'pr-10 sm:pr-0' : ''}`}>
+        <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-normal text-light-gray leading-none">
           {isBarberAdmin ? 'Panel de Gestión' : 'Reserva tu Turno'}
         </h2>
         {user ? (
-          <button onClick={handleLogout} className="text-charcoal hover:text-crimson transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
+          <button onClick={handleLogout} className="text-charcoal hover:text-crimson transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer mt-1">
             <LogOut className="w-4 h-4" /> Salir
           </button>
         ) : (
-          <button onClick={handleLogin} className="text-charcoal hover:text-crimson transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
+          <button onClick={handleLogin} className="text-charcoal hover:text-crimson transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer mt-1">
             <LogIn className="w-4 h-4" /> Barber Login
           </button>
         )}
