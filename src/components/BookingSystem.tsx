@@ -452,6 +452,24 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     return days;
   };
 
+  const getCalendarDays = () => {
+    const days = [];
+    const today = startOfDay(new Date());
+    const currentDayOfWeek = getDay(today);
+    const daysToSubtract = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+    const startMonday = addDays(today, -daysToSubtract);
+    
+    let current = startMonday;
+    // We want to show 5 weeks of Monday-Saturday, which is 30 days
+    while (days.length < 30) {
+      if (getDay(current) !== 0) { // Skip Sunday
+        days.push(current);
+      }
+      current = addDays(current, 1);
+    }
+    return days;
+  };
+
   const getAvailableSlots = () => {
     if (!selectedBarber || !selectedService) return [];
 
@@ -3002,8 +3020,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <button onClick={() => setStep(2)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-lg md:text-2xl font-display font-bold uppercase flex items-center gap-3">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
                         <CalendarIcon className="text-crimson w-5 h-5" /> Selecciona el Día
                       </h3>
                       <div className="relative">
@@ -3028,27 +3046,47 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 pb-2">
-                      {getAvailableDays().map((date, i) => {
+                    {/* Column Headers (Lunes a Sábado) */}
+                    <div className="grid grid-cols-6 gap-2 text-center mb-1 border-b border-white/5 pb-2">
+                      {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(dayName => (
+                        <span key={dayName} className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-charcoal">
+                          {dayName}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-6 gap-2 pb-2">
+                      {getCalendarDays().map((date, i) => {
                         const today = startOfDay(new Date());
                         const isSelected = isSameDay(date, selectedDate);
                         const isToday = isSameDay(date, today);
+                        
+                        const isPast = isBefore(date, today);
+                        const dayOfWeek = getDay(date);
+                        const daySchedule = getBarberDaySchedule(selectedBarber, dayOfWeek);
+                        const isDayOpen = daySchedule.isOpen;
+                        
+                        const isDisabled = isPast || !isDayOpen;
 
                         return (
                           <button
                             key={i}
+                            disabled={isDisabled}
                             onClick={() => { setSelectedDate(date); setSelectedTime(null); setStep(4); }}
-                            className={`py-3 sm:py-4 border flex flex-col items-center justify-center transition-all cursor-pointer rounded-sm ${
-                              isSelected
+                            className={`py-2.5 sm:py-3.5 border flex flex-col items-center justify-center transition-all cursor-pointer rounded-sm ${
+                              isDisabled
+                                ? 'border-white/5 bg-black/40 text-charcoal/20 cursor-not-allowed opacity-25'
+                                : isSelected
                                 ? 'border-crimson bg-crimson text-white shadow-lg shadow-crimson/20 scale-105 z-10'
                                 : isToday
                                 ? 'border-white bg-black text-white hover:bg-zinc-900'
                                 : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:bg-zinc-900'
                             }`}
                           >
-                            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest">{format(date, 'EEEE', { locale: es }).substring(0, 3)}</span>
-                            <span className="text-lg sm:text-2xl md:text-3xl font-display font-black mt-1 leading-none">{format(date, 'dd')}</span>
-                            <span className="text-[9px] sm:text-[10px] text-charcoal/80 uppercase font-bold mt-0.5">{format(date, 'MMM', { locale: es })}</span>
+                            <span className="text-base sm:text-2xl md:text-3xl font-display font-black leading-none">{format(date, 'dd')}</span>
+                            <span className="text-[8px] sm:text-[9px] text-charcoal/80 uppercase font-bold mt-1 leading-none">
+                              {!isDayOpen && !isPast ? 'Cerrado' : format(date, 'MMM', { locale: es })}
+                            </span>
                           </button>
                         );
                       })}
@@ -3062,34 +3100,30 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
+                    className="space-y-2.5 md:space-y-4"
                   >
-                    <button onClick={() => setStep(3)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
+                    <button onClick={() => setStep(3)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-1 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
-                    <div className="text-center py-2.5 md:py-4 bg-zinc-900 border border-white/5 rounded-sm mb-2">
-                      <p className="text-charcoal text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">Día Seleccionado</p>
-                      <h4 className="font-display font-black text-base sm:text-xl md:text-3xl uppercase text-white tracking-wide">
+                    <div className="text-center py-2 bg-zinc-900 border border-white/5 rounded-sm mb-1.5">
+                      <h4 className="font-display font-black text-xs sm:text-base md:text-xl uppercase text-white tracking-wide leading-none py-1">
                         {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
                       </h4>
                     </div>
 
-                    <div className="border-t border-white/5 pt-4">
-                      <h4 className="font-display font-black text-lg md:text-xl uppercase tracking-widest text-crimson mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-crimson" /> HORARIOS
-                      </h4>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
+                    <div className="border-t border-white/5 pt-3">
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1.5 md:gap-3">
                         {getAvailableSlots().map(time => (
                           <button
                             key={time}
                             onClick={() => { setSelectedTime(time); setStep(5); }}
-                            className={`py-3 sm:py-4 border font-display font-black text-base sm:text-lg md:text-xl transition-all cursor-pointer rounded-sm ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
+                            className={`py-2.5 sm:py-3.5 border font-display font-black text-sm sm:text-base md:text-lg transition-all cursor-pointer rounded-sm ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
                           >
                             {time}
                           </button>
                         ))}
                         {getAvailableSlots().length === 0 && (
-                          <p className="col-span-full text-center py-8 text-charcoal italic border border-dashed border-white/5 text-sm">
+                          <p className="col-span-full text-center py-6 text-charcoal italic border border-dashed border-white/5 text-xs">
                             No hay horarios disponibles para este día.
                           </p>
                         )}
