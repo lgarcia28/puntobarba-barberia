@@ -668,7 +668,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl bg-zinc-950 md:border md:border-white/10 shadow-2xl p-4 sm:p-6 md:p-10 text-white overflow-y-auto md:rounded-sm concrete-texture flex flex-col justify-start"
+              className="relative w-[92%] h-auto max-h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl p-5 sm:p-8 md:p-10 text-white overflow-y-auto rounded-md concrete-texture flex flex-col justify-start"
             >
               {/* Close Button */}
               <button 
