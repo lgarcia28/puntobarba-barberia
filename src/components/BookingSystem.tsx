@@ -116,10 +116,11 @@ interface BookingSystemProps {
   bookingTab?: 'agendar' | 'mis-turnos';
   setBookingTab?: (tab: 'agendar' | 'mis-turnos') => void;
   onClose?: () => void;
+  forceClientFlow?: boolean;
 }
 
 // --- Booking System Component ---
-export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose }: BookingSystemProps = {}) => {
+export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose, forceClientFlow = false }: BookingSystemProps = {}) => {
   const [step, setStep] = useState(1);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -285,11 +286,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       if (u) {
         const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com'];
         const isJoseUser = adminEmails.includes(u.email || '');
-        setIsJose(isJoseUser);
+        setIsJose(isJoseUser && !forceClientFlow);
 
         // Check if user is a barber in the dynamic list
         const barber = barbers.find(b => b.email === u.email);
-        if (barber || isJoseUser) {
+        if ((barber || isJoseUser) && !forceClientFlow) {
           setIsBarberAdmin(true);
           // If not Jose, auto-select the barber
           if (!isJoseUser && barber && !selectedBarber) {
@@ -304,7 +305,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       }
     });
     return unsubscribe;
-  }, [barbers]);
+  }, [barbers, forceClientFlow]);
 
   useEffect(() => {
     if (!selectedBarber) return;

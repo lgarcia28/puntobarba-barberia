@@ -22,19 +22,42 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { BookingSystem } from './components/BookingSystem';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isBarberAdmin, setIsBarberAdmin] = useState(false);
 
   useEffect(() => {
+    let unsubBarbers = () => {};
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      // User authentication state changed
+      if (user) {
+        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com'];
+        const isJoseUser = adminEmails.includes(user.email || '');
+        const q = query(collection(db, 'barbers'));
+        unsubBarbers = onSnapshot(q, (snapshot) => {
+          const barbersEmails = snapshot.docs.map(doc => doc.data().email);
+          const isBarber = barbersEmails.includes(user.email || '');
+          if (isJoseUser || isBarber) {
+            setIsBarberAdmin(true);
+            setIsBookingOpen(false);
+          } else {
+            setIsBarberAdmin(false);
+          }
+        });
+      } else {
+        setIsBarberAdmin(false);
+        unsubBarbers();
+      }
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      unsubBarbers();
+    };
   }, []);
 
   // Efecto premium: convertir imágenes en blanco y negro a color al hacer scroll en móviles
@@ -129,6 +152,9 @@ export default function App() {
             <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cortes</a>
             <a href="#cursos" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cursos</a>
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
+            {isBarberAdmin && (
+              <a href="#reserva" className="text-sm font-bold uppercase tracking-widest text-crimson hover:text-white transition-colors">Panel de Gestión</a>
+            )}
             <button 
               onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
               className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-crimson hover:text-crimson transition-all active:scale-95 text-light-gray cursor-pointer"
@@ -159,6 +185,9 @@ export default function App() {
             <a href="#cortes" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cortes</a>
             <a href="#cursos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cursos</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
+            {isBarberAdmin && (
+              <a href="#reserva" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest text-crimson">Panel de Gestión</a>
+            )}
             <div className="grid grid-cols-2 gap-3 pt-2">
               <button 
                 onClick={() => {
@@ -316,27 +345,36 @@ export default function App() {
           </div>
         </section>
 
-        {/* Booking CTA Banner */}
-        <section id="reserva" className="py-24 bg-zinc-950 border-y border-white/5 relative overflow-hidden concrete-texture">
-          <div className="absolute inset-0 bg-distressed opacity-20 bg-cover bg-center" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-6">
-            <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tight text-light-gray">
-              ¿Listo para tu cambio de estilo?
-            </h2>
-            <p className="max-w-lg mx-auto text-charcoal text-sm md:text-lg font-display uppercase tracking-widest leading-relaxed">
-              Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
-            </p>
-            <div className="pt-4">
-              <button 
-                onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                className="inline-block bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-2xl shadow-crimson/30 cursor-pointer text-white"
-              >
-                Reservar Turno Ahora
-              </button>
+        {/* Booking CTA Banner or Full-Width Management Panel */}
+        {isBarberAdmin ? (
+          <section id="reserva" className="py-20 md:py-32 bg-black concrete-texture relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson to-transparent opacity-30" />
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+              <BookingSystem bookingTab={bookingTab} setBookingTab={setBookingTab} />
             </div>
-          </div>
-        </section>
+          </section>
+        ) : (
+          <section id="reserva" className="py-24 bg-zinc-950 border-y border-white/5 relative overflow-hidden concrete-texture">
+            <div className="absolute inset-0 bg-distressed opacity-20 bg-cover bg-center" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+            <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-6">
+              <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tight text-light-gray">
+                ¿Listo para tu cambio de estilo?
+              </h2>
+              <p className="max-w-lg mx-auto text-charcoal text-sm md:text-lg font-display uppercase tracking-widest leading-relaxed">
+                Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
+              </p>
+              <div className="pt-4">
+                <button 
+                  onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                  className="inline-block bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-2xl shadow-crimson/30 cursor-pointer text-white"
+                >
+                  Reservar Turno Ahora
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Academy Section */}
         <section id="cursos" className="py-20 md:py-32 relative overflow-hidden bg-black concrete-texture">
@@ -557,6 +595,7 @@ export default function App() {
                 bookingTab={bookingTab} 
                 setBookingTab={setBookingTab} 
                 onClose={() => setIsBookingOpen(false)}
+                forceClientFlow={true}
               />
             </motion.div>
           </motion.div>
