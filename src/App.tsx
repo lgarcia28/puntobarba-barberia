@@ -19,7 +19,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { BookingSystem } from './components/BookingSystem';
 import { auth } from './firebase';
@@ -28,6 +28,7 @@ import { Toaster } from 'react-hot-toast';
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -85,6 +86,19 @@ export default function App() {
     };
   }, []);
 
+  // Bloquear scroll de fondo cuando el modal está abierto
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (isBookingOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isBookingOpen]);
+
   return (
     <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray">
       <Toaster 
@@ -115,20 +129,18 @@ export default function App() {
             <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cortes</a>
             <a href="#cursos" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cursos</a>
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
-            <a 
-              href="#reserva" 
-              onClick={() => setBookingTab('mis-turnos')}
-              className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-crimson hover:text-crimson transition-all active:scale-95 text-light-gray"
+            <button 
+              onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
+              className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-crimson hover:text-crimson transition-all active:scale-95 text-light-gray cursor-pointer"
             >
               Mis Turnos
-            </a>
-            <a 
-              href="#reserva" 
-              onClick={() => setBookingTab('agendar')}
-              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95 text-white"
+            </button>
+            <button 
+              onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95 text-white cursor-pointer"
             >
               Reservar
-            </a>
+            </button>
           </div>
 
           {/* Mobile Toggle */}
@@ -148,26 +160,26 @@ export default function App() {
             <a href="#cursos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cursos</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <a 
-                href="#reserva" 
+              <button 
                 onClick={() => {
                   setIsMenuOpen(false);
                   setBookingTab('mis-turnos');
+                  setIsBookingOpen(true);
                 }}
-                className="border border-white/10 py-3 font-bold uppercase tracking-widest text-center text-xs text-light-gray hover:border-crimson hover:text-white transition-all bg-black/50"
+                className="border border-white/10 py-3 font-bold uppercase tracking-widest text-center text-xs text-light-gray hover:border-crimson hover:text-white transition-all bg-black/50 cursor-pointer"
               >
                 Mis Turnos
-              </a>
-              <a 
-                href="#reserva" 
+              </button>
+              <button 
                 onClick={() => {
                   setIsMenuOpen(false);
                   setBookingTab('agendar');
+                  setIsBookingOpen(true);
                 }}
-                className="bg-red-600 py-3 font-bold uppercase tracking-widest text-center text-xs text-white"
+                className="bg-red-600 py-3 font-bold uppercase tracking-widest text-center text-xs text-white cursor-pointer"
               >
                 Reservar
-              </a>
+              </button>
             </div>
           </motion.div>
         )}
@@ -203,20 +215,18 @@ export default function App() {
                 Ven y descubre la mejor versión de ti
               </p>
               <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-6">
-                <a 
-                  href="#reserva" 
-                  onClick={() => setBookingTab('agendar')}
-                  className="bg-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/20 text-center"
+                <button 
+                  onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                  className="bg-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/20 text-center cursor-pointer text-white"
                 >
                   Reservar Turno
-                </a>
-                <a 
-                  href="#reserva" 
-                  onClick={() => setBookingTab('mis-turnos')}
-                  className="bg-black/50 backdrop-blur-sm border border-white/20 px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:border-crimson hover:text-crimson transition-all active:scale-95 text-center text-light-gray"
+                </button>
+                <button 
+                  onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
+                  className="bg-black/50 backdrop-blur-sm border border-white/20 px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:border-crimson hover:text-crimson transition-all active:scale-95 text-center text-light-gray cursor-pointer"
                 >
                   Mis Turnos
-                </a>
+                </button>
                 <a 
                   href="#cursos"
                   className="bg-charcoal/30 backdrop-blur-sm px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-charcoal/50 transition-all active:scale-95 border border-white/10 text-center"
@@ -306,15 +316,25 @@ export default function App() {
           </div>
         </section>
 
-        {/* Booking Section */}
-        <section id="reserva" className="py-20 md:py-32 bg-black concrete-texture relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson to-transparent opacity-30" />
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-normal text-light-gray">Agenda tu Turno</h2>
-              <p className="text-charcoal text-lg md:text-2xl font-display mt-4 uppercase tracking-widest">Sistema de gestión en tiempo real</p>
+        {/* Booking CTA Banner */}
+        <section id="reserva" className="py-24 bg-zinc-950 border-y border-white/5 relative overflow-hidden concrete-texture">
+          <div className="absolute inset-0 bg-distressed opacity-20 bg-cover bg-center" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-6">
+            <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tight text-light-gray">
+              ¿Listo para tu cambio de estilo?
+            </h2>
+            <p className="max-w-lg mx-auto text-charcoal text-sm md:text-lg font-display uppercase tracking-widest leading-relaxed">
+              Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
+            </p>
+            <div className="pt-4">
+              <button 
+                onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                className="inline-block bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-2xl shadow-crimson/30 cursor-pointer text-white"
+              >
+                Reservar Turno Ahora
+              </button>
             </div>
-             <BookingSystem bookingTab={bookingTab} setBookingTab={setBookingTab} />
           </div>
         </section>
 
@@ -505,6 +525,43 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Immersive Booking App Modal Overlay */}
+      <AnimatePresence>
+        {isBookingOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 md:p-6 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsBookingOpen(false);
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full h-full md:h-auto md:max-w-4xl bg-zinc-950 md:border md:border-white/10 shadow-2xl p-6 md:p-10 text-white overflow-hidden md:rounded-sm concrete-texture flex flex-col justify-between"
+            >
+              {/* Close Button */}
+              <button 
+                onClick={() => setIsBookingOpen(false)}
+                className="absolute top-4 right-4 md:top-6 md:right-6 text-charcoal hover:text-white transition-colors cursor-pointer p-2 hover:bg-white/5 rounded-full z-50"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <BookingSystem 
+                bookingTab={bookingTab} 
+                setBookingTab={setBookingTab} 
+                onClose={() => setIsBookingOpen(false)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

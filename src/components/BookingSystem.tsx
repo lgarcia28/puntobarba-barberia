@@ -115,10 +115,11 @@ export const getPhoneVariations = (phone: string): string[] => {
 interface BookingSystemProps {
   bookingTab?: 'agendar' | 'mis-turnos';
   setBookingTab?: (tab: 'agendar' | 'mis-turnos') => void;
+  onClose?: () => void;
 }
 
 // --- Booking System Component ---
-export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab }: BookingSystemProps = {}) => {
+export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose }: BookingSystemProps = {}) => {
   const [step, setStep] = useState(1);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -801,7 +802,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       }
 
       setSuccess(true);
-      setStep(5);
+      setStep(6);
       setReschedulingApptId(null);
     } catch (err: any) {
       setError(err.message || 'Error al agendar el turno.');
@@ -2885,17 +2886,19 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           ) : (
             <>
               {/* Steps Indicator */}
-              <div className="flex justify-between mb-12 relative">
-                <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/30 -z-10" />
-                {[1, 2, 3, 4].map(s => (
-                  <div
-                    key={s}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-display font-bold border-2 transition-all ${step >= s ? 'bg-crimson border-crimson text-white' : 'bg-black border-charcoal/30 text-charcoal'}`}
-                  >
-                    {s}
-                  </div>
-                ))}
-              </div>
+              {step <= 5 && (
+                <div className="flex justify-between mb-12 relative">
+                  <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/30 -z-10" />
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <div
+                      key={s}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-display font-bold border-2 transition-all ${step >= s ? 'bg-crimson border-crimson text-white' : 'bg-black border-charcoal/30 text-charcoal'}`}
+                    >
+                      {s}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <AnimatePresence mode="wait">
                 {step === 1 && (
@@ -2972,7 +2975,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     </button>
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
-                        <CalendarIcon className="text-crimson" /> Fecha y Hora
+                        <CalendarIcon className="text-crimson" /> Selecciona el Día
                       </h3>
                       <div className="relative">
                         <button className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-2 hover:border-crimson transition-colors uppercase text-xs font-bold">
@@ -2989,7 +2992,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               if (isBefore(d, startOfDay(new Date()))) return;
                               setSelectedDate(d);
                               setSelectedTime(null);
-                              scrollToHorarios();
+                              setStep(4);
                             }
                           }}
                         />
@@ -3012,7 +3015,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           <button
                             key={i}
                             disabled={isPast}
-                            onClick={() => { setSelectedDate(date); setSelectedTime(null); scrollToHorarios(); }}
+                            onClick={() => { setSelectedDate(date); setSelectedTime(null); setStep(4); }}
                             className={`py-2 md:py-3 border flex flex-col items-center transition-all ${
                               isPast
                                 ? 'border-white/5 bg-black/50 text-charcoal/30 cursor-not-allowed opacity-50'
@@ -3029,37 +3032,6 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         );
                       })}
                     </div>
-
-                    <div ref={horariosRef} className="border-t border-white/5 pt-6">
-                      <h4 className="font-display font-black text-xl uppercase tracking-widest text-crimson mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-crimson" /> HORARIOS
-                      </h4>
-                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
-                        {getAvailableSlots().map(time => (
-                          <button
-                            key={time}
-                            onClick={() => setSelectedTime(time)}
-                            className={`py-3 border font-display font-bold text-lg transition-all ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
-                          >
-                            {time}
-                          </button>
-                        ))}
-                        {getAvailableSlots().length === 0 && (
-                          <p className="col-span-full text-center py-12 text-charcoal italic border border-dashed border-white/5">
-                            No hay horarios disponibles para este día.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {selectedTime && (
-                      <button
-                        onClick={() => setStep(4)}
-                        className="w-full bg-crimson py-5 font-display font-bold uppercase tracking-widest text-lg mt-8"
-                      >
-                        Continuar
-                      </button>
-                    )}
                   </motion.div>
                 )}
 
@@ -3072,6 +3044,48 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     className="space-y-6"
                   >
                     <button onClick={() => setStep(3)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
+                      <ChevronLeft className="w-4 h-4" /> Volver
+                    </button>
+                    <div className="text-center py-4 bg-zinc-900 border border-white/5 rounded-sm">
+                      <p className="text-charcoal text-xs font-bold uppercase tracking-[0.2em] mb-1">Día Seleccionado</p>
+                      <h4 className="font-display font-black text-2xl md:text-3xl uppercase text-white tracking-wide">
+                        {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
+                      </h4>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-6">
+                      <h4 className="font-display font-black text-xl uppercase tracking-widest text-crimson mb-6 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-crimson" /> HORARIOS
+                      </h4>
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                        {getAvailableSlots().map(time => (
+                          <button
+                            key={time}
+                            onClick={() => { setSelectedTime(time); setStep(5); }}
+                            className={`py-3 border font-display font-bold text-lg transition-all ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                        {getAvailableSlots().length === 0 && (
+                          <p className="col-span-full text-center py-12 text-charcoal italic border border-dashed border-white/5">
+                            No hay horarios disponibles para este día.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {step === 5 && (
+                  <motion.div
+                    key="step5"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                    <button onClick={() => setStep(4)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-4">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <h3 className="text-xl md:text-2xl font-display font-bold uppercase flex items-center gap-3">
@@ -3160,9 +3174,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   </motion.div>
                 )}
 
-                {step === 5 && (
+                {step === 6 && (
                   <motion.div
-                    key="step5"
+                    key="step6"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-12 space-y-6"
@@ -3175,7 +3189,15 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       Te esperamos el <span className="text-white">{format(selectedDate, 'dd/MM')}</span> a las <span className="text-white">{selectedTime} HS</span> con <span className="text-white">{selectedBarber.name}</span>.
                     </p>
                     <button
-                      onClick={() => { setStep(1); setSelectedBarber(null); setSelectedService(null); setSelectedTime(null); setSuccess(false); setIsFixedAppointment(false); }}
+                      onClick={() => {
+                        setStep(1);
+                        setSelectedBarber(null);
+                        setSelectedService(null);
+                        setSelectedTime(null);
+                        setSuccess(false);
+                        setIsFixedAppointment(false);
+                        onClose?.();
+                      }}
                       className="bg-charcoal/20 px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-charcoal/40 transition-all"
                     >
                       Volver al Inicio
