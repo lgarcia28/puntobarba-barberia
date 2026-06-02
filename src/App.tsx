@@ -20,7 +20,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BookingSystem } from './components/BookingSystem';
 import { auth, db } from './firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
@@ -32,6 +32,11 @@ export default function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
+
+  const isBookingOpenRef = useRef(isBookingOpen);
+  useEffect(() => {
+    isBookingOpenRef.current = isBookingOpen;
+  }, [isBookingOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -54,7 +59,11 @@ export default function App() {
           const isBarber = barbersEmails.includes(user.email || '');
           if (isJoseUser || isBarber) {
             setIsBarberAdmin(true);
-            setIsBookingOpen(false);
+            if (isBookingOpenRef.current) {
+              setIsBookingOpen(false);
+              window.history.pushState({}, '', '/admin');
+              setCurrentPath('/admin');
+            }
           } else {
             setIsBarberAdmin(false);
           }
@@ -62,6 +71,11 @@ export default function App() {
       } else {
         setIsBarberAdmin(false);
         unsubBarbers();
+        // Redirect to home if logging out from the admin path
+        if (window.location.pathname === '/admin' || window.location.pathname === '/admin/') {
+          window.history.pushState({}, '', '/');
+          setCurrentPath('/');
+        }
       }
     });
     return () => {
@@ -69,6 +83,7 @@ export default function App() {
       unsubBarbers();
     };
   }, []);
+
 
   // Efecto premium: convertir imágenes en blanco y negro a color al hacer scroll en móviles
   useEffect(() => {
