@@ -31,6 +31,16 @@ export default function App() {
   const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
+  const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     let unsubBarbers = () => {};
@@ -122,6 +132,56 @@ export default function App() {
     };
   }, [isBookingOpen]);
 
+  if (currentPath === '/admin' || currentPath === '/admin/') {
+    return (
+      <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray py-10 px-4 md:px-12 flex flex-col justify-start">
+        <Toaster 
+          position="top-center" 
+          toastOptions={{
+            style: {
+              background: '#18181b',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '0px',
+              textTransform: 'uppercase',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              letterSpacing: '1px',
+            },
+            success: { iconTheme: { primary: '#dc2626', secondary: '#fff' } }
+          }} 
+        />
+        <div className="max-w-7xl w-full mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-10 pb-6 border-b border-white/5">
+            <div 
+              className="text-3xl font-black tracking-normal uppercase font-display flex items-center gap-1 cursor-pointer"
+              onClick={() => {
+                window.history.pushState({}, '', '/');
+                setCurrentPath('/');
+              }}
+            >
+              RESET <span className="bg-crimson text-white px-2 py-0.5 leading-none">ART</span> <span className="text-sm font-bold tracking-[0.3em] ml-2 hidden sm:inline">BARBERSHOP</span>
+            </div>
+            <a 
+              href="/" 
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/');
+                setCurrentPath('/');
+              }}
+              className="text-sm font-bold uppercase tracking-widest text-charcoal hover:text-white transition-colors"
+            >
+              Volver a la Web
+            </a>
+          </div>
+
+          <BookingSystem bookingTab={bookingTab} setBookingTab={setBookingTab} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray">
       <Toaster 
@@ -153,7 +213,17 @@ export default function App() {
             <a href="#cursos" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cursos</a>
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
             {isBarberAdmin && (
-              <a href="#reserva" className="text-sm font-bold uppercase tracking-widest text-crimson hover:text-white transition-colors">Panel de Gestión</a>
+              <a 
+                href="/admin" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, '', '/admin');
+                  setCurrentPath('/admin');
+                }}
+                className="text-sm font-bold uppercase tracking-widest text-crimson hover:text-white transition-colors"
+              >
+                Panel de Gestión
+              </a>
             )}
             <button 
               onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
@@ -186,7 +256,18 @@ export default function App() {
             <a href="#cursos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cursos</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
             {isBarberAdmin && (
-              <a href="#reserva" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest text-crimson">Panel de Gestión</a>
+              <a 
+                href="/admin" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsMenuOpen(false);
+                  window.history.pushState({}, '', '/admin');
+                  setCurrentPath('/admin');
+                }}
+                className="font-bold uppercase tracking-widest text-crimson animate-pulse"
+              >
+                Panel de Gestión
+              </a>
             )}
             <div className="grid grid-cols-2 gap-3 pt-2">
               <button 
@@ -345,36 +426,27 @@ export default function App() {
           </div>
         </section>
 
-        {/* Booking CTA Banner or Full-Width Management Panel */}
-        {isBarberAdmin ? (
-          <section id="reserva" className="py-20 md:py-32 bg-black concrete-texture relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-crimson to-transparent opacity-30" />
-            <div className="max-w-7xl mx-auto px-6 relative z-10">
-              <BookingSystem bookingTab={bookingTab} setBookingTab={setBookingTab} />
+        {/* Booking CTA Banner */}
+        <section id="reserva" className="py-24 bg-zinc-950 border-y border-white/5 relative overflow-hidden concrete-texture">
+          <div className="absolute inset-0 bg-distressed opacity-20 bg-cover bg-center" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-6">
+            <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tight text-light-gray">
+              ¿Listo para tu cambio de estilo?
+            </h2>
+            <p className="max-w-lg mx-auto text-charcoal text-sm md:text-lg font-display uppercase tracking-widest leading-relaxed">
+              Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
+            </p>
+            <div className="pt-4">
+              <button 
+                onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                className="inline-block bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-2xl shadow-crimson/30 cursor-pointer text-white"
+              >
+                Reservar Turno Ahora
+              </button>
             </div>
-          </section>
-        ) : (
-          <section id="reserva" className="py-24 bg-zinc-950 border-y border-white/5 relative overflow-hidden concrete-texture">
-            <div className="absolute inset-0 bg-distressed opacity-20 bg-cover bg-center" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-            <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-6">
-              <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tight text-light-gray">
-                ¿Listo para tu cambio de estilo?
-              </h2>
-              <p className="max-w-lg mx-auto text-charcoal text-sm md:text-lg font-display uppercase tracking-widest leading-relaxed">
-                Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
-              </p>
-              <div className="pt-4">
-                <button 
-                  onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                  className="inline-block bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-2xl shadow-crimson/30 cursor-pointer text-white"
-                >
-                  Reservar Turno Ahora
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
+          </div>
+        </section>
 
         {/* Academy Section */}
         <section id="cursos" className="py-20 md:py-32 relative overflow-hidden bg-black concrete-texture">
