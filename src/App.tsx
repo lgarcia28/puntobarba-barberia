@@ -188,7 +188,7 @@ export default function App() {
                 setCurrentPath('/');
               }}
             >
-              <img src={logoHorizontal} alt="Punto Barba" className="h-10 md:h-12 w-auto object-contain" />
+              <img src={logoHorizontal} alt="Punto Barba" className="h-14 md:h-18 w-auto object-contain" />
             </div>
             <a 
               href="/" 
@@ -237,13 +237,13 @@ export default function App() {
               <img 
                 src={logoSymbol} 
                 alt="Punto Barba" 
-                className="w-40 h-40 md:w-56 md:h-56 object-contain"
+                className="w-48 h-48 md:w-64 md:h-64 object-contain"
               />
               <motion.h2 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.9, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
-                className="text-3xl md:text-4xl font-display font-black tracking-[0.25em] text-crimson mt-6"
+                className="text-3xl md:text-5xl font-display font-black tracking-[0.25em] text-crimson mt-6"
               >
                 PUNTO BARBA
               </motion.h2>
@@ -271,7 +271,7 @@ export default function App() {
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-1">
-            <img src={logoHorizontal} alt="Punto Barba" className="h-10 md:h-12 w-auto object-contain" />
+            <img src={logoHorizontal} alt="Punto Barba" className="h-16 md:h-20 w-auto object-contain" />
           </div>
           
           {/* Desktop Menu */}
@@ -382,10 +382,13 @@ export default function App() {
                   Cortes & Rituales Premium
                 </span>
                 
-                <h1 className="text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-display font-black uppercase leading-[0.9] tracking-tight">
-                  PUNTO <br />
-                  <span className="text-crimson">BARBA</span>
-                </h1>
+                <div className="py-2 flex justify-center md:justify-start">
+                  <img 
+                    src={logoVertical} 
+                    alt="Punto Barba" 
+                    className="h-40 sm:h-48 md:h-56 lg:h-64 xl:h-72 w-auto object-contain max-w-full"
+                  />
+                </div>
                 
                 <p className="text-charcoal text-base md:text-xl font-display uppercase tracking-widest max-w-lg leading-relaxed mx-auto md:mx-0">
                   El espacio donde la precisión clásica se encuentra con la actitud urbana en el corazón de Rosario.
@@ -742,7 +745,7 @@ export default function App() {
       <footer className="bg-black py-16 border-t border-white/5 concrete-texture">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-1">
-            <img src={logoHorizontal} alt="Punto Barba" className="h-10 w-auto object-contain" />
+            <img src={logoHorizontal} alt="Punto Barba" className="h-16 w-auto object-contain" />
           </div>
           <p className="text-xs text-charcoal uppercase tracking-[0.3em] text-center font-display">
             © 2026 Punto Barba. Mendoza 2656, Rosario, Santa Fe. Tel: 341 3293388
