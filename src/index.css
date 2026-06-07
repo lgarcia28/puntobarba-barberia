@@ -26,27 +26,12 @@
 }
 
 .bg-distressed {
-  background-color: #000000;
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
-    url('https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&q=80&w=2000');
-  background-size: cover;
-  background-attachment: fixed;
-  background-blend-mode: multiply;
+  background-color: #050505;
+  background-image: linear-gradient(to bottom, #050505, #0a0a0a);
 }
 
 .concrete-texture {
   position: relative;
-}
-
-.concrete-texture::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url('https://www.transparenttextures.com/patterns/concrete-wall-2.png');
-  opacity: 0.15;
-  pointer-events: none;
-  z-index: 1;
 }
 
 /* Mobile scroll color reveal style */

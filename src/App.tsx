@@ -239,12 +239,14 @@ export default function App() {
                 alt="Punto Barba" 
                 className="w-40 h-40 md:w-56 md:h-56 object-contain"
               />
-              <motion.div 
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "120px", opacity: 0.7 }}
+              <motion.h2 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 0.9, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
-                className="h-[1px] bg-crimson mt-6"
-              />
+                className="text-3xl md:text-4xl font-display font-black tracking-[0.25em] text-crimson mt-6"
+              >
+                PUNTO BARBA
+              </motion.h2>
             </motion.div>
           </motion.div>
         )}
@@ -275,7 +277,7 @@ export default function App() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cortes</a>
-            <a href="#cursos" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cursos</a>
+            <a href="#experiencia" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Experiencia</a>
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
             {isBarberAdmin && (
               <a 
@@ -298,7 +300,7 @@ export default function App() {
             </button>
             <button 
               onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95 text-white cursor-pointer"
+              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95 text-neutral-900 cursor-pointer"
             >
               Reservar
             </button>
@@ -318,7 +320,7 @@ export default function App() {
             className="md:hidden bg-[#0e0e0e] border-b border-white/5 p-6 flex flex-col space-y-4"
           >
             <a href="#cortes" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cortes</a>
-            <a href="#cursos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cursos</a>
+            <a href="#experiencia" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Experiencia</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
             {isBarberAdmin && (
               <a 
@@ -351,7 +353,7 @@ export default function App() {
                   setBookingTab('agendar');
                   setIsBookingOpen(true);
                 }}
-                className="bg-red-600 py-3 font-bold uppercase tracking-widest text-center text-xs text-white cursor-pointer"
+                className="bg-crimson py-3 font-bold uppercase tracking-widest text-center text-xs text-neutral-900 cursor-pointer"
               >
                 Reservar
               </button>
@@ -362,94 +364,166 @@ export default function App() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center overflow-hidden py-20 md:py-0">
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black via-black/90 md:via-black/80 to-transparent z-10" />
-            <img 
-              src="https://images.unsplash.com/photo-1512690196252-741ef2c5a44a?auto=format&fit=crop&q=80&w=2000" 
-              alt="Barber Shop" 
-              className="w-full h-full object-cover grayscale opacity-20 md:opacity-30"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-
+        <section className="relative min-h-screen flex items-center overflow-hidden py-32 md:py-0 bg-gradient-to-br from-[#050505] to-[#101010] border-b border-white/5">
+          {/* Subtle background glow */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-crimson/5 rounded-full blur-3xl pointer-events-none" />
+          
           <div className="relative z-20 max-w-7xl mx-auto px-6 w-full">
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="max-w-3xl space-y-6 md:space-y-8 text-center md:text-left"
-            >
-              <span className="inline-block px-3 py-1 bg-crimson/10 border border-crimson/20 text-crimson font-display text-sm font-bold tracking-[0.2em] uppercase">
-                Estilo & Academia
-              </span>
-              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-display font-black uppercase leading-[0.85] tracking-normal">
-                PUNTO <span className="text-crimson">BARBA</span>
-              </h1>
-              <p className="text-lg md:text-3xl font-display text-charcoal max-w-lg italic border-l-0 md:border-l-4 border-crimson md:pl-6 uppercase tracking-tight mx-auto md:mx-0">
-                Ven y descubre la mejor versión de ti
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-6">
-                <button 
-                  onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                  className="bg-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/20 text-center cursor-pointer text-white"
-                >
-                  Reservar Turno
-                </button>
-                <button 
-                  onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
-                  className="bg-black/50 backdrop-blur-sm border border-white/20 px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:border-crimson hover:text-crimson transition-all active:scale-95 text-center text-light-gray cursor-pointer"
-                >
-                  Mis Turnos
-                </button>
-                <a 
-                  href="#cursos"
-                  className="bg-charcoal/30 backdrop-blur-sm px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-charcoal/50 transition-all active:scale-95 border border-white/10 text-center"
-                >
-                  Ver Cursos
-                </a>
-              </div>
-            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16 items-center">
+              
+              {/* Text Column */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className="col-span-1 md:col-span-7 space-y-6 md:space-y-8 text-center md:text-left"
+              >
+                <span className="inline-block px-4 py-1.5 bg-crimson/10 border border-crimson/20 text-crimson font-display text-sm font-bold tracking-[0.25em] uppercase rounded-full">
+                  Cortes & Rituales Premium
+                </span>
+                
+                <h1 className="text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-display font-black uppercase leading-[0.9] tracking-tight">
+                  PUNTO <br />
+                  <span className="text-crimson">BARBA</span>
+                </h1>
+                
+                <p className="text-charcoal text-base md:text-xl font-display uppercase tracking-widest max-w-lg leading-relaxed mx-auto md:mx-0">
+                  El espacio donde la precisión clásica se encuentra con la actitud urbana en el corazón de Rosario.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-4">
+                  <button 
+                    onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                    className="bg-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/10 text-center cursor-pointer text-neutral-900 rounded-sm"
+                  >
+                    Reservar Turno
+                  </button>
+                  <button 
+                    onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
+                    className="bg-transparent border border-crimson/40 text-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:border-crimson hover:bg-crimson/5 transition-all active:scale-95 text-center cursor-pointer rounded-sm"
+                  >
+                    Mis Turnos
+                  </button>
+                </div>
+              </motion.div>
+              
+              {/* Image Frame Column */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="col-span-1 md:col-span-5 hidden md:block"
+              >
+                <div className="relative group p-4">
+                  {/* Decorative Gold Offset Frame */}
+                  <div className="absolute inset-0 border border-crimson/30 translate-x-4 translate-y-4 transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2 rounded-sm" />
+                  
+                  {/* Main Image */}
+                  <div className="relative aspect-[3/4] overflow-hidden border border-white/10 bg-zinc-950 shadow-2xl rounded-sm">
+                    <img 
+                      src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000" 
+                      alt="Punto Barba Barbería" 
+                      className="w-full h-full object-cover grayscale opacity-85 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                  </div>
+                </div>
+              </motion.div>
+
+            </div>
           </div>
         </section>
 
         {/* Services Section */}
-        <section id="cortes" className="py-20 md:py-32 bg-black relative overflow-hidden concrete-texture">
+        <section id="cortes" className="py-20 md:py-32 bg-black relative overflow-hidden border-b border-white/5">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="flex flex-col lg:flex-row justify-between items-center mb-16 md:mb-24 gap-12">
-              <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">Servicios de Autor</h2>
-                <div className="h-2 w-24 bg-crimson mt-4 mx-auto lg:mx-0" />
-                <p className="max-w-md text-charcoal text-base md:text-xl mt-8 mx-auto lg:mx-0 font-display">
-                  Excelencia técnica en cada detalle. Fusionamos la barbería clásica con tendencias contemporáneas de alto nivel.
-                </p>
-              </div>
-              <div className="flex-1 w-full max-w-md">
-                <div className="relative aspect-square overflow-hidden rounded-sm border border-white/5 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
-                  <img 
-                    src="https://i.postimg.cc/fRNGCywF/ccded255-3d3a-4af4-b0f3-2e2e82ab28d4.jpg" 
-                    alt="Corte de Autor - Punto Barba" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                </div>
-              </div>
+            <div className="text-center mb-16 md:mb-24">
+              <span className="text-crimson font-display font-bold uppercase tracking-[0.2em] text-sm mb-4 block">Carta de Servicios</span>
+              <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">Menú de Autor</h2>
+              <div className="h-1 w-20 bg-crimson mt-4 mx-auto" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-charcoal/20 border border-charcoal/20">
-              {[
-                { id: '01', title: 'Cortes de Cabello', desc: 'Técnicas de degradado precisas, tijera clásica y texturizado personalizado.', icon: Scissors },
-                { id: '02', title: 'Barba', desc: 'Ritual completo de toalla caliente, perfilado con navaja y nutrición profunda.', icon: User },
-                { id: '03', title: 'Perfilado', desc: 'Limpieza absoluta de contornos y detalles críticos para un look pulcro.', icon: Brush },
-              ].map((service) => (
-                <div key={service.id} className="group relative bg-black p-8 md:p-12 hover:bg-zinc-900 transition-all duration-500 overflow-hidden concrete-texture">
-                  <span className="text-crimson font-display font-bold text-xl mb-6 block">{service.id}</span>
-                  <h3 className="text-3xl md:text-4xl font-display font-bold uppercase mb-4 text-light-gray">{service.title}</h3>
-                  <p className="text-charcoal leading-relaxed mb-8 text-sm md:text-lg font-display">{service.desc}</p>
-                  <service.icon className="w-12 h-12 md:w-16 md:h-16 absolute bottom-8 right-8 text-white/5 group-hover:text-crimson/20 transition-all duration-500" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+              {/* Menu Column (7 cols) */}
+              <div className="lg:col-span-7 bg-[#0c0c0c] border border-white/5 p-8 md:p-16 rounded-sm space-y-12 shadow-2xl relative">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-crimson/50 to-transparent" />
+                
+                {/* Categoría 1 */}
+                <div className="space-y-6">
+                  <h3 className="text-2xl font-display font-bold uppercase text-crimson tracking-widest border-b border-white/5 pb-2">01. Cabello</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="group">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Corte de Pelo Premium</h4>
+                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
+                        <span className="font-display font-bold text-lg text-crimson">$18.000</span>
+                      </div>
+                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">Degradados de precisión, tiijera clásica y texturizado personalizado. / 30 MIN</p>
+                    </div>
+
+                    <div className="group">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Perfilado de Contornos</h4>
+                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
+                        <span className="font-display font-bold text-lg text-crimson">$8.000</span>
+                      </div>
+                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">Limpieza absoluta de patillas, frente y nuca para mantener tu estilo pulcro. / 15 MIN</p>
+                    </div>
+                  </div>
                 </div>
-              ))}
+
+                {/* Categoría 2 */}
+                <div className="space-y-6">
+                  <h3 className="text-2xl font-display font-bold uppercase text-crimson tracking-widest border-b border-white/5 pb-2">02. Barba & Combos</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="group">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Barba de Autor</h4>
+                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
+                        <span className="font-display font-bold text-lg text-crimson">$13.000</span>
+                      </div>
+                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">Ritual completo de toalla caliente, perfilado detallado con navaja y nutrición con aceites premium. / 30 MIN</p>
+                    </div>
+
+                    <div className="group">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Corte & Barba (Combo)</h4>
+                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
+                        <span className="font-display font-bold text-lg text-crimson">$25.000</span>
+                      </div>
+                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">El ritual definitivo de cuidado para el caballero. Incluye corte premium y spa de barba. / 60 MIN</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reservar CTA */}
+                <div className="pt-4 text-center">
+                  <button 
+                    onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                    className="w-full bg-transparent border border-crimson text-crimson py-4 font-display font-bold uppercase tracking-widest hover:bg-crimson hover:text-neutral-900 transition-all duration-300"
+                  >
+                    Agendar un Servicio
+                  </button>
+                </div>
+              </div>
+
+              {/* Photo Column (5 cols) */}
+              <div className="lg:col-span-5 w-full hidden lg:block sticky top-28">
+                <div className="relative p-4">
+                  <div className="absolute inset-0 border border-crimson/20 -translate-x-4 translate-y-4 rounded-sm" />
+                  <div className="relative aspect-[4/5] overflow-hidden border border-white/5 rounded-sm">
+                    <img 
+                      src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=1000" 
+                      alt="Barber Tools" 
+                      className="w-full h-full object-cover grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -479,7 +553,7 @@ export default function App() {
                 </div>
               ))}
               <a 
-                href="https://www.instagram.com/puntobarbabareria/" 
+                href="https://www.instagram.com/puntobarba.barberia/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-900 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors"
@@ -513,98 +587,47 @@ export default function App() {
           </div>
         </section>
 
-        {/* Academy Section */}
-        <section id="cursos" className="py-20 md:py-32 relative overflow-hidden bg-black concrete-texture">
+        {/* La Experiencia Section */}
+        <section id="experiencia" className="py-20 md:py-32 bg-[#0c0c0c] border-t border-white/5 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-              <div className="relative order-2 lg:order-1">
-                <div className="absolute -top-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-crimson/10 rounded-full blur-3xl" />
-                <div className="relative aspect-square overflow-hidden rounded-sm border border-white/5 shadow-2xl">
-                  <img 
-                    src="https://i.postimg.cc/xdHc8cLT/b8b73d54-00a6-4972-8a14-ea91ba044718.jpg" 
-                    alt="Punto Barba Academia - Capacitación Profesional" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute bottom-0 right-0 bg-crimson p-6 md:p-8">
-                    <h4 className="font-display font-black text-xl md:text-4xl uppercase leading-none text-neutral-900">Aprendizaje<br/>Garantizado</h4>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-8 md:space-y-10 order-1 lg:order-2 text-center lg:text-left">
-                <div>
-                  <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm md:text-lg mb-4 block">Punto Barba Academia</span>
-                  <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-normal leading-[0.9] text-light-gray">
-                    Capacitación Barbería Profesional
-                  </h2>
-                </div>
-
-                <div className="space-y-4 md:space-y-6">
-                  <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 p-6 md:p-8 bg-zinc-900/50 border border-white/5 hover:border-crimson/30 transition-colors text-center md:text-left concrete-texture">
-                    <GraduationCap className="text-crimson w-8 h-8 shrink-0" />
-                    <div>
-                      <h5 className="text-lg md:text-2xl font-display font-bold uppercase mb-2 text-light-gray">Barbería Inicial</h5>
-                      <p className="text-charcoal text-sm md:text-lg font-display">Desde cero absoluto hasta dominar las herramientas y técnicas de corte más demandadas.</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 p-6 md:p-8 bg-zinc-900/50 border border-white/5 hover:border-crimson/30 transition-colors text-center md:text-left concrete-texture">
-                    <Award className="text-crimson w-8 h-8 shrink-0" />
-                    <div>
-                      <h5 className="text-lg md:text-2xl font-display font-bold uppercase mb-2 text-light-gray">Certificado de Participación</h5>
-                      <p className="text-charcoal text-sm md:text-lg font-display">Aval oficial de Punto Barba para impulsar tu carrera profesional en el mercado laboral.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <a 
-                  href="https://wa.me/5493413293388?text=Hola!%20Estoy%20interesado%20en%20inscribirme%20a%20los%20cursos%20de%20Punto%20Barba%20Academia.%20%C2%BFMe%20podr%C3%ADan%20dar%20m%C3%A1s%20informaci%C3%B3n?" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full md:w-auto bg-transparent border-2 border-crimson text-crimson px-12 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson hover:text-neutral-900 transition-all shadow-lg shadow-crimson/5 text-center"
-                >
-                  Inscribirse Ahora
-                </a>
-              </div>
+            <div className="text-center mb-16 md:mb-24">
+              <span className="text-crimson font-display font-bold uppercase tracking-[0.2em] text-sm mb-4 block">
+                Exclusividad & Estilo
+              </span>
+              <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">
+                La Experiencia Punto Barba
+              </h2>
+              <div className="h-1 w-20 bg-crimson mt-4 mx-auto" />
             </div>
-          </div>
-        </section>
 
-        {/* Features Bento Grid */}
-        <section className="py-20 md:py-32 bg-black concrete-texture">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <div className="sm:col-span-2 bg-zinc-900/50 p-8 md:p-12 flex flex-col justify-between min-h-[280px] md:h-[320px] border border-white/5 group hover:border-crimson/20 transition-colors concrete-texture">
-                <Wrench className="text-crimson w-10 h-10 md:w-12 md:h-12" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+              <div className="bg-black/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:border-crimson/30 transition-all duration-500 rounded-sm flex flex-col justify-between group">
+                <Scissors className="text-crimson w-10 h-10 mb-8 group-hover:scale-110 transition-transform duration-300" />
                 <div>
-                  <h3 className="text-xl md:text-3xl font-display font-bold uppercase mb-3 text-light-gray">Te prestamos las herramientas</h3>
-                  <p className="text-charcoal text-sm md:text-lg font-display">Equipamiento profesional de alta gama a tu disposición durante toda la cursada.</p>
-                </div>
-              </div>
-              
-              <div className="bg-crimson p-8 md:p-12 flex flex-col justify-between min-h-[280px] md:h-[320px] shadow-xl shadow-crimson/10 concrete-texture">
-                <BookOpen className="text-white w-10 h-10 md:w-12 md:h-12" />
-                <div>
-                  <h3 className="text-xl md:text-3xl font-display font-bold uppercase mb-3 text-white">Guía Digital</h3>
-                  <p className="text-white/80 text-sm md:text-lg font-display">Material de estudio exclusivo en formato digital para repasar en cualquier momento.</p>
+                  <h3 className="text-2xl font-display font-bold uppercase mb-4 text-light-gray">Cortes de Élite</h3>
+                  <p className="text-charcoal leading-relaxed text-sm md:text-base font-display">
+                    Nuestros profesionales dominan técnicas avanzadas de tijera y degradados geométricos, logrando un estilo único adaptado a tus facciones.
+                  </p>
                 </div>
               </div>
 
-              <div className="bg-zinc-900/50 p-8 md:p-12 flex flex-col justify-between min-h-[280px] md:h-[320px] border border-white/5 group hover:border-crimson/20 transition-colors concrete-texture">
-                <Headset className="text-crimson w-10 h-10 md:w-12 md:h-12" />
+              <div className="bg-black/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:border-crimson/30 transition-all duration-500 rounded-sm flex flex-col justify-between group">
+                <User className="text-crimson w-10 h-10 mb-8 group-hover:scale-110 transition-transform duration-300" />
                 <div>
-                  <h3 className="text-xl md:text-3xl font-display font-bold uppercase mb-3 text-light-gray">Asesoría Personalizada</h3>
-                  <p className="text-charcoal text-sm md:text-lg font-display">Mentoría individual para perfeccionar tus puntos débiles técnicos.</p>
+                  <h3 className="text-2xl font-display font-bold uppercase mb-4 text-light-gray">Café & Whisky</h3>
+                  <p className="text-charcoal leading-relaxed text-sm md:text-base font-display">
+                    Disfruta de un café de especialidad, una cerveza helada o un whisky single malt de cortesía mientras perfeccionamos tu look en un ambiente relajado.
+                  </p>
                 </div>
               </div>
 
-              <div className="sm:col-span-2 lg:col-span-4 bg-zinc-900/50 p-8 md:p-12 border border-white/5 group hover:border-crimson/20 transition-colors concrete-texture">
-                <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
-                  <BarChart3 className="text-crimson w-12 h-12 md:w-16 md:h-16 shrink-0" />
-                  <div>
-                    <h3 className="text-2xl md:text-4xl font-display font-bold uppercase mb-2 text-light-gray">Supervisión y Seguimiento</h3>
-                    <p className="text-charcoal text-base md:text-xl font-display">Evaluación constante de tu progreso real para garantizar resultados profesionales.</p>
-                  </div>
+              <div className="bg-black/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:border-crimson/30 transition-all duration-500 rounded-sm flex flex-col justify-between group">
+                <Award className="text-crimson w-10 h-10 mb-8 group-hover:scale-110 transition-transform duration-300" />
+                <div>
+                  <h3 className="text-2xl font-display font-bold uppercase mb-4 text-light-gray">Club Privado</h3>
+                  <p className="text-charcoal leading-relaxed text-sm md:text-base font-display">
+                    Mucho más que una barbería: un espacio de encuentro, networking y distensión diseñado para el caballero contemporáneo de Rosario.
+                  </p>
                 </div>
               </div>
             </div>
@@ -645,7 +668,7 @@ export default function App() {
                     <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">341 3293388</span>
                   </a>
                   <a 
-                    href="https://www.instagram.com/puntobarbabareria/" 
+                    href="https://www.instagram.com/puntobarba.barberia/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
@@ -653,7 +676,7 @@ export default function App() {
                     <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
                       <Instagram className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">@puntobarbabareria</span>
+                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">@puntobarba.barberia</span>
                   </a>
                 </div>
               </div>
@@ -690,12 +713,12 @@ export default function App() {
           </p>
           <div className="flex gap-8">
             <a 
-              href="https://www.instagram.com/puntobarbabareria/" 
+              href="https://www.instagram.com/puntobarba.barberia/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-xs text-charcoal hover:text-crimson uppercase tracking-widest transition-colors font-display"
             >
-              Instagram: @puntobarbabareria
+              Instagram: @puntobarba.barberia
             </a>
           </div>
         </div>
