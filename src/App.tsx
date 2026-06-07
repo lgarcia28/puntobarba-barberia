@@ -234,12 +234,15 @@ export default function App() {
               }}
               className="flex flex-col items-center justify-center p-6"
             >
-              <img 
+              <motion.img 
+                layoutId="logo-symbol"
                 src={logoSymbol} 
                 alt="Punto Barba" 
                 className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                transition={{ type: "spring", stiffness: 80, damping: 15 }}
               />
               <motion.h2 
+                layoutId="logo-text"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.9, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
@@ -270,8 +273,25 @@ export default function App() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-1">
-            <img src={logoHorizontal} alt="Punto Barba" className="h-16 md:h-20 w-auto object-contain" />
+          <div className="flex items-center gap-3">
+            {!showIntro && (
+              <>
+                <motion.img 
+                  layoutId="logo-symbol"
+                  src={logoSymbol} 
+                  alt="Punto Barba" 
+                  className="h-12 md:h-14 w-auto object-contain" 
+                  transition={{ type: "spring", stiffness: 80, damping: 15 }}
+                />
+                <motion.span 
+                  layoutId="logo-text"
+                  className="text-xl md:text-2xl font-display font-black tracking-[0.15em] text-crimson"
+                  transition={{ type: "spring", stiffness: 80, damping: 15 }}
+                >
+                  PUNTO BARBA
+                </motion.span>
+              </>
+            )}
           </div>
           
           {/* Desktop Menu */}
