@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, animate } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { BookingSystem } from './components/BookingSystem';
 import { auth, db } from './firebase';
@@ -60,7 +60,9 @@ export default function App() {
 
   // Gallery Carousel State
   const [activeSlide, setActiveSlide] = useState(0);
-  const [slideDirection, setSlideDirection] = useState<number>(0);
+  const galleryContainerRef = useRef<HTMLDivElement>(null);
+  const [galleryContainerWidth, setGalleryContainerWidth] = useState(0);
+  const galleryDragX = useMotionValue(0);
   
   const galleryImages = [
     "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=1000",
@@ -69,30 +71,36 @@ export default function App() {
     "https://images.unsplash.com/photo-1512864084360-7c0c4d0a0845?auto=format&fit=crop&q=80&w=1000",
     "https://images.unsplash.com/photo-1605497746444-ac9dbd324ce8?auto=format&fit=crop&q=80&w=1000"
   ];
+
+  useEffect(() => {
+    if (galleryContainerRef.current) {
+      setGalleryContainerWidth(galleryContainerRef.current.offsetWidth);
+    }
+    const handleResize = () => {
+      if (galleryContainerRef.current) {
+        setGalleryContainerWidth(galleryContainerRef.current.offsetWidth);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (galleryContainerWidth > 0) {
+      animate(galleryDragX, -activeSlide * galleryContainerWidth, {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      });
+    }
+  }, [activeSlide, galleryContainerWidth, galleryDragX]);
   
   const handlePrevSlide = () => {
-    setSlideDirection(-1);
     setActiveSlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
   };
   
   const handleNextSlide = () => {
-    setSlideDirection(1);
     setActiveSlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
-  };
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 300 : -300,
-      opacity: 0,
-    }),
   };
 
   useEffect(() => {
@@ -623,36 +631,48 @@ export default function App() {
             {/* Gallery Carousel */}
             <div className="relative max-w-4xl mx-auto">
               {/* Carousel Viewport */}
-              <div className="relative aspect-[16/10] sm:aspect-[16/9] md:aspect-[21/10] overflow-hidden border border-white/5 bg-zinc-950/60 shadow-2xl">
-                <AnimatePresence initial={false} custom={slideDirection} mode="popLayout">
-                  <motion.img
-                    key={activeSlide}
-                    custom={slideDirection}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                      x: { type: "spring", stiffness: 300, damping: 30 },
-                      opacity: { duration: 0.2 }
-                    }}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={1}
-                    onDragEnd={(e, info) => {
-                      const swipe = info.offset.x;
-                      if (swipe < -50) {
-                        handleNextSlide();
-                      } else if (swipe > 50) {
-                        handlePrevSlide();
-                      }
-                    }}
-                    src={galleryImages[activeSlide]}
-                    alt={`Corte Punto Barba ${activeSlide + 1}`}
-                    className="absolute inset-0 w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700 select-none cursor-grab active:cursor-grabbing"
-                    referrerPolicy="no-referrer"
-                  />
-                </AnimatePresence>
+              <div 
+                ref={galleryContainerRef}
+                className="relative aspect-[16/10] sm:aspect-[16/9] md:aspect-[21/10] overflow-hidden border border-white/5 bg-zinc-950/60 shadow-2xl"
+              >
+                <motion.div
+                  drag="x"
+                  dragConstraints={{
+                    left: -galleryContainerWidth * (galleryImages.length - 1),
+                    right: 0
+                  }}
+                  dragElastic={0.6}
+                  style={{ x: galleryDragX }}
+                  onDragEnd={(event, info) => {
+                    const currentX = galleryDragX.get();
+                    const closestSlide = Math.round(-currentX / galleryContainerWidth);
+                    const newSlide = Math.max(0, Math.min(galleryImages.length - 1, closestSlide));
+                    
+                    if (newSlide === activeSlide) {
+                      // Snap back to current slide
+                      animate(galleryDragX, -activeSlide * galleryContainerWidth, {
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30
+                      });
+                    } else {
+                      setActiveSlide(newSlide);
+                    }
+                  }}
+                  className="flex w-full h-full cursor-grab active:cursor-grabbing"
+                >
+                  {galleryImages.map((img, idx) => (
+                    <div key={idx} className="w-full h-full shrink-0 relative select-none">
+                      <img
+                        src={img}
+                        alt={`Corte Punto Barba ${idx + 1}`}
+                        className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ))}
+                </motion.div>
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
                 
                 {/* Arrow Navigation Controls */}
@@ -676,7 +696,6 @@ export default function App() {
                   <button
                     key={idx}
                     onClick={() => {
-                      setSlideDirection(idx > activeSlide ? 1 : -1);
                       setActiveSlide(idx);
                     }}
                     className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === activeSlide ? 'w-6 bg-gold' : 'w-1.5 bg-white/20 hover:bg-white/40'}`}
