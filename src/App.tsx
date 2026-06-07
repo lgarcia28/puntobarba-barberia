@@ -26,12 +26,24 @@ import { auth, db } from './firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Toaster } from 'react-hot-toast';
 
+import logoSymbol from './assets/logo_symbol.png';
+import logoHorizontal from './assets/logo_horizontal.png';
+import logoVertical from './assets/logo_vertical.png';
+
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [bookingTab, setBookingTab] = useState<'agendar' | 'mis-turnos'>('agendar');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
+  const [showIntro, setShowIntro] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 2800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const isBookingOpenRef = useRef(isBookingOpen);
   useEffect(() => {
@@ -51,7 +63,7 @@ export default function App() {
     let unsubBarbers = () => {};
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com'];
+        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com', 'puntobarba.barber@gmail.com'];
         const isJoseUser = adminEmails.includes(user.email || '');
         const q = query(collection(db, 'barbers'));
         unsubBarbers = onSnapshot(q, (snapshot) => {
@@ -134,10 +146,10 @@ export default function App() {
     };
   }, []);
 
-  // Bloquear scroll de fondo cuando el modal está abierto
+  // Bloquear scroll de fondo cuando el modal o la intro están abiertos
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    if (isBookingOpen) {
+    if (isBookingOpen || showIntro) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -145,7 +157,7 @@ export default function App() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isBookingOpen]);
+  }, [isBookingOpen, showIntro]);
 
   if (currentPath === '/admin' || currentPath === '/admin/') {
     return (
@@ -170,13 +182,13 @@ export default function App() {
           {/* Header */}
           <div className="flex justify-between items-center mb-10 pb-6 border-b border-white/5">
             <div 
-              className="text-3xl font-black tracking-normal uppercase font-display flex items-center gap-1 cursor-pointer"
+              className="flex items-center gap-1 cursor-pointer"
               onClick={() => {
                 window.history.pushState({}, '', '/');
                 setCurrentPath('/');
               }}
             >
-              RESET <span className="bg-crimson text-white px-2 py-0.5 leading-none">ART</span> <span className="text-sm font-bold tracking-[0.3em] ml-2 hidden sm:inline">BARBERSHOP</span>
+              <img src={logoHorizontal} alt="Punto Barba" className="h-10 md:h-12 w-auto object-contain" />
             </div>
             <a 
               href="/" 
@@ -199,6 +211,44 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray">
+      {/* Immersive Loader Intro */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            key="intro-screen"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: 'easeInOut' }}
+            className="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ 
+                scale: [0.6, 1.05, 1], 
+                opacity: [0, 1, 1] 
+              }}
+              transition={{ 
+                duration: 1.6, 
+                ease: 'easeInOut',
+                times: [0, 0.6, 1]
+              }}
+              className="flex flex-col items-center justify-center p-6"
+            >
+              <img 
+                src={logoSymbol} 
+                alt="Punto Barba" 
+                className="w-40 h-40 md:w-56 md:h-56 object-contain"
+              />
+              <motion.div 
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "120px", opacity: 0.7 }}
+                transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
+                className="h-[1px] bg-crimson mt-6"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Toaster 
         position="top-center" 
         toastOptions={{
@@ -218,8 +268,8 @@ export default function App() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-3xl font-black tracking-normal uppercase font-display flex items-center gap-1">
-            RESET <span className="bg-crimson text-white px-2 py-0.5 leading-none">ART</span> <span className="text-sm font-bold tracking-[0.3em] ml-2 hidden sm:inline">BARBERSHOP</span>
+          <div className="flex items-center gap-1">
+            <img src={logoHorizontal} alt="Punto Barba" className="h-10 md:h-12 w-auto object-contain" />
           </div>
           
           {/* Desktop Menu */}
@@ -334,7 +384,7 @@ export default function App() {
                 Estilo & Academia
               </span>
               <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-display font-black uppercase leading-[0.85] tracking-normal">
-                RESET <span className="text-crimson">ART</span>
+                PUNTO <span className="text-crimson">BARBA</span>
               </h1>
               <p className="text-lg md:text-3xl font-display text-charcoal max-w-lg italic border-l-0 md:border-l-4 border-crimson md:pl-6 uppercase tracking-tight mx-auto md:mx-0">
                 Ven y descubre la mejor versión de ti
@@ -375,10 +425,10 @@ export default function App() {
                 </p>
               </div>
               <div className="flex-1 w-full max-w-md">
-                <div className="relative aspect-square overflow-hidden rounded-sm border border-white/5 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700 group">
+                <div className="relative aspect-square overflow-hidden rounded-sm border border-white/5 shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
                   <img 
                     src="https://i.postimg.cc/fRNGCywF/ccded255-3d3a-4af4-b0f3-2e2e82ab28d4.jpg" 
-                    alt="Corte de Autor - Reset Barbería" 
+                    alt="Corte de Autor - Punto Barba" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
@@ -421,7 +471,7 @@ export default function App() {
                 <div key={i} className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5">
                   <img 
                     src={img} 
-                    alt={`Corte Reset ART ${i + 1}`} 
+                    alt={`Corte Punto Barba ${i + 1}`} 
                     className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                     referrerPolicy="no-referrer"
                   />
@@ -429,7 +479,7 @@ export default function App() {
                 </div>
               ))}
               <a 
-                href="https://www.instagram.com/reset.barberia/" 
+                href="https://www.instagram.com/puntobarbabareria/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-900 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors"
@@ -472,19 +522,19 @@ export default function App() {
                 <div className="relative aspect-square overflow-hidden rounded-sm border border-white/5 shadow-2xl">
                   <img 
                     src="https://i.postimg.cc/xdHc8cLT/b8b73d54-00a6-4972-8a14-ea91ba044718.jpg" 
-                    alt="Reset Academy - Capacitación Profesional" 
+                    alt="Punto Barba Academia - Capacitación Profesional" 
                     className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute bottom-0 right-0 bg-crimson p-6 md:p-8">
-                    <h4 className="font-display font-black text-xl md:text-4xl uppercase leading-none text-white">Aprendizaje<br/>Garantizado</h4>
+                    <h4 className="font-display font-black text-xl md:text-4xl uppercase leading-none text-neutral-900">Aprendizaje<br/>Garantizado</h4>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-8 md:space-y-10 order-1 lg:order-2 text-center lg:text-left">
                 <div>
-                  <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm md:text-lg mb-4 block">Reset Academy</span>
+                  <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm md:text-lg mb-4 block">Punto Barba Academia</span>
                   <h2 className="text-4xl md:text-8xl font-display font-black uppercase tracking-normal leading-[0.9] text-light-gray">
                     Capacitación Barbería Profesional
                   </h2>
@@ -502,16 +552,16 @@ export default function App() {
                     <Award className="text-crimson w-8 h-8 shrink-0" />
                     <div>
                       <h5 className="text-lg md:text-2xl font-display font-bold uppercase mb-2 text-light-gray">Certificado de Participación</h5>
-                      <p className="text-charcoal text-sm md:text-lg font-display">Aval oficial de Reset ART para impulsar tu carrera profesional en el mercado laboral.</p>
+                      <p className="text-charcoal text-sm md:text-lg font-display">Aval oficial de Punto Barba para impulsar tu carrera profesional en el mercado laboral.</p>
                     </div>
                   </div>
                 </div>
 
                 <a 
-                  href="https://wa.me/5493413143702?text=Hola!%20Estoy%20interesado%20en%20inscribirme%20a%20los%20cursos%20de%20Reset%20Academy.%20%C2%BFMe%20podr%C3%ADan%20dar%20m%C3%A1s%20informaci%C3%B3n?" 
+                  href="https://wa.me/5493413293388?text=Hola!%20Estoy%20interesado%20en%20inscribirme%20a%20los%20cursos%20de%20Punto%20Barba%20Academia.%20%C2%BFMe%20podr%C3%ADan%20dar%20m%C3%A1s%20informaci%C3%B3n?" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full md:w-auto bg-transparent border-2 border-crimson text-crimson px-12 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson hover:text-white transition-all shadow-lg shadow-crimson/5 text-center"
+                  className="w-full md:w-auto bg-transparent border-2 border-crimson text-crimson px-12 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson hover:text-neutral-900 transition-all shadow-lg shadow-crimson/5 text-center"
                 >
                   Inscribirse Ahora
                 </a>
@@ -573,7 +623,7 @@ export default function App() {
 
                 <div className="space-y-6 md:space-y-8">
                   <a 
-                    href="https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario,+Santa+Fe" 
+                    href="https://www.google.com/maps/search/?api=1&query=Mendoza+2656,+Rosario,+Santa+Fe" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
@@ -581,10 +631,10 @@ export default function App() {
                     <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
                       <MapPin className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">Mitre 264, Rosario, Santa Fe</span>
+                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">Mendoza 2656, Rosario, Santa Fe</span>
                   </a>
                   <a 
-                    href="https://wa.me/5493413143702?text=Hola%20ResetART!%20Me%20gustar%C3%ADa%20reservar%20un%20turno%20para%20un%20servicio%20de%20barber%C3%ADa.%20%C2%BFQu%C3%A9%20horarios%20tienen%20disponibles?" 
+                    href="https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20gustar%C3%ADa%20reservar%20un%20turno%20para%20un%20servicio%20de%20barber%C3%ADa.%20%C2%BFQu%C3%A9%20horarios%20tienen%20disponibles?" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
@@ -592,10 +642,10 @@ export default function App() {
                     <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
                       <Phone className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">341 3143702</span>
+                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">341 3293388</span>
                   </a>
                   <a 
-                    href="https://www.instagram.com/reset.barberia/" 
+                    href="https://www.instagram.com/puntobarbabareria/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
@@ -603,7 +653,7 @@ export default function App() {
                     <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
                       <Instagram className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">@reset.barberia</span>
+                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">@puntobarbabareria</span>
                   </a>
                 </div>
               </div>
@@ -632,20 +682,20 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-black py-16 border-t border-white/5 concrete-texture">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-3xl font-black uppercase font-display tracking-normal flex items-center gap-1">
-            RESET <span className="bg-crimson text-white px-2 py-0.5 leading-none">ART</span>
+          <div className="flex items-center gap-1">
+            <img src={logoHorizontal} alt="Punto Barba" className="h-10 w-auto object-contain" />
           </div>
           <p className="text-xs text-charcoal uppercase tracking-[0.3em] text-center font-display">
-            © 2024 ResetART BarberShop. Mitre 264, Rosario, Santa Fe. Tel: 341 3143702
+            © 2026 Punto Barba. Mendoza 2656, Rosario, Santa Fe. Tel: 341 3293388
           </p>
           <div className="flex gap-8">
             <a 
-              href="https://www.instagram.com/reset.barberia/" 
+              href="https://www.instagram.com/puntobarbabareria/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-xs text-charcoal hover:text-crimson uppercase tracking-widest transition-colors font-display"
             >
-              Instagram: @reset.barberia
+              Instagram: @puntobarbabareria
             </a>
           </div>
         </div>

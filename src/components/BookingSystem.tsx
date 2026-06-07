@@ -16,7 +16,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -255,7 +255,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   useEffect(() => {
     const q = query(collection(db, 'barbers'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com'];
+      const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com', 'puntobarba.barber@gmail.com'];
       const barbersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Barber));
 
       // Sort: Admin (Jose) first, then others by name
@@ -287,7 +287,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     const unsubscribe = auth.onAuthStateChanged((u) => {
       setUser(u);
       if (u) {
-        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com'];
+        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com', 'puntobarba.barber@gmail.com'];
         const isJoseUser = adminEmails.includes(u.email || '');
         setIsJose(isJoseUser && !forceClientFlow);
 
@@ -309,6 +309,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     });
     return unsubscribe;
   }, [barbers, forceClientFlow]);
+
+  useEffect(() => {
+    if (isBarberAdmin) {
+      seedBarbers();
+    }
+  }, [isBarberAdmin]);
 
   useEffect(() => {
     if (!selectedBarber) return;
@@ -2380,7 +2386,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         >
                           <Edit2 className="w-5 h-5" />
                         </button>
-                        {!['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com'].includes(b.email) && (
+                        {!['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'resetart.barber@gmail.com', 'puntobarba.barber@gmail.com'].includes(b.email) && (
                           <button
                             onClick={async () => {
                               if (window.confirm(`¿Estás seguro de eliminar a ${b.name}?`)) {
@@ -2646,7 +2652,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                 const processedAppts = finanzasAppts.map(appt => {
                   const barber = barbers.find(b => b.id === appt.barberId);
-                  const isJoseCut = barber?.id === 'jose-hernandez' || barber?.email === 'jhbarber87@gmail.com' || barber?.email === 'resetart.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+                  const isJoseCut = barber?.id === 'jose-hernandez' || barber?.email === 'jhbarber87@gmail.com' || barber?.email === 'resetart.barber@gmail.com' || barber?.email === 'puntobarba.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
                   const svcPrice = appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0);
                   
                   let joseShare = 0;
@@ -2685,7 +2691,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   const completedAppts = barberAppts.filter(a => a.completed);
                   const pendingAppts = barberAppts.filter(a => !a.completed);
 
-                  const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'jhbarber87@gmail.com' || barber.email === 'resetart.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+                  const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'jhbarber87@gmail.com' || barber.email === 'resetart.barber@gmail.com' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
 
                   const totalEarnedVal = completedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
                   const commissionVal = isJoseBarber ? totalEarnedVal : totalEarnedVal * 0.5;
@@ -2781,7 +2787,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       const individualBarberEarnings = barbers.map(barber => {
                         const barberCompletedAppts = filteredAppts.filter(a => a.barberId === barber.id && a.completed);
                         const totalEarnedVal = barberCompletedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
-                        const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'jhbarber87@gmail.com' || barber.email === 'resetart.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+                        const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'jhbarber87@gmail.com' || barber.email === 'resetart.barber@gmail.com' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
                         const commissionVal = isJoseBarber ? totalEarnedVal : totalEarnedVal * 0.5;
                         return {
                           name: barber.name,

@@ -182,7 +182,7 @@ export default async function handler(req: any, res: any) {
             }
           }
 
-          const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
+          const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en Punto Barba.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mendoza 2656, Rosario\n\n¡Te esperamos!`;
           
           try {
             await sendWhatsAppMessage(appt.customerPhone, message);

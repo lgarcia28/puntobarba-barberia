@@ -181,7 +181,7 @@ export async function processReminders(db: any) {
             }
           }
 
-          const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en ResetART.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
+          const message = `¡Hola ${firstName}! 👋\nTe recordamos que tienes un turno en Punto Barba.\n\n📅 Fecha: ${dateStr}\n⏰ Hora: ${timeStr} HS\n✂️ Servicio: ${appt.service}\n💈 Barbero: ${barberName}\n\n📍 Dirección: Mendoza 2656, Rosario\n\n¡Te esperamos!`;
           
           try {
             await sendWhatsAppMessage(appt.customerPhone, message);
@@ -224,11 +224,11 @@ async function startServer() {
 
       let message = "";
       if (action === 'cancel_single' || action === 'cancel_series') {
-        message = `Hola ${firstName},\nLamentamos informarte que tu turno en ResetART para el día ${date} a las ${time} HS ha sido cancelado.\n\nSi deseas reprogramar, puedes hacerlo desde nuestra web.`;
+        message = `Hola ${firstName},\nLamentamos informarte que tu turno en Punto Barba para el día ${date} a las ${time} HS ha sido cancelado.\n\nSi deseas reprogramar, puedes hacerlo desde nuestra web.`;
       } else if (action === 'reschedule') {
-        message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido reprogramado con éxito.\n\n📅 Nueva Fecha: ${date}\n⏰ Nueva Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n\n¡Te esperamos!`;
+        message = `¡Hola ${firstName}! 👋\nTu turno en Punto Barba ha sido reprogramado con éxito.\n\n📅 Nueva Fecha: ${date}\n⏰ Nueva Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mendoza 2656, Rosario\n\n¡Te esperamos!`;
       } else {
-        message = `¡Hola ${firstName}! 👋\nTu turno en ResetART ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mitre 264, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mitre+264,+Rosario\n\n¡Te esperamos!`;
+        message = `¡Hola ${firstName}! 👋\nTu turno en Punto Barba ha sido confirmado.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time} HS\n✂️ Servicio: ${service}\n💈 Barbero: ${barber}\n\n📍 Dirección: Mendoza 2656, Rosario\n🗺️ Mapa: https://www.google.com/maps/search/?api=1&query=Mendoza+2656,+Rosario\n\n¡Te esperamos!`;
       }
 
       const result = await sendWhatsAppMessage(phone, message);

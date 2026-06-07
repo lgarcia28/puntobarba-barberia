@@ -5,9 +5,18 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Bebas Neue", sans-serif;
   
-  --color-crimson: #C1112F;
+  --color-crimson: #E6D3B6;
   --color-charcoal: #676767;
   --color-light-gray: #EBEBEB;
+}
+
+/* Ensure text and SVGs/icons within bg-crimson are dark for readability */
+.bg-crimson, .bg-crimson * {
+  color: #0a0a0a !important;
+}
+.bg-crimson svg, .bg-crimson svg * {
+  stroke: #0a0a0a !important;
+  fill: currentColor;
 }
 
 @layer base {

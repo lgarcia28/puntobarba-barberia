@@ -68,7 +68,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 }
 
 function isAdminEmail(email: string | null | undefined) {
-  return email === 'leoneldariogarcia@gmail.com' || email === 'jhbarber87@gmail.com' || email === 'resetart.barber@gmail.com';
+  return email === 'leoneldariogarcia@gmail.com' || email === 'jhbarber87@gmail.com' || email === 'resetart.barber@gmail.com' || email === 'puntobarba.barber@gmail.com';
 }
 
 export const BARBERS = [
@@ -77,7 +77,7 @@ export const BARBERS = [
     name: 'José Hernández',
     photo: 'https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg',
     bio: '',
-    email: 'resetart.barber@gmail.com',
+    email: 'puntobarba.barber@gmail.com',
     role: 'admin'
   },
   {
@@ -85,7 +85,7 @@ export const BARBERS = [
     name: 'Fabricio Lozano',
     photo: 'https://i.postimg.cc/VNNHZb2R/438b49d7-3dbd-45ff-a274-4c0c7c495738.jpg',
     bio: '',
-    email: 'fabricio@resetart.com',
+    email: 'fabricio@puntobarba.com',
     role: 'barber'
   },
   {
@@ -93,7 +93,7 @@ export const BARBERS = [
     name: 'Mateo Montenegro',
     photo: 'https://i.postimg.cc/02dW8fsf/51361ed6-8bd2-43b9-9373-8c912e1b0afd.jpg',
     bio: '',
-    email: 'mateo@resetart.com',
+    email: 'mateo@puntobarba.com',
     role: 'barber'
   }
 ];
