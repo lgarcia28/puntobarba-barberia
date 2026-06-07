@@ -246,7 +246,7 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.9, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
-                className="flex flex-col items-center justify-center leading-[0.85] font-sans font-black text-crimson mt-8 text-4xl md:text-6xl select-none"
+                className="flex flex-col items-center justify-center leading-[0.85] font-sans font-black text-crimson mt-4 md:mt-5 text-2xl md:text-4xl select-none"
               >
                 <motion.span layoutId="word-punto" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
                 <motion.span layoutId="word-barba" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
@@ -281,7 +281,7 @@ export default function App() {
                   layoutId="logo-symbol"
                   src={logoSymbol} 
                   alt="Punto Barba" 
-                  className="h-14 md:h-16 w-auto object-contain" 
+                  className="h-14 md:h-18 w-auto object-contain" 
                   transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 />
                 <motion.div 
@@ -289,8 +289,8 @@ export default function App() {
                   className="flex flex-col justify-center leading-[0.85] font-sans font-black text-crimson select-none"
                   transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 >
-                  <motion.span layoutId="word-punto" className="text-2xl md:text-3xl tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
-                  <motion.span layoutId="word-barba" className="text-2xl md:text-3xl tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
+                  <motion.span layoutId="word-punto" className="text-lg md:text-2xl tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
+                  <motion.span layoutId="word-barba" className="text-lg md:text-2xl tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
                 </motion.div>
               </>
             )}
