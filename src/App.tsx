@@ -532,9 +532,9 @@ export default function App() {
         </section>
 
         {/* Services Section */}
-        <section id="cortes" className="py-24 md:py-36 bg-[#090909] relative overflow-hidden border-b border-white/5">
+        <section id="cortes" className="py-20 md:py-28 bg-[#090909] relative overflow-hidden border-b border-white/5">
           <div className="max-w-5xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-20">
+            <div className="text-center mb-12">
               <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">Estilos & Rituales</span>
               <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Servicios de Autor</h2>
               <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
@@ -585,21 +585,21 @@ export default function App() {
                     key={svc.id}
                     whileHover={{ y: -6, borderColor: "rgba(212, 196, 174, 0.4)" }}
                     onClick={() => { setSelectedServiceForBooking(svc.name); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                    className="group relative p-6 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between aspect-[3/4] rounded-sm hover:shadow-2xl hover:shadow-gold/5"
+                    className="group relative p-5 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between h-full rounded-sm hover:shadow-2xl hover:shadow-gold/5"
                   >
                     <div>
                       <div className="flex justify-between items-start">
-                        <span className="font-display font-black text-6xl text-white/5 group-hover:text-gold/10 transition-colors duration-300">{svc.num}</span>
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-gold/30 transition-colors">
-                          <IconComponent className="w-4 h-4 text-gold" />
+                        <span className="font-display font-black text-5xl text-white/5 group-hover:text-gold/10 transition-colors duration-300">{svc.num}</span>
+                        <div className="w-9 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-gold/30 transition-colors">
+                          <IconComponent className="w-3.5 h-3.5 text-gold" />
                         </div>
                       </div>
-                      <div className="mt-8 space-y-3">
-                        <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">{svc.name}</h3>
+                      <div className="mt-5 space-y-2.5">
+                        <h3 className="font-display font-semibold uppercase text-lg md:text-xl text-light-gray tracking-wide group-hover:text-gold transition-colors">{svc.name}</h3>
                         <p className="text-charcoal text-xs font-sans tracking-wide leading-relaxed line-clamp-4">{svc.desc}</p>
                       </div>
                     </div>
-                    <div className="pt-6 flex justify-between items-center border-t border-white/5 group-hover:border-gold/10 transition-colors">
+                    <div className="pt-4 mt-6 flex justify-between items-center border-t border-white/5 group-hover:border-gold/10 transition-colors">
                       <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-bold group-hover:text-gold/80 transition-colors">[ {svc.duration} ]</span>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-black flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         RESERVAR <span className="transform transition-transform duration-300 group-hover:translate-x-1">→</span>
