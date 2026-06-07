@@ -238,7 +238,7 @@ export default function App() {
                 layoutId="logo-symbol"
                 src={logoSymbol} 
                 alt="Punto Barba" 
-                className="w-36 h-36 md:w-48 md:h-48 object-contain"
+                className="w-32 h-32 md:w-44 md:h-44 object-contain"
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
               />
               <motion.div 
@@ -246,7 +246,7 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.9, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
-                className="flex flex-col items-center justify-center leading-[0.85] font-sans font-black text-crimson mt-4 md:mt-5 text-2xl md:text-4xl select-none"
+                className="flex flex-col items-center justify-center leading-[0.8] font-sans font-black text-crimson mt-1 md:mt-2 text-[34px] md:text-[50px] select-none"
               >
                 <motion.span layoutId="word-punto" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
                 <motion.span layoutId="word-barba" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
@@ -274,23 +274,23 @@ export default function App() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-2.5">
             {!showIntro && (
               <>
                 <motion.img 
                   layoutId="logo-symbol"
                   src={logoSymbol} 
                   alt="Punto Barba" 
-                  className="h-14 md:h-18 w-auto object-contain" 
+                  className="h-12 md:h-16 w-auto object-contain" 
                   transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 />
                 <motion.div 
                   layoutId="logo-text"
-                  className="flex flex-col justify-center leading-[0.85] font-sans font-black text-crimson select-none"
+                  className="flex flex-col justify-center leading-[0.8] font-sans font-black text-crimson select-none"
                   transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 >
-                  <motion.span layoutId="word-punto" className="text-lg md:text-2xl tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
-                  <motion.span layoutId="word-barba" className="text-lg md:text-2xl tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
+                  <motion.span layoutId="word-punto" className="text-[23px] md:text-[31px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
+                  <motion.span layoutId="word-barba" className="text-[23px] md:text-[31px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
                 </motion.div>
               </>
             )}
