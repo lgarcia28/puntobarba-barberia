@@ -132,6 +132,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [fixedInterval, setFixedInterval] = useState<'weekly' | 'biweekly'>('weekly');
   const [appointments, setAppointments] = useState<any[]>([]);
   const [reschedulingApptId, setReschedulingApptId] = useState<string | null>(null);
+  const [fixedCancelAppt, setFixedCancelAppt] = useState<any | null>(null);
+  const [fixedRescheduleAppt, setFixedRescheduleAppt] = useState<any | null>(null);
+  const [rescheduleOption, setRescheduleOption] = useState<'single' | 'series' | null>(null);
   const [blocks, setBlocks] = useState<any[]>([]);
 
   // Admin Panel Specific State
@@ -503,6 +506,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
       // Check if slot is occupied by appointment or block
       const isOccupied = appointments.some(appt => {
+        if (appt.completed) return false; // Ignorar turnos ya cobrados/completados
         const apptStart = appt.startTime.toDate();
         const apptEnd = appt.endTime.toDate();
         return (isBefore(slotStart, apptEnd) && isAfter(slotEnd, apptStart));
@@ -516,6 +520,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       if (selectedService.duration === 60) {
         const midPoint = addMinutes(slotStart, 30);
         const isMidOccupied = appointments.some(appt => {
+          if (appt.completed) return false; // Ignorar turnos ya cobrados/completados
           const apptStart = appt.startTime.toDate();
           const apptEnd = appt.endTime.toDate();
           return (isBefore(midPoint, apptEnd) && isAfter(addMinutes(midPoint, 30), apptStart));
@@ -602,25 +607,55 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
         // Si estamos reprogramando, liberamos sus slots y cancelamos el turno anterior
         if (reschedulingApptId) {
-          const oldSnapshot = await getDoc(doc(db, 'appointments', reschedulingApptId));
+          const oldDocRef = doc(db, 'appointments', reschedulingApptId);
+          const oldSnapshot = await getDoc(oldDocRef);
           if (oldSnapshot.exists()) {
-            const oldApptData = oldSnapshot.data();
+            const oldApptData = oldSnapshot.data() as any;
             if (oldApptData && oldApptData.status === 'confirmed') {
-              const oldStart = oldApptData.startTime.toDate();
-              const oldEnd = oldApptData.endTime.toDate();
-              const oldBarberId = oldApptData.barberId;
-              const oldDuration = Math.round((oldEnd.getTime() - oldStart.getTime()) / (60 * 1000));
-              const oldIntervalsCount = Math.ceil(oldDuration / 30);
-              const oldSlotDateStr = format(oldStart, 'yyyy-MM-dd');
-              for (let i = 0; i < oldIntervalsCount; i++) {
-                const slotTime = addMinutes(oldStart, i * 30);
-                const timeStr = format(slotTime, 'HH:mm');
-                const slotId = `${oldBarberId}_${oldSlotDateStr}_${timeStr}`;
-                batch.delete(doc(db, 'slots', slotId));
+              if (rescheduleOption === 'series' && oldApptData.isFixed && oldApptData.groupId) {
+                // Cancelar toda la serie de turnos futuros
+                const q = query(
+                  collection(db, 'appointments'),
+                  where('groupId', '==', oldApptData.groupId),
+                  where('startTime', '>=', oldApptData.startTime)
+                );
+                const seriesSnapshot = await getDocs(q);
+                seriesSnapshot.docs.forEach(d => {
+                  const data = d.data() as any;
+                  batch.update(d.ref, { status: 'cancelled' });
+                  
+                  if (data.status === 'confirmed') {
+                    const start = data.startTime.toDate();
+                    const end = data.endTime.toDate();
+                    const durationMin = Math.round((end.getTime() - start.getTime()) / (60 * 1000));
+                    const intervalsCount = Math.ceil(durationMin / 30);
+                    const slotDateStr = format(start, 'yyyy-MM-dd');
+                    for (let i = 0; i < intervalsCount; i++) {
+                      const slotTime = addMinutes(start, i * 30);
+                      const timeStr = format(slotTime, 'HH:mm');
+                      const slotId = `${data.barberId}_${slotDateStr}_${timeStr}`;
+                      batch.delete(doc(db, 'slots', slotId));
+                    }
+                  }
+                });
+              } else {
+                // Cancelar solo el turno individual anterior
+                const oldStart = oldApptData.startTime.toDate();
+                const oldEnd = oldApptData.endTime.toDate();
+                const oldBarberId = oldApptData.barberId;
+                const oldDuration = Math.round((oldEnd.getTime() - oldStart.getTime()) / (60 * 1000));
+                const oldIntervalsCount = Math.ceil(oldDuration / 30);
+                const oldSlotDateStr = format(oldStart, 'yyyy-MM-dd');
+                for (let i = 0; i < oldIntervalsCount; i++) {
+                  const slotTime = addMinutes(oldStart, i * 30);
+                  const timeStr = format(slotTime, 'HH:mm');
+                  const slotId = `${oldBarberId}_${oldSlotDateStr}_${timeStr}`;
+                  batch.delete(doc(db, 'slots', slotId));
+                }
+                batch.update(oldDocRef, { status: 'cancelled' });
               }
             }
           }
-          batch.update(doc(db, 'appointments', reschedulingApptId), { status: 'cancelled' });
         }
 
         let currentStartTime = baseStartTime;
@@ -652,6 +687,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           const existingBlocks = snapBlocks.docs.map(d => d.data());
           
           const isOccupied = existingAppts.some(appt => {
+            if ((appt as any).completed) return false; // Ignorar turnos ya cobrados/completados
             const apptStart = (appt as any).startTime.toDate();
             const apptEnd = (appt as any).endTime.toDate();
             return (isBefore(currentStartTime, apptEnd) && isAfter(currentEndTime, apptStart));
@@ -850,90 +886,73 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }
   };
 
-  const handleCancelAppointment = async (appt: any) => {
-    if (!isBarberAdmin) {
-      const timeDiff = appt.startTime.toDate().getTime() - new Date().getTime();
-      if (timeDiff <= 2 * 60 * 60 * 1000) {
-        toast.error('No se puede cancelar o reprogramar un turno con menos de 2 horas de anticipación.');
-        return;
-      }
-    }
-    if (appt.isFixed && appt.groupId) {
-      const isSeries = window.confirm(
-        'Este es un turno fijo semanal.\n\n¿Deseas cancelar TODA LA SERIE de turnos futuros?\n(Haz clic en Aceptar para cancelar todos, o Cancelar para la siguiente opción)'
-      );
-      if (isSeries) {
-        try {
-          setLoading(true);
-          const q = query(
-            collection(db, 'appointments'),
-            where('groupId', '==', appt.groupId),
-            where('startTime', '>=', appt.startTime)
-          );
-          const snapshot = await getDocs(q);
-          const batch = writeBatch(db);
-          snapshot.docs.forEach(d => {
-             const data = d.data() as any;
-             batch.update(d.ref, { status: 'cancelled' });
-
-             // Liberar los slots para cada turno de la serie cancelado
-             if (data.status === 'confirmed') {
-               const start = data.startTime.toDate();
-               const end = data.endTime.toDate();
-               const durationMin = Math.round((end.getTime() - start.getTime()) / (60 * 1000));
-               const intervalsCount = Math.ceil(durationMin / 30);
-               const slotDateStr = format(start, 'yyyy-MM-dd');
-
-               for (let i = 0; i < intervalsCount; i++) {
-                 const slotTime = addMinutes(start, i * 30);
-                 const timeStr = format(slotTime, 'HH:mm');
-                 const slotId = `${data.barberId}_${slotDateStr}_${timeStr}`;
-                 batch.delete(doc(db, 'slots', slotId));
-               }
-             }
-          });
-          await batch.commit();
-          toast.success('Serie de turnos cancelada correctamente.');
-          
-          try {
-            await fetch('/api/send-whatsapp', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                phone: appt.customerPhone,
-                customerName: appt.customerName,
-                service: appt.service,
-                barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
-                date: format(appt.startTime.toDate(), 'dd/MM/yyyy'),
-                time: format(appt.startTime.toDate(), 'HH:mm'),
-                dayOfWeek: format(appt.startTime.toDate(), 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(appt.startTime.toDate(), 'EEEE', { locale: es })) ? 's' : ''),
-                isFixed: true,
-                action: 'cancel_series'
-              })
-            });
-          } catch (waErr) {
-            console.error('Error al enviar WhatsApp de cancelación:', waErr);
-          }
-
-          if (searchPhone) {
-            const e = new Event('submit') as any;
-            handleSearchAppointments(e);
-          }
-        } catch (err) {
-          handleFirestoreError(err, OperationType.UPDATE, 'appointments');
-        } finally {
-          setLoading(false);
-        }
-        return;
-      } else {
-        const isSingle = window.confirm('¿Deseas cancelar SOLO ESTE turno?');
-        if (!isSingle) return;
-      }
-    } else {
-      if (!window.confirm('¿Estás seguro de que deseas cancelar este turno?')) return;
-    }
-
+  const executeCancelSeries = async (appt: any) => {
     try {
+      setLoading(true);
+      const q = query(
+        collection(db, 'appointments'),
+        where('groupId', '==', appt.groupId),
+        where('startTime', '>=', appt.startTime)
+      );
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => {
+         const data = d.data() as any;
+         batch.update(d.ref, { status: 'cancelled' });
+
+         // Liberar los slots para cada turno de la serie cancelado
+         if (data.status === 'confirmed') {
+           const start = data.startTime.toDate();
+           const end = data.endTime.toDate();
+           const durationMin = Math.round((end.getTime() - start.getTime()) / (60 * 1000));
+           const intervalsCount = Math.ceil(durationMin / 30);
+           const slotDateStr = format(start, 'yyyy-MM-dd');
+
+           for (let i = 0; i < intervalsCount; i++) {
+             const slotTime = addMinutes(start, i * 30);
+             const timeStr = format(slotTime, 'HH:mm');
+             const slotId = `${data.barberId}_${slotDateStr}_${timeStr}`;
+             batch.delete(doc(db, 'slots', slotId));
+           }
+         }
+      });
+      await batch.commit();
+      toast.success('Serie de turnos cancelada correctamente.');
+      
+      try {
+        await fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: appt.customerPhone,
+            customerName: appt.customerName,
+            service: appt.service,
+            barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
+            date: format(appt.startTime.toDate(), 'dd/MM/yyyy'),
+            time: format(appt.startTime.toDate(), 'HH:mm'),
+            dayOfWeek: format(appt.startTime.toDate(), 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(appt.startTime.toDate(), 'EEEE', { locale: es })) ? 's' : ''),
+            isFixed: true,
+            action: 'cancel_series'
+          })
+        });
+      } catch (waErr) {
+        console.error('Error al enviar WhatsApp de cancelación:', waErr);
+      }
+
+      if (searchPhone) {
+        const e = new Event('submit') as any;
+        handleSearchAppointments(e);
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const executeCancelSingle = async (appt: any) => {
+    try {
+      setLoading(true);
       await runTransaction(db, async (transaction) => {
         const apptRef = doc(db, 'appointments', appt.id);
         transaction.update(apptRef, { status: 'cancelled' });
@@ -973,12 +992,31 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         console.error('Error al enviar WhatsApp de cancelación:', waErr);
       }
 
-      if (searchPhone && bookingTab === 'mis-turnos') {
+      if (searchPhone) {
         const e = new Event('submit') as any;
         handleSearchAppointments(e);
       }
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelAppointment = async (appt: any) => {
+    if (!isBarberAdmin) {
+      const timeDiff = appt.startTime.toDate().getTime() - new Date().getTime();
+      if (timeDiff <= 2 * 60 * 60 * 1000) {
+        toast.error('No se puede cancelar o reprogramar un turno con menos de 2 horas de anticipación.');
+        return;
+      }
+    }
+
+    if (appt.isFixed && appt.groupId) {
+      setFixedCancelAppt(appt);
+    } else {
+      if (!window.confirm('¿Estás seguro de que deseas cancelar este turno?')) return;
+      await executeCancelSingle(appt);
     }
   };
 
@@ -990,6 +1028,34 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       toast.success('Duración actualizada correctamente.');
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    }
+  };
+
+  const handleRescheduleClick = (appt: any) => {
+    if (!isBarberAdmin) {
+      const timeDiff = appt.startTime.toDate().getTime() - new Date().getTime();
+      if (timeDiff <= 2 * 60 * 60 * 1000) {
+        toast.error('No se puede cancelar o reprogramar un turno con menos de 2 horas de anticipación.');
+        return;
+      }
+    }
+
+    if (appt.isFixed && appt.groupId) {
+      setFixedRescheduleAppt(appt);
+    } else {
+      if (window.confirm('Para reprogramar, elige tu nuevo horario. El turno actual se cancelará automáticamente cuando confirmes el nuevo. ¿Continuar?')) {
+        const b = barbers.find(barber => barber.id === appt.barberId);
+        setSelectedBarber(b || null);
+        setSelectedService(services.find(s => s.name === appt.service) || null);
+        setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+        setReschedulingApptId(appt.id);
+        setRescheduleOption('single');
+        setIsFixedAppointment(false);
+        setSelectedDate(startOfDay(new Date()));
+        setSelectedTime(null);
+        setStep(3); // Go to date selection
+        setBookingTab('agendar');
+      }
     }
   };
 
@@ -1034,15 +1100,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     setLoading(true);
     try {
       const price = quickLogPrice !== '' ? Number(quickLogPrice) : quickLogService.price;
+      const walkInDate = new Date(adminDate);
       const now = new Date();
-      const endTime = addMinutes(now, quickLogService.duration);
+      walkInDate.setHours(now.getHours());
+      walkInDate.setMinutes(now.getMinutes());
+      walkInDate.setSeconds(now.getSeconds());
+      walkInDate.setMilliseconds(now.getMilliseconds());
+
+      const endTime = addMinutes(walkInDate, quickLogService.duration);
 
       await addDoc(collection(db, 'appointments'), {
         barberId: selectedBarber.id,
         customerName: quickLogClientName.trim() || 'Cliente al paso',
         customerPhone: '',
         service: quickLogService.name,
-        startTime: Timestamp.fromDate(now),
+        startTime: Timestamp.fromDate(walkInDate),
         endTime: Timestamp.fromDate(endTime),
         status: 'confirmed',
         completed: true,
@@ -1072,12 +1144,30 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     setLoading(true);
     try {
       const price = completingPrice !== '' ? Number(completingPrice) : null;
+      const batch = writeBatch(db);
       const apptRef = doc(db, 'appointments', completingAppt.id);
       
-      await updateDoc(apptRef, {
+      batch.update(apptRef, {
         completed: true,
         customPrice: price
       });
+
+      // Liberar slots correspondientes al turno completado en la colección 'slots'
+      if (completingAppt.startTime && completingAppt.endTime && completingAppt.barberId) {
+        const start = completingAppt.startTime.toDate();
+        const end = completingAppt.endTime.toDate();
+        const durationMin = Math.round((end.getTime() - start.getTime()) / 60000);
+        const intervalsCount = Math.ceil(durationMin / 30);
+        const slotDateStr = format(start, 'yyyy-MM-dd');
+        for (let i = 0; i < intervalsCount; i++) {
+          const slotTime = addMinutes(start, i * 30);
+          const timeStr = format(slotTime, 'HH:mm');
+          const slotId = `${completingAppt.barberId}_${slotDateStr}_${timeStr}`;
+          batch.delete(doc(db, 'slots', slotId));
+        }
+      }
+
+      await batch.commit();
 
       toast.success('Turno cobrado y completado con éxito.');
       setCompletingAppt(null);
@@ -1789,43 +1879,76 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               const bEnd = b.endTime.toDate();
                               return isBefore(slotStart, bEnd) && isAfter(slotEnd, bStart);
                             });
-                            const appt = adminAppts.find(a => {
+                            const slotAppts = adminAppts.filter(a => {
                               const aStart = a.startTime.toDate();
                               const aEnd = a.endTime.toDate();
                               return isBefore(slotStart, aEnd) && isAfter(slotEnd, aStart);
                             });
+                            slotAppts.sort((a, b) => {
+                              if (a.completed && !b.completed) return 1;
+                              if (!a.completed && b.completed) return -1;
+                              return a.startTime.toMillis() - b.startTime.toMillis();
+                            });
+                            const hasPending = slotAppts.some(a => !a.completed);
+                            const hasCompleted = slotAppts.some(a => a.completed);
                             const isSelected = selectedTimesForBlocking.includes(tStr);
 
                             return (
-                              <button
-                                key={tStr}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    setSelectedTimesForBlocking(selectedTimesForBlocking.filter(t => t !== tStr));
-                                  } else {
-                                    setSelectedTimesForBlocking([...selectedTimesForBlocking, tStr]);
-                                  }
-                                }}
-                                className={`p-4 text-xs font-bold border transition-all flex flex-col items-center gap-1 min-h-[80px] justify-center relative ${isSelected ? 'scale-105 z-10 shadow-2xl' : ''
-                                  } ${isSelected
-                                    ? 'bg-white text-black border-white'
-                                    : appt
-                                      ? 'bg-crimson/20 border-crimson text-crimson'
-                                      : block
-                                        ? 'bg-zinc-800 border-zinc-700 text-zinc-500'
-                                        : 'border-white/5 hover:border-white/20'
-                                  }`}
-                              >
-                                <span className="text-sm">{tStr}</span>
-                                {appt && (
-                                   <div className="flex flex-col items-center w-full overflow-hidden px-1">
-                                     <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
-                                     <span className="text-[8px] text-charcoal font-bold">{appt.customerPhone}</span>
+                               <div
+                                 key={tStr}
+                                 onClick={() => {
+                                   if (hasPending) {
+                                     const pendingAppt = slotAppts.find(a => !a.completed);
+                                     if (pendingAppt) {
+                                       setCompletingAppt(pendingAppt);
+                                       setCompletingPrice(String(pendingAppt.customPrice != null ? pendingAppt.customPrice : (services.find(s => s.name === pendingAppt.service)?.price || 0)));
+                                     }
+                                   } else if (slotAppts.filter(a => !a.completed).length === 0 || block) {
+                                     if (isSelected) {
+                                       setSelectedTimesForBlocking(selectedTimesForBlocking.filter(t => t !== tStr));
+                                     } else {
+                                       setSelectedTimesForBlocking([...selectedTimesForBlocking, tStr]);
+                                     }
+                                   }
+                                 }}
+                                 className={`p-4 text-xs font-bold border transition-all flex flex-col items-center gap-1.5 min-h-[90px] justify-center relative cursor-pointer ${isSelected ? 'scale-105 z-10 shadow-2xl' : ''
+                                   } ${isSelected
+                                     ? 'bg-white text-black border-white'
+                                     : hasPending
+                                       ? 'bg-crimson/20 border-crimson text-crimson hover:bg-crimson/30'
+                                       : hasCompleted
+                                         ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-400'
+                                         : block
+                                           ? 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                                           : 'border-white/5 hover:border-white/20'
+                                   }`}
+                               >
+                                 <span className="text-sm">{tStr}</span>
+                                 {slotAppts.length > 0 && (
+                                   <div className="flex flex-col items-center w-full overflow-hidden px-1 gap-1">
+                                     {slotAppts.map((a, idx) => (
+                                       <div key={a.id || idx} className="flex flex-col items-center w-full border-t border-white/5 first:border-0 pt-1 first:pt-0">
+                                         <span 
+                                           onClick={(e) => {
+                                             e.stopPropagation();
+                                             if (!a.completed) {
+                                               setCompletingAppt(a);
+                                               setCompletingPrice(String(a.customPrice != null ? a.customPrice : (services.find(s => s.name === a.service)?.price || 0)));
+                                             }
+                                           }}
+                                           title={!a.completed ? "Hacer clic para cobrar" : undefined}
+                                           className={`uppercase text-[9px] font-black truncate w-full text-center ${a.completed ? 'text-zinc-500 line-through' : 'text-crimson hover:underline cursor-pointer'}`}
+                                         >
+                                           {a.customerName}
+                                         </span>
+                                         <span className="text-[8px] text-charcoal font-bold">{a.customerPhone || 'Walk-in'}</span>
+                                       </div>
+                                     ))}
                                    </div>
                                  )}
-                                {block && <span className="uppercase text-[9px] font-black">Bloqueado</span>}
-                                {!appt && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
-                              </button>
+                                {block && slotAppts.length === 0 && <span className="uppercase text-[9px] font-black">Bloqueado</span>}
+                                {slotAppts.length === 0 && !block && <span className="uppercase text-[9px] font-black opacity-30">Libre</span>}
+                              </div>
                             );
                               })}
                             </>
@@ -2903,18 +3026,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                      Cancelar
                                    </button>
                                    <button
-                                     onClick={() => {
-                                        if (window.confirm('Para reprogramar, elige tu nuevo horario. El turno actual se cancelará automáticamente cuando confirmes el nuevo. ¿Continuar?')) {
-                                            setSelectedBarber(b || null);
-                                            setSelectedService(services.find(s => s.name === appt.service) || null);
-                                            setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
-                                            setReschedulingApptId(appt.id);
-                                            setSelectedDate(startOfDay(new Date()));
-                                            setSelectedTime(null);
-                                            setStep(3); // Go to date selection
-                                            setBookingTab('agendar');
-                                        }
-                                     }}
+                                     onClick={() => handleRescheduleClick(appt)}
                                      className="text-[10px] font-bold uppercase tracking-widest bg-crimson text-white px-3 py-2 hover:bg-crimson/80 transition-colors"
                                    >
                                      Reprogramar
@@ -3180,36 +3292,38 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                           className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors text-base"
                         />
-                        <div className="space-y-3">
-                          <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
-                            <input
-                              type="checkbox"
-                              checked={isFixedAppointment}
-                              onChange={(e) => setIsFixedAppointment(e.target.checked)}
-                              className="w-4.5 h-4.5 accent-crimson"
-                            />
-                            Turno Fijo (Reservar varias fechas por 1 mes)
-                          </label>
+                        {!reschedulingApptId && (
+                          <div className="space-y-3">
+                            <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={isFixedAppointment}
+                                onChange={(e) => setIsFixedAppointment(e.target.checked)}
+                                className="w-4.5 h-4.5 accent-crimson"
+                              />
+                              Turno Fijo (Reservar varias fechas por 1 mes)
+                            </label>
 
-                          {isFixedAppointment && (
-                            <div className="grid grid-cols-2 gap-3 ml-8 animate-in fade-in slide-in-from-left-2 duration-300">
-                              <button
-                                type="button"
-                                onClick={() => setFixedInterval('weekly')}
-                                className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'weekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
-                              >
-                                Semanal (Cada 7 días)
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setFixedInterval('biweekly')}
-                                className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'biweekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
-                              >
-                                Quincenal (Cada 15 días)
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                            {isFixedAppointment && (
+                              <div className="grid grid-cols-2 gap-3 ml-8 animate-in fade-in slide-in-from-left-2 duration-300">
+                                <button
+                                  type="button"
+                                  onClick={() => setFixedInterval('weekly')}
+                                  className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'weekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                                >
+                                  Semanal (Cada 7 días)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setFixedInterval('biweekly')}
+                                  className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'biweekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                                >
+                                  Quincenal (Cada 15 días)
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {error && (
@@ -3419,6 +3533,133 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   className="px-5 py-3 border border-white/10 font-bold uppercase text-xs text-charcoal hover:border-white/30 hover:text-white transition-all"
                 >
                   Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {fixedCancelAppt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setFixedCancelAppt(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 p-6 w-full max-w-md shadow-2xl rounded-md"
+            >
+              <h3 className="font-display font-black uppercase text-xl mb-2 text-light-gray">Cancelar Turno Fijo</h3>
+              <p className="text-charcoal text-xs uppercase font-bold mb-6">
+                Turno de {fixedCancelAppt.customerName} - {format(fixedCancelAppt.startTime.toDate(), "EEEE dd/MM 'a las' HH:mm 'hs'", { locale: es })}
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={async () => {
+                    const appt = fixedCancelAppt;
+                    setFixedCancelAppt(null);
+                    await executeCancelSingle(appt);
+                  }}
+                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-wider text-xs py-3 border border-white/5 transition-all text-center rounded-sm cursor-pointer"
+                >
+                  Cancelar solo este turno (esta semana)
+                </button>
+                <button
+                  onClick={async () => {
+                    const appt = fixedCancelAppt;
+                    setFixedCancelAppt(null);
+                    await executeCancelSeries(appt);
+                  }}
+                  className="w-full bg-crimson hover:bg-crimson/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
+                >
+                  Cancelar toda la serie (futuros)
+                </button>
+                <button
+                  onClick={() => setFixedCancelAppt(null)}
+                  className="w-full bg-black hover:bg-zinc-950 text-charcoal font-bold uppercase tracking-wider text-xs py-3 border border-white/10 transition-all text-center rounded-sm cursor-pointer"
+                >
+                  Volver / No cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {fixedRescheduleAppt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setFixedRescheduleAppt(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 p-6 w-full max-w-md shadow-2xl rounded-md"
+            >
+              <h3 className="font-display font-black uppercase text-xl mb-2 text-light-gray">Reprogramar Turno Fijo</h3>
+              <p className="text-charcoal text-xs uppercase font-bold mb-6">
+                Turno de {fixedRescheduleAppt.customerName} - {format(fixedRescheduleAppt.startTime.toDate(), "EEEE dd/MM 'a las' HH:mm 'hs'", { locale: es })}
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    const appt = fixedRescheduleAppt;
+                    setFixedRescheduleAppt(null);
+                    
+                    const b = barbers.find(barber => barber.id === appt.barberId);
+                    setSelectedBarber(b || null);
+                    setSelectedService(services.find(s => s.name === appt.service) || null);
+                    setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+                    setReschedulingApptId(appt.id);
+                    setRescheduleOption('single');
+                    setIsFixedAppointment(false); // only rescheduling this single week instance
+                    setSelectedDate(startOfDay(new Date()));
+                    setSelectedTime(null);
+                    setStep(3); // Go to date selection
+                    setBookingTab('agendar');
+                  }}
+                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-wider text-xs py-3 border border-white/5 transition-all text-center rounded-sm cursor-pointer"
+                >
+                  Reprogramar solo este turno (esta semana)
+                </button>
+                <button
+                  onClick={() => {
+                    const appt = fixedRescheduleAppt;
+                    setFixedRescheduleAppt(null);
+                    
+                    const b = barbers.find(barber => barber.id === appt.barberId);
+                    setSelectedBarber(b || null);
+                    setSelectedService(services.find(s => s.name === appt.service) || null);
+                    setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+                    setReschedulingApptId(appt.id);
+                    setRescheduleOption('series');
+                    setIsFixedAppointment(true); // rescheduling the entire series
+                    setFixedInterval('weekly'); // default or we can keep weekly/biweekly if known
+                    setSelectedDate(startOfDay(new Date()));
+                    setSelectedTime(null);
+                    setStep(3); // Go to date selection
+                    setBookingTab('agendar');
+                  }}
+                  className="w-full bg-crimson hover:bg-crimson/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
+                >
+                  Reprogramar toda la serie (futuros)
+                </button>
+                <button
+                  onClick={() => setFixedRescheduleAppt(null)}
+                  className="w-full bg-black hover:bg-zinc-950 text-charcoal font-bold uppercase tracking-wider text-xs py-3 border border-white/10 transition-all text-center rounded-sm cursor-pointer"
+                >
+                  Volver / No reprogramar
                 </button>
               </div>
             </motion.div>
