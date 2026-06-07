@@ -275,7 +275,20 @@ export default function App() {
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 md:gap-2.5">
-            {!showIntro && (
+            {showIntro ? (
+              <>
+                <img 
+                  src={logoSymbol} 
+                  alt="" 
+                  className="h-[40px] md:h-[52px] w-auto object-contain opacity-0 pointer-events-none" 
+                  aria-hidden="true"
+                />
+                <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-crimson select-none opacity-0 pointer-events-none" aria-hidden="true">
+                  <span className="text-[25px] md:text-[32.5px] tracking-tight">PUNTO</span>
+                  <span className="text-[25px] md:text-[32.5px] tracking-tight">BARBA</span>
+                </div>
+              </>
+            ) : (
               <>
                 <motion.img 
                   layoutId="logo-symbol"
