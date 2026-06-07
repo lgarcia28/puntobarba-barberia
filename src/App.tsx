@@ -591,9 +591,9 @@ export default function App() {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                "https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg",
-                "https://i.postimg.cc/fRNGCywF/ccded255-3d3a-4af4-b0f3-2e2e82ab28d4.jpg",
-                "https://i.postimg.cc/ydHCPN5n/9696527f-03e6-442a-8ba1-6be736a5f5fc.jpg"
+                "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=600",
+                "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=600",
+                "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=600"
               ].map((img, i) => (
                 <div key={i} className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5">
                   <img 
@@ -620,7 +620,7 @@ export default function App() {
 
         {/* Booking CTA Banner */}
         <section id="reserva" className="py-28 bg-dark-bg border-b border-white/5 relative overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center opacity-10 filter grayscale" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
+          <div className="absolute inset-0 bg-cover bg-center opacity-10 filter grayscale" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000')" }} />
           <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
             <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray leading-tight">
               ¿Listo para tu cambio de estilo?

@@ -73,28 +73,12 @@ function isAdminEmail(email: string | null | undefined) {
 
 export const BARBERS = [
   {
-    id: 'jose-hernandez',
-    name: 'José Hernández',
-    photo: 'https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg',
-    bio: '',
-    email: 'puntobarba.barber@gmail.com',
+    id: 'ivan-nunez',
+    name: 'Iván Núñez',
+    photo: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600',
+    bio: 'Barbero de autor especialista en cortes clásicos y rituales de barba.',
+    email: 'jhbarber87@gmail.com',
     role: 'admin'
-  },
-  {
-    id: 'fabricio-lozano',
-    name: 'Fabricio Lozano',
-    photo: 'https://i.postimg.cc/VNNHZb2R/438b49d7-3dbd-45ff-a274-4c0c7c495738.jpg',
-    bio: '',
-    email: 'fabricio@puntobarba.com',
-    role: 'barber'
-  },
-  {
-    id: 'mateo-montenegro',
-    name: 'Mateo Montenegro',
-    photo: 'https://i.postimg.cc/02dW8fsf/51361ed6-8bd2-43b9-9373-8c912e1b0afd.jpg',
-    bio: '',
-    email: 'mateo@puntobarba.com',
-    role: 'barber'
   }
 ];
 
@@ -112,6 +96,19 @@ export async function seedBarbers() {
       return;
     }
 
+    // Get all current barbers in Firestore
+    const snapshot = await getDocs(collection(db, 'barbers'));
+    
+    // Delete any barber doc whose ID is NOT in our local BARBERS array
+    const localIds = BARBERS.map(b => b.id);
+    for (const docSnap of snapshot.docs) {
+      if (!localIds.includes(docSnap.id)) {
+        await deleteDoc(doc(db, 'barbers', docSnap.id));
+        console.log(`Deleted old barber from DB: ${docSnap.id}`);
+      }
+    }
+
+    // Write/Update local barbers
     for (const barber of BARBERS) {
       const barberRef = doc(db, 'barbers', barber.id);
       await setDoc(barberRef, barber, { merge: true });
