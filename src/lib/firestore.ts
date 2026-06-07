@@ -79,6 +79,14 @@ export const BARBERS = [
     bio: 'Barbero de autor especialista en cortes clásicos y rituales de barba.',
     email: 'jhbarber87@gmail.com',
     role: 'admin'
+  },
+  {
+    id: 'leonel-garcia',
+    name: 'Leonel García',
+    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=600',
+    bio: 'Administrador de Punto Barba',
+    email: 'leoneldariogarcia@gmail.com',
+    role: 'admin'
   }
 ];
 
@@ -229,5 +237,65 @@ export async function updateShopSettings(data: any) {
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, 'settings');
+  }
+}
+
+export const DEFAULT_PRODUCTS = [
+  {
+    id: 'cera-matte',
+    name: 'Cera Matte Clay',
+    desc: 'Fijación fuerte con acabado mate natural. Aporta textura y volumen sin dejar residuos.',
+    price: '$12.000',
+    img: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=600',
+    tag: '[ FIX ]'
+  },
+  {
+    id: 'oleo-barba',
+    name: 'Óleo Premium Barba',
+    desc: 'Hidratación profunda para la piel y suavidad extrema para el vello facial con notas a madera noble.',
+    price: '$9.500',
+    img: 'https://images.unsplash.com/photo-1626015713026-d837d172406f?auto=format&fit=crop&q=80&w=600',
+    tag: '[ HYDRATE ]'
+  },
+  {
+    id: 'pomada-brillo',
+    name: 'Pomada Pompadour',
+    desc: 'Fijación media con acabado de brillo clásico húmedo, ideal para peinados formales y tradicionales.',
+    price: '$11.000',
+    img: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=80&w=600',
+    tag: '[ SHINE ]'
+  },
+  {
+    id: 'shampoo-purificante',
+    name: 'Shampoo Carbón Activo',
+    desc: 'Desintoxicación profunda del cuero cabelludo. Elimina impurezas y el exceso de oleosidad.',
+    price: '$14.000',
+    img: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&q=80&w=600',
+    tag: '[ DETOX ]'
+  }
+];
+
+export async function addProduct(product: any) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    const productRef = doc(collection(db, 'products'));
+    await setDoc(productRef, { ...product, id: productRef.id });
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'products');
+  }
+}
+
+export async function deleteProduct(productId: string) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    await deleteDoc(doc(db, 'products', productId));
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'products');
   }
 }

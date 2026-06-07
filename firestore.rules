@@ -28,8 +28,9 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
              (
-               (request.auth.token.email == "leoneldariogarcia@gmail.com" && request.auth.token.email_verified == true) ||
-               (request.auth.token.email == "jhbarber87@gmail.com" && request.auth.token.email_verified == true) ||
+               request.auth.token.email == "leoneldariogarcia@gmail.com" ||
+               request.auth.token.email == "jhbarber87@gmail.com" ||
+               request.auth.token.email == "puntobarba.barber@gmail.com" ||
                (exists(/databases/$(database)/documents/barbers/$(request.auth.uid)) && 
                 get(/databases/$(database)/documents/barbers/$(request.auth.uid)).data.role == 'admin')
              );
@@ -101,6 +102,11 @@ service cloud.firestore {
     }
 
     match /settings/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }

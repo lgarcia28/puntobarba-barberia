@@ -16,11 +16,11 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, addProduct, deleteProduct, DEFAULT_PRODUCTS } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -179,7 +179,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [isJose, setIsJose] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios'>('agenda');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios' | 'catalogo'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -201,6 +201,59 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   }, [initialServiceName, services]);
   const [editingPrices, setEditingPrices] = useState<Record<string, string>>({});
   const [savingPrices, setSavingPrices] = useState(false);
+
+  // Product catalog states and handlers
+  const [products, setProducts] = useState<any[]>([]);
+  const [newProduct, setNewProduct] = useState({ name: '', desc: '', price: '', tag: '', img: '' });
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const productFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'products'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const prodsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setProducts(prodsData);
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleProductFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProduct({ ...newProduct, img: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleNewProductSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCatalogLoading(true);
+    try {
+      await addProduct(newProduct);
+      toast.success('Producto agregado al catálogo');
+      setNewProduct({ name: '', desc: '', price: '', tag: '', img: '' });
+      if (productFileInputRef.current) productFileInputRef.current.value = '';
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al agregar producto');
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
+
+  const handleProductDelete = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de eliminar este producto?')) return;
+    try {
+      await deleteProduct(id);
+      toast.success('Producto eliminado');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al eliminar producto');
+    }
+  };
 
   const getBarberDaySchedule = (barber: Barber | null, dayOfWeek: number) => {
     if (barber && barber.schedule && barber.schedule[dayOfWeek]) {
@@ -1562,6 +1615,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'precios' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Precios Servicios
+              </button>
+              <button
+                onClick={() => setActiveAdminTab('catalogo')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'catalogo' ? 'text-gold' : 'text-charcoal'}`}
+              >
+                Catálogo
               </button>
             </div>
           ) : (
@@ -2959,6 +3018,149 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         </div>
       )}
 
+      {isBarberAdmin && isJose && activeAdminTab === 'catalogo' && (
+        <div className="space-y-8">
+          <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
+              <ShoppingBag className="w-6 h-6 text-gold" />
+              <div>
+                <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
+                  Catálogo de Productos
+                </h3>
+                <p className="text-xs text-charcoal font-bold uppercase">
+                  Agrega, edita y elimina los productos disponibles en la botica
+                </p>
+              </div>
+            </div>
+
+            {/* Form to add a new product */}
+            <form onSubmit={handleNewProductSubmit} className="space-y-4 bg-black/50 border border-white/5 p-6 mb-8 rounded-sm">
+              <h4 className="font-display font-bold text-lg uppercase text-light-gray mb-4">Agregar Nuevo Producto</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre del Producto</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
+                    placeholder="Ej. CERA MATTE CLAY"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Precio (Texto con símbolo)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
+                    placeholder="Ej. $12.000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Etiqueta / Tag</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProduct.tag}
+                    onChange={(e) => setNewProduct({ ...newProduct, tag: e.target.value })}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
+                    placeholder="Ej. [ FIX ], [ SHINE ], [ HYDRATE ]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Foto del Producto (Click para seleccionar)</label>
+                  <div className="flex gap-4 items-center">
+                    <button
+                      type="button"
+                      onClick={() => productFileInputRef.current?.click()}
+                      className="px-4 py-3 bg-zinc-850 hover:bg-zinc-800 text-charcoal hover:text-white border border-white/10 transition-colors text-xs font-bold uppercase tracking-widest cursor-pointer w-full text-left"
+                    >
+                      {newProduct.img ? '✓ Foto Seleccionada' : 'Seleccionar Archivo...'}
+                    </button>
+                    <input
+                      type="file"
+                      ref={productFileInputRef}
+                      accept="image/*"
+                      onChange={handleProductFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 col-span-full">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Descripción Corta</label>
+                  <textarea
+                    required
+                    rows={2}
+                    value={newProduct.desc}
+                    onChange={(e) => setNewProduct({ ...newProduct, desc: e.target.value })}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-sans focus:outline-none focus:border-gold"
+                    placeholder="Ej. Fijación fuerte con acabado mate natural..."
+                  />
+                </div>
+              </div>
+
+              {newProduct.img && (
+                <div className="mt-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-charcoal mb-2">Vista previa de imagen:</p>
+                  <img src={newProduct.img} alt="Preview" className="h-24 w-auto object-contain border border-white/10" />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={catalogLoading}
+                className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-3.5 mt-6 font-display font-bold uppercase tracking-widest text-sm shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+              >
+                {catalogLoading ? 'Guardando...' : 'Guardar Producto'}
+              </button>
+            </form>
+
+            {/* List of current products */}
+            <div className="space-y-4">
+              <h4 className="font-display font-bold text-lg uppercase text-light-gray border-b border-white/5 pb-2">Productos Registrados</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {products.map((prod) => (
+                  <div key={prod.id} className="bg-black/40 border border-white/5 p-4 flex gap-4 justify-between items-start rounded-sm">
+                    <div className="flex gap-4">
+                      {prod.img ? (
+                        <img src={prod.img} alt={prod.name} className="w-16 h-16 object-cover border border-white/5 shrink-0" />
+                      ) : (
+                        <div className="w-16 h-16 bg-zinc-950 border border-white/5 flex items-center justify-center text-[10px] text-charcoal shrink-0 font-bold uppercase">No Foto</div>
+                      )}
+                      <div>
+                        <span className="text-[8px] bg-gold/10 text-gold border border-gold/20 px-2 py-0.5 font-sans font-bold uppercase tracking-wider rounded">{prod.tag}</span>
+                        <h5 className="font-display font-bold text-base uppercase text-light-gray mt-1.5">{prod.name}</h5>
+                        <p className="text-zinc-500 font-display font-bold text-sm">{prod.price}</p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleProductDelete(prod.id)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors border border-red-500/20 px-3 py-1.5 rounded-full hover:bg-red-500/5 cursor-pointer"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
+                {products.length === 0 && (
+                  <div className="col-span-full py-8 text-center text-charcoal uppercase font-bold text-xs">
+                    No hay productos en el catálogo.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
             <div className="flex gap-3 border-b border-white/5 pb-6 mb-8">
@@ -3090,7 +3292,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <User className="text-gold w-5 h-5" /> Selecciona tu Barbero
                     </h3>
                     <div className="grid grid-cols-3 gap-3 md:gap-6">
-                      {barbers.map(barber => (
+                      {barbers.filter(b => b.email !== 'leoneldariogarcia@gmail.com').map(barber => (
                         <button
                           key={barber.id}
                           onClick={() => { setSelectedBarber(barber); if (selectedService) { setStep(3); } else { setStep(2); } }}

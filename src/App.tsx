@@ -17,7 +17,9 @@ import {
   Phone, 
   Instagram,
   Menu,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
@@ -25,6 +27,7 @@ import { BookingSystem } from './components/BookingSystem';
 import { auth, db } from './firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Toaster } from 'react-hot-toast';
+import { DEFAULT_PRODUCTS } from './lib/firestore';
 
 import logoSymbol from './assets/logo_symbol.png';
 import logoHorizontal from './assets/logo_horizontal.png';
@@ -38,6 +41,59 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const [showIntro, setShowIntro] = useState(true);
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState<string | null>(null);
+  
+  // Dynamic products catalog state
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'products'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const prodsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (prodsData.length === 0) {
+        setProducts(DEFAULT_PRODUCTS);
+      } else {
+        setProducts(prodsData);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // Gallery Carousel State
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<number>(0);
+  
+  const galleryImages = [
+    "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=1000",
+    "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=1000",
+    "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000",
+    "https://images.unsplash.com/photo-1512864084360-7c0c4d0a0845?auto=format&fit=crop&q=80&w=1000",
+    "https://images.unsplash.com/photo-1605497746444-ac9dbd324ce8?auto=format&fit=crop&q=80&w=1000"
+  ];
+  
+  const handlePrevSlide = () => {
+    setSlideDirection(-1);
+    setActiveSlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  };
+  
+  const handleNextSlide = () => {
+    setSlideDirection(1);
+    setActiveSlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+    }),
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -487,96 +543,71 @@ export default function App() {
               <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
             </div>
 
-            {/* Editorial List Layout */}
-            <div className="bg-dark-surface/30 border border-white/5 p-8 md:p-16 space-y-1">
-              
-              {/* Servicio I */}
-              <div 
-                onClick={() => { setSelectedServiceForBooking("Corte de Pelo Premium"); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
-              >
-                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-display font-light text-2xl text-gold/60">I.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Corte de Pelo Premium</h3>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 md:mt-0">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 30 Minutos ]</span>
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
-                      AGENDAR →
-                    </span>
-                  </div>
-                </div>
-                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
-                  Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y lavado final.
-                </p>
-              </div>
-
-              {/* Servicio II */}
-              <div 
-                onClick={() => { setSelectedServiceForBooking("Barba de Autor"); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
-              >
-                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-display font-light text-2xl text-gold/60">II.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Barba de Autor</h3>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 md:mt-0">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 30 Minutos ]</span>
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
-                      AGENDAR →
-                    </span>
-                  </div>
-                </div>
-                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
-                  Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo.
-                </p>
-              </div>
-
-              {/* Servicio III */}
-              <div 
-                onClick={() => { setSelectedServiceForBooking("Perfilado de Contornos"); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
-              >
-                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-display font-light text-2xl text-gold/60">III.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Perfilado de Contornos</h3>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 md:mt-0">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 15 Minutos ]</span>
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
-                      AGENDAR →
-                    </span>
-                  </div>
-                </div>
-                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
-                  Limpieza y delimitación absoluta de patillas, frente y nuca con navaja y trimmer. Ideal para mantener tu corte nítido entre visitas.
-                </p>
-              </div>
-
-              {/* Servicio IV */}
-              <div 
-                onClick={() => { setSelectedServiceForBooking("Corte & Barba (Combo)"); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
-              >
-                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-display font-light text-2xl text-gold/60">IV.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Corte & Barba (Combo)</h3>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 md:mt-0">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 60 Minutos ]</span>
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
-                      AGENDAR →
-                    </span>
-                  </div>
-                </div>
-                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
-                  La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora.
-                </p>
-              </div>
+            {/* Modern Services Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  id: "Corte de Pelo Premium",
+                  num: "01",
+                  name: "Corte de Pelo Premium",
+                  desc: "Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y lavado final.",
+                  duration: "30 MIN",
+                  icon: Scissors,
+                },
+                {
+                  id: "Barba de Autor",
+                  num: "02",
+                  name: "Barba de Autor",
+                  desc: "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo.",
+                  duration: "30 MIN",
+                  icon: Brush,
+                },
+                {
+                  id: "Perfilado de Contornos",
+                  num: "03",
+                  name: "Perfilado de Contornos",
+                  desc: "Limpieza y delimitación absoluta de patillas, frente y nuca con navaja y trimmer. Ideal para mantener tu corte nítido entre visitas.",
+                  duration: "15 MIN",
+                  icon: Award,
+                },
+                {
+                  id: "Corte & Barba (Combo)",
+                  num: "04",
+                  name: "Corte & Barba (Combo)",
+                  desc: "La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora.",
+                  duration: "60 MIN",
+                  icon: User,
+                },
+              ].map((svc) => {
+                const IconComponent = svc.icon;
+                return (
+                  <motion.div
+                    key={svc.id}
+                    whileHover={{ y: -6, borderColor: "rgba(212, 196, 174, 0.4)" }}
+                    onClick={() => { setSelectedServiceForBooking(svc.name); setBookingTab("agendar"); setIsBookingOpen(true); }}
+                    className="group relative p-6 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between aspect-[3/4] rounded-sm hover:shadow-2xl hover:shadow-gold/5"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <span className="font-display font-black text-6xl text-white/5 group-hover:text-gold/10 transition-colors duration-300">{svc.num}</span>
+                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-gold/30 transition-colors">
+                          <IconComponent className="w-4 h-4 text-gold" />
+                        </div>
+                      </div>
+                      <div className="mt-8 space-y-3">
+                        <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">{svc.name}</h3>
+                        <p className="text-charcoal text-xs font-sans tracking-wide leading-relaxed line-clamp-4">{svc.desc}</p>
+                      </div>
+                    </div>
+                    <div className="pt-6 flex justify-between items-center border-t border-white/5 group-hover:border-gold/10 transition-colors">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-bold group-hover:text-gold/80 transition-colors">[ {svc.duration} ]</span>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-black flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        RESERVAR <span className="transform transition-transform duration-300 group-hover:translate-x-1">→</span>
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -589,31 +620,70 @@ export default function App() {
               <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Galería</h2>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=600",
-                "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=600",
-                "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=600"
-              ].map((img, i) => (
-                <div key={i} className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5">
-                  <img 
-                    src={img} 
-                    alt={`Corte Punto Barba ${i + 1}`} 
-                    className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
+            {/* Gallery Carousel */}
+            <div className="relative max-w-4xl mx-auto">
+              {/* Carousel Viewport */}
+              <div className="relative aspect-[16/10] sm:aspect-[16/9] md:aspect-[21/10] overflow-hidden border border-white/5 bg-zinc-950/60 shadow-2xl">
+                <AnimatePresence initial={false} custom={slideDirection} mode="popLayout">
+                  <motion.img
+                    key={activeSlide}
+                    custom={slideDirection}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: "spring", stiffness: 300, damping: 30 },
+                      opacity: { duration: 0.2 }
+                    }}
+                    src={galleryImages[activeSlide]}
+                    alt={`Corte Punto Barba ${activeSlide + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700 select-none"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-700" />
-                </div>
-              ))}
-              <a 
-                href="https://www.instagram.com/puntobarba.barberia/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-950 flex flex-col items-center justify-center hover:bg-zinc-900 transition-colors"
-              >
-                <Instagram className="w-10 h-10 text-white/20 group-hover:text-gold transition-colors mb-4" />
-                <span className="text-white/30 group-hover:text-gold font-display font-semibold uppercase tracking-[0.2em] text-[10px] md:text-xs transition-colors text-center px-4 leading-relaxed">@puntobarba.barberia</span>
-              </a>
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                
+                {/* Arrow Navigation Controls */}
+                <button
+                  onClick={handlePrevSlide}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/10 bg-black/60 hover:bg-black hover:border-gold/50 flex items-center justify-center text-white hover:text-gold transition-all duration-300 z-10 cursor-pointer active:scale-90"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleNextSlide}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/10 bg-black/60 hover:bg-black hover:border-gold/50 flex items-center justify-center text-white hover:text-gold transition-all duration-300 z-10 cursor-pointer active:scale-90"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Slider dots indicator */}
+              <div className="flex justify-center gap-2 mt-6">
+                {galleryImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSlideDirection(idx > activeSlide ? 1 : -1);
+                      setActiveSlide(idx);
+                    }}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === activeSlide ? 'w-6 bg-gold' : 'w-1.5 bg-white/20 hover:bg-white/40'}`}
+                  />
+                ))}
+              </div>
+              
+              <div className="text-center mt-8">
+                <a 
+                  href="https://www.instagram.com/puntobarba.barberia/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-charcoal hover:text-gold font-display font-semibold uppercase tracking-[0.2em] text-xs transition-colors duration-300"
+                >
+                  <Instagram className="w-4 h-4" />
+                  <span>Seguinos en @puntobarba.barberia</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -657,40 +727,7 @@ export default function App() {
 
             {/* Apothecary Minimal Grid (No Cards) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-white/5 bg-zinc-950/20">
-              {[
-                {
-                  id: 'cera-matte',
-                  name: 'Cera Matte Clay',
-                  desc: 'Fijación fuerte con acabado mate natural. Aporta textura y volumen sin dejar residuos.',
-                  price: '$12.000',
-                  img: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=600',
-                  tag: '[ FIX ]'
-                },
-                {
-                  id: 'oleo-barba',
-                  name: 'Óleo Premium Barba',
-                  desc: 'Hidratación profunda para la piel y suavidad extrema para el vello facial con notas a madera noble.',
-                  price: '$9.500',
-                  img: 'https://images.unsplash.com/photo-1626015713026-d837d172406f?auto=format&fit=crop&q=80&w=600',
-                  tag: '[ HYDRATE ]'
-                },
-                {
-                  id: 'pomada-brillo',
-                  name: 'Pomada Pompadour',
-                  desc: 'Fijación media con acabado de brillo clásico húmedo, ideal para peinados formales y tradicionales.',
-                  price: '$11.000',
-                  img: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=80&w=600',
-                  tag: '[ SHINE ]'
-                },
-                {
-                  id: 'shampoo-purificante',
-                  name: 'Shampoo Carbón Activo',
-                  desc: 'Desintoxicación profunda del cuero cabelludo. Elimina impurezas y el exceso de oleosidad.',
-                  price: '$14.000',
-                  img: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&q=80&w=600',
-                  tag: '[ DETOX ]'
-                }
-              ].map((prod, index) => (
+              {products.map((prod, index) => (
                 <div 
                   key={prod.id} 
                   className={`group p-8 flex flex-col justify-between transition-colors hover:bg-white/[0.01] border-white/5
