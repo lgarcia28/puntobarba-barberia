@@ -23,7 +23,7 @@ jobs:
             echo "2. Haz clic en 'Settings' (Configuración) -> 'Secrets and variables' -> 'Actions'"
             echo "3. Haz clic en 'New repository secret'"
             echo "4. Ponle de nombre: APP_URL"
-            echo "5. Ponle de valor la URL de tu aplicación (ej: https://resetart-barber.web.app)"
+            echo "5. Ponle de valor la URL de tu aplicación (ej: https://puntobarba-barberia.vercel.app)"
             echo "=========================================================================="
             exit 1
           fi
