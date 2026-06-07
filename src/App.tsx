@@ -277,7 +277,7 @@ export default function App() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cortes</a>
-            <a href="#experiencia" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Experiencia</a>
+            <a href="#productos" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Productos</a>
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
             {isBarberAdmin && (
               <a 
@@ -320,7 +320,7 @@ export default function App() {
             className="md:hidden bg-[#0e0e0e] border-b border-white/5 p-6 flex flex-col space-y-4"
           >
             <a href="#cortes" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cortes</a>
-            <a href="#experiencia" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Experiencia</a>
+            <a href="#productos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Productos</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
             {isBarberAdmin && (
               <a 
@@ -587,49 +587,85 @@ export default function App() {
           </div>
         </section>
 
-        {/* La Experiencia Section */}
-        <section id="experiencia" className="py-20 md:py-32 bg-[#0c0c0c] border-t border-white/5 relative overflow-hidden">
+        {/* Productos Section */}
+        <section id="productos" className="py-20 md:py-32 bg-[#0c0c0c] border-t border-white/5 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-16 md:mb-24">
               <span className="text-crimson font-display font-bold uppercase tracking-[0.2em] text-sm mb-4 block">
-                Exclusividad & Estilo
+                Cuidado & Estilo Masculino
               </span>
               <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">
-                La Experiencia Punto Barba
+                Catálogo de Productos
               </h2>
               <div className="h-1 w-20 bg-crimson mt-4 mx-auto" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-              <div className="bg-black/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:border-crimson/30 transition-all duration-500 rounded-sm flex flex-col justify-between group">
-                <Scissors className="text-crimson w-10 h-10 mb-8 group-hover:scale-110 transition-transform duration-300" />
-                <div>
-                  <h3 className="text-2xl font-display font-bold uppercase mb-4 text-light-gray">Cortes de Élite</h3>
-                  <p className="text-charcoal leading-relaxed text-sm md:text-base font-display">
-                    Nuestros profesionales dominan técnicas avanzadas de tijera y degradados geométricos, logrando un estilo único adaptado a tus facciones.
-                  </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  id: 'cera-matte',
+                  name: 'Cera Matte Clay',
+                  desc: 'Fijación fuerte con acabado mate natural. Aporta textura y volumen sin dejar residuos.',
+                  price: '$12.000',
+                  img: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=600',
+                  tag: 'Fijación Fuerte'
+                },
+                {
+                  id: 'oleo-barba',
+                  name: 'Óleo Premium Barba',
+                  desc: 'Hidratación profunda para la piel y suavidad extrema para el vello facial con notas a madera noble.',
+                  price: '$9.500',
+                  img: 'https://images.unsplash.com/photo-1626015713026-d837d172406f?auto=format&fit=crop&q=80&w=600',
+                  tag: 'Hidratación'
+                },
+                {
+                  id: 'pomada-brillo',
+                  name: 'Pomada Pompadour',
+                  desc: 'Fijación media con acabado de brillo clásico húmedo, ideal para peinados formales y tradicionales.',
+                  price: '$11.000',
+                  img: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=80&w=600',
+                  tag: 'Brillo Clásico'
+                },
+                {
+                  id: 'shampoo-purificante',
+                  name: 'Shampoo Carbón Activo',
+                  desc: 'Desintoxicación profunda del cuero cabelludo. Elimina impurezas y el exceso de oleosidad.',
+                  price: '$14.000',
+                  img: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&q=80&w=600',
+                  tag: 'Desintoxicante'
+                }
+              ].map((prod) => (
+                <div key={prod.id} className="group bg-black/40 border border-white/5 hover:border-crimson/30 transition-all duration-500 rounded-sm overflow-hidden flex flex-col justify-between">
+                  <div className="relative aspect-square overflow-hidden bg-zinc-950 border-b border-white/5">
+                    <img 
+                      src={prod.img} 
+                      alt={prod.name} 
+                      className="w-full h-full object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute top-3 left-3 bg-crimson text-neutral-900 font-display font-bold uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-sm">
+                      {prod.tag}
+                    </span>
+                  </div>
+                  <div className="p-6 flex flex-col justify-between flex-grow">
+                    <div>
+                      <h3 className="text-xl font-display font-bold uppercase text-light-gray tracking-wide">{prod.name}</h3>
+                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-2 line-clamp-3">{prod.desc}</p>
+                    </div>
+                    <div>
+                      <span className="text-2xl font-display font-black text-crimson mt-4 block">{prod.price}</span>
+                      <a 
+                        href={`https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20interesa%20comprar%20el%20producto%20${encodeURIComponent(prod.name)}%20de%20su%20cat%C3%A1logo.%20%C2%BFHay%20stock%20disponible?`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full block bg-transparent border border-white/10 hover:border-crimson hover:text-neutral-900 text-center py-2.5 font-display font-bold uppercase text-xs tracking-wider transition-all duration-300 text-light-gray mt-4"
+                      >
+                        Consultar Stock
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="bg-black/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:border-crimson/30 transition-all duration-500 rounded-sm flex flex-col justify-between group">
-                <User className="text-crimson w-10 h-10 mb-8 group-hover:scale-110 transition-transform duration-300" />
-                <div>
-                  <h3 className="text-2xl font-display font-bold uppercase mb-4 text-light-gray">Café & Whisky</h3>
-                  <p className="text-charcoal leading-relaxed text-sm md:text-base font-display">
-                    Disfruta de un café de especialidad, una cerveza helada o un whisky single malt de cortesía mientras perfeccionamos tu look en un ambiente relajado.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-black/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:border-crimson/30 transition-all duration-500 rounded-sm flex flex-col justify-between group">
-                <Award className="text-crimson w-10 h-10 mb-8 group-hover:scale-110 transition-transform duration-300" />
-                <div>
-                  <h3 className="text-2xl font-display font-bold uppercase mb-4 text-light-gray">Club Privado</h3>
-                  <p className="text-charcoal leading-relaxed text-sm md:text-base font-display">
-                    Mucho más que una barbería: un espacio de encuentro, networking y distensión diseñado para el caballero contemporáneo de Rosario.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
