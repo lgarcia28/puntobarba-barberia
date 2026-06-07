@@ -280,16 +280,17 @@ export default function App() {
                   layoutId="logo-symbol"
                   src={logoSymbol} 
                   alt="Punto Barba" 
-                  className="h-12 md:h-14 w-auto object-contain" 
+                  className="h-14 md:h-18 w-auto object-contain" 
                   transition={{ type: "spring", stiffness: 80, damping: 15 }}
                 />
-                <motion.span 
+                <motion.div 
                   layoutId="logo-text"
-                  className="text-xl md:text-2xl font-display font-black tracking-[0.15em] text-crimson"
+                  className="flex flex-col justify-center leading-[0.85] font-display font-black text-crimson select-none"
                   transition={{ type: "spring", stiffness: 80, damping: 15 }}
                 >
-                  PUNTO BARBA
-                </motion.span>
+                  <span className="text-2xl md:text-3xl tracking-[0.05em]">PUNTO</span>
+                  <span className="text-2xl md:text-3xl tracking-[0.05em]">BARBA</span>
+                </motion.div>
               </>
             )}
           </div>
