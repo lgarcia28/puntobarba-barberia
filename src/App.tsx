@@ -644,9 +644,19 @@ export default function App() {
                   dragElastic={0.6}
                   style={{ x: galleryDragX }}
                   onDragEnd={(event, info) => {
-                    const currentX = galleryDragX.get();
-                    const closestSlide = Math.round(-currentX / galleryContainerWidth);
-                    const newSlide = Math.max(0, Math.min(galleryImages.length - 1, closestSlide));
+                    const offset = info.offset.x;
+                    const velocity = info.velocity.x;
+                    const swipeThreshold = galleryContainerWidth * 0.15; // 15% of container width
+                    
+                    let newSlide = activeSlide;
+                    
+                    if (offset < -swipeThreshold || velocity < -400) {
+                      // Swiped left -> next slide
+                      newSlide = Math.min(galleryImages.length - 1, activeSlide + 1);
+                    } else if (offset > swipeThreshold || velocity > 400) {
+                      // Swiped right -> prev slide
+                      newSlide = Math.max(0, activeSlide - 1);
+                    }
                     
                     if (newSlide === activeSlide) {
                       // Snap back to current slide
