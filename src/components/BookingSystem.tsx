@@ -1501,11 +1501,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           {isBarberAdmin ? 'Panel de Gestión' : 'Reserva tu Turno'}
         </h2>
         {user ? (
-          <button onClick={handleLogout} className="text-charcoal hover:text-crimson transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer mt-1">
+          <button onClick={handleLogout} className="text-charcoal hover:text-gold transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer mt-1">
             <LogOut className="w-4 h-4" /> Salir
           </button>
         ) : (
-          <button onClick={handleLogin} className="text-charcoal hover:text-crimson transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer mt-1">
+          <button onClick={handleLogin} className="text-charcoal hover:text-gold transition-colors flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer mt-1">
             <LogIn className="w-4 h-4" /> Barber Login
           </button>
         )}
@@ -1517,37 +1517,37 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             <div className="flex flex-wrap gap-4 border-b border-white/5 pb-4">
               <button
                 onClick={() => setActiveAdminTab('agenda')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Agenda y Bloqueos
               </button>
               <button
                 onClick={() => setActiveAdminTab('barberos')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'barberos' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'barberos' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Gestión de Barberos
               </button>
               <button
                 onClick={() => setActiveAdminTab('horarios')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'horarios' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'horarios' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Horarios de Atención
               </button>
               <button
                 onClick={() => setActiveAdminTab('agendar')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Agendar Turno
               </button>
               <button
                 onClick={() => setActiveAdminTab('finanzas')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'finanzas' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'finanzas' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Finanzas
               </button>
               <button
                 onClick={() => setActiveAdminTab('precios')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'precios' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'precios' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Precios Servicios
               </button>
@@ -1556,13 +1556,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             <div className="flex flex-wrap gap-4 border-b border-white/5 pb-4">
               <button
                 onClick={() => setActiveAdminTab('agenda')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agenda' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Agenda y Bloqueos
               </button>
               <button
                 onClick={() => setActiveAdminTab('agendar')}
-                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-crimson' : 'text-charcoal'}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'agendar' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Agendar Turno
               </button>
@@ -1580,7 +1580,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <button
                       key={b.id}
                       onClick={() => setSelectedBarber(b)}
-                      className={`p-4 border ${selectedBarber?.id === b.id ? 'border-crimson bg-crimson/10' : 'border-white/5 bg-black'} transition-all text-left flex items-center gap-4`}
+                      className={`p-4 border ${selectedBarber?.id === b.id ? 'border-gold bg-gold/10' : 'border-white/5 bg-black'} transition-all text-left flex items-center gap-4`}
                     >
                       <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full grayscale object-cover" referrerPolicy="no-referrer" />
                       <span className="font-display font-bold uppercase text-sm">{b.name}</span>
@@ -1594,10 +1594,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   <div className="bg-zinc-950 border border-white/5 p-6 rounded-sm">
                     <button
                       onClick={() => setShowQuickLog(!showQuickLog)}
-                      className="w-full flex justify-between items-center text-sm font-bold uppercase tracking-widest text-light-gray hover:text-crimson transition-colors"
+                      className="w-full flex justify-between items-center text-sm font-bold uppercase tracking-widest text-light-gray hover:text-gold transition-colors"
                     >
                       <span className="flex items-center gap-2">
-                        <Scissors className="w-4 h-4 text-crimson" /> Registrar Venta Rápida (Sin Turno / Walk-in)
+                        <Scissors className="w-4 h-4 text-gold" /> Registrar Venta Rápida (Sin Turno / Walk-in)
                       </span>
                       <span className="text-xl">{showQuickLog ? '−' : '+'}</span>
                     </button>
@@ -1619,7 +1619,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 placeholder="Cliente al paso"
                                 value={quickLogClientName}
                                 onChange={(e) => setQuickLogClientName(e.target.value)}
-                                className="w-full bg-black border border-white/10 px-3 py-2.5 text-xs text-light-gray focus:border-crimson outline-none transition-colors"
+                                className="w-full bg-black border border-white/10 px-3 py-2.5 text-xs text-light-gray focus:border-gold outline-none transition-colors"
                               />
                             </div>
 
@@ -1637,7 +1637,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     }}
                                     className={`py-2 px-1 text-[9px] font-black uppercase border transition-all ${
                                       quickLogService?.id === svc.id
-                                        ? 'bg-crimson border-crimson text-white'
+                                        ? 'bg-gold border-gold text-white'
                                         : 'bg-black border-white/10 text-charcoal hover:border-white/30'
                                     }`}
                                   >
@@ -1658,13 +1658,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     value={quickLogPrice}
                                     onChange={(e) => setQuickLogPrice(e.target.value)}
                                     placeholder="0"
-                                    className="w-full bg-black border border-white/10 pl-6 pr-3 py-2 text-xs text-light-gray focus:border-crimson outline-none transition-colors"
+                                    className="w-full bg-black border border-white/10 pl-6 pr-3 py-2 text-xs text-light-gray focus:border-gold outline-none transition-colors"
                                   />
                                 </div>
                                 <button
                                   onClick={handleSaveQuickCut}
                                   disabled={loading || !quickLogService}
-                                  className="bg-crimson text-white px-5 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-crimson/80 transition-all disabled:opacity-40"
+                                  className="bg-gold text-white px-5 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gold/80 transition-all disabled:opacity-40"
                                 >
                                   Registrar
                                 </button>
@@ -1684,7 +1684,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     </div>
                     <div className="bg-black p-6 border border-white/5 flex flex-col justify-center">
                       <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Ingresos Estimados</p>
-                      <p className="font-display font-black text-4xl text-crimson">
+                      <p className="font-display font-black text-4xl text-gold">
                         ${adminAppts.reduce((acc, appt) => {
                           const svc = services.find(s => s.name === appt.service);
                           return acc + (svc ? svc.price : 0);
@@ -1700,12 +1700,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                           {/* Date label — label activates input on mobile; showPicker() handles desktop Chrome */}
                           <label
-                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none"
+                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-gold transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none"
                             onClick={() => {
                               try { adminDateInputRef.current?.showPicker(); } catch (_) {/* fallback: label activates input natively */}
                             }}
                           >
-                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0 pointer-events-none" />
+                            <CalendarIcon className="w-6 h-6 text-gold flex-shrink-0 pointer-events-none" />
                             <span className="pointer-events-none">{format(adminDate, 'EEEE dd/MM/yyyy', { locale: es })}</span>
                             <input
                               ref={adminDateInputRef}
@@ -1726,7 +1726,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             <button
                               type="button"
                               onClick={() => { setAdminDate(addMinutes(adminDate, -1440)); setSelectedTimesForBlocking([]); }}
-                              className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"
+                              className="p-2 bg-zinc-800 hover:bg-gold transition-colors"
                               title="Día Anterior"
                             >
                               <ChevronLeft />
@@ -1734,7 +1734,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             <button
                               type="button"
                               onClick={() => { setAdminDate(addMinutes(adminDate, 1440)); setSelectedTimesForBlocking([]); }}
-                              className="p-2 bg-zinc-800 hover:bg-crimson transition-colors"
+                              className="p-2 bg-zinc-800 hover:bg-gold transition-colors"
                               title="Siguiente Día"
                             >
                               <ChevronRight />
@@ -1751,12 +1751,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                         {isRangeMode && (
                           <label
-                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-crimson transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none"
+                            className="font-display font-bold uppercase flex items-center gap-2 hover:text-gold transition-colors text-xl bg-zinc-900 border border-white/10 px-4 py-2 cursor-pointer select-none"
                             onClick={() => {
                               try { blockingEndDateInputRef.current?.showPicker(); } catch (_) {}
                             }}
                           >
-                            <CalendarIcon className="w-6 h-6 text-crimson flex-shrink-0 pointer-events-none" />
+                            <CalendarIcon className="w-6 h-6 text-gold flex-shrink-0 pointer-events-none" />
                             <span className="pointer-events-none">Hasta: {blockingEndDate ? format(blockingEndDate, 'dd/MM/yyyy') : 'Seleccionar...'}</span>
                             <input
                               ref={blockingEndDateInputRef}
@@ -1775,21 +1775,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
 
                       <div className="flex flex-col gap-4">
-                        <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer hover:text-crimson">
+                        <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer hover:text-gold">
                           <input
                             type="checkbox"
                             checked={isRangeMode}
                             onChange={(e) => setIsRangeMode(e.target.checked)}
-                            className="accent-crimson"
+                            className="accent-gold"
                           />
                           Rango de días
                         </label>
-                        <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer hover:text-crimson">
+                        <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer hover:text-gold">
                           <input
                             type="checkbox"
                             checked={adminViewMode === 'weekly'}
                             onChange={(e) => setAdminViewMode(e.target.checked ? 'weekly' : 'daily')}
-                            className="accent-crimson"
+                            className="accent-gold"
                           />
                           Vista Semanal
                         </label>
@@ -1856,13 +1856,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           return (
                             <>
                               {outOfHoursAppts.length > 0 && (
-                                <div className="col-span-full mb-6 p-4 bg-crimson/10 border border-crimson/30">
-                                  <h5 className="text-crimson font-bold text-xs uppercase mb-3 flex items-center gap-2">
+                                <div className="col-span-full mb-6 p-4 bg-gold/10 border border-gold/30">
+                                  <h5 className="text-gold font-bold text-xs uppercase mb-3 flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4" /> Turnos fuera de horario configurado
                                   </h5>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                     {outOfHoursAppts.map(appt => (
-                                      <div key={appt.id} className="bg-crimson/20 border border-crimson p-3 flex flex-col items-center gap-1">
+                                      <div key={appt.id} className="bg-gold/20 border border-gold p-3 flex flex-col items-center gap-1">
                                         <span className="text-sm font-bold">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
                                         <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
                                         <span className="text-[8px] font-bold">{appt.customerPhone}</span>
@@ -1921,7 +1921,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                    } ${isSelected
                                      ? 'bg-white text-black border-white'
                                      : hasPending
-                                       ? 'bg-crimson/20 border-crimson text-crimson hover:bg-crimson/30'
+                                       ? 'bg-gold/20 border-gold text-gold hover:bg-gold/30'
                                        : hasCompleted
                                          ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-400'
                                          : block
@@ -1943,7 +1943,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                              }
                                            }}
                                            title={!a.completed ? "Hacer clic para cobrar" : undefined}
-                                           className={`uppercase text-[9px] font-black truncate w-full text-center ${a.completed ? 'text-zinc-500 line-through' : 'text-crimson hover:underline cursor-pointer'}`}
+                                           className={`uppercase text-[9px] font-black truncate w-full text-center ${a.completed ? 'text-zinc-500 line-through' : 'text-gold hover:underline cursor-pointer'}`}
                                          >
                                            {a.customerName}
                                          </span>
@@ -1964,7 +1964,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                       {/* Agenda detallada del día */}
                       <div className="mt-8 border-t border-white/5 pt-8">
-                        <h4 className="font-display font-bold uppercase text-crimson mb-4 flex items-center gap-2">
+                        <h4 className="font-display font-bold uppercase text-gold mb-4 flex items-center gap-2">
                           <Database className="w-4 h-4" /> Agenda de {format(adminDate, 'EEEE dd/MM', { locale: es })}
                         </h4>
                         <div className="space-y-2">
@@ -1977,7 +1977,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                   {/* Time, Duration & Badges */}
                                   <div className="flex flex-wrap items-center gap-2">
                                     <div className="bg-zinc-800/80 px-2.5 py-1 rounded-sm border border-white/5 flex items-center gap-1.5">
-                                      <Clock className="w-3.5 h-3.5 text-crimson" />
+                                      <Clock className="w-3.5 h-3.5 text-gold" />
                                       <span className="font-display font-black text-sm tracking-wide text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
                                     </div>
                                     <span className="text-[9px] text-charcoal font-black uppercase tracking-wider bg-white/5 px-2 py-1 rounded-sm">
@@ -2016,7 +2016,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                           href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
                                           target="_blank" 
                                           rel="noopener noreferrer" 
-                                          className="text-crimson hover:underline flex items-center gap-1"
+                                          className="text-gold hover:underline flex items-center gap-1"
                                         >
                                           <Phone className="w-3 h-3" /> {appt.customerPhone}
                                         </a>
@@ -2030,7 +2030,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                   {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 ? (
                                     <button
                                       onClick={() => handleUpdateDuration(appt, 30)}
-                                      className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
+                                      className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-gold hover:text-gold transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                       title="Reducir a 30 minutos para liberar espacio"
                                     >
                                       Acortar a 30m
@@ -2039,7 +2039,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     appt.service === 'Corte y Barba' && (
                                       <button
                                         onClick={() => handleUpdateDuration(appt, 60)}
-                                        className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
+                                        className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-gold hover:text-gold transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                         title="Volver a 60 minutos"
                                       >
                                         Deshacer
@@ -2067,7 +2067,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                         setCompletingAppt(appt);
                                         setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0)));
                                       }}
-                                      className="flex-1 md:flex-none bg-crimson border border-crimson hover:bg-crimson/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-crimson/10 text-center"
+                                      className="flex-1 md:flex-none bg-gold border border-gold hover:bg-gold/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-gold/10 text-center"
                                       title="Registrar cobro de este corte"
                                     >
                                       Cobrar
@@ -2075,7 +2075,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                   )}
                                   <button 
                                     onClick={() => handleCancelAppointment(appt)} 
-                                    className="text-crimson hover:bg-crimson/10 p-2 border border-white/10 transition-colors rounded-sm flex items-center justify-center"
+                                    className="text-gold hover:bg-gold/10 p-2 border border-white/10 transition-colors rounded-sm flex items-center justify-center"
                                     title="Eliminar turno"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -2103,7 +2103,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             
                             return (
                               <div key={day.toString()} className="bg-zinc-900 border border-white/5 p-4">
-                                <h4 className="font-display font-bold uppercase text-crimson mb-3">{format(day, 'EEEE dd/MM/yyyy', { locale: es })}</h4>
+                                <h4 className="font-display font-bold uppercase text-gold mb-3">{format(day, 'EEEE dd/MM/yyyy', { locale: es })}</h4>
                                 {dayAppts.length === 0 ? (
                                   <p className="text-charcoal text-xs uppercase font-bold">Sin turnos</p>
                                 ) : (
@@ -2115,7 +2115,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                           {/* Time, Duration & Badges */}
                                           <div className="flex flex-wrap items-center gap-2">
                                             <div className="bg-zinc-800/80 px-2.5 py-1 rounded-sm border border-white/5 flex items-center gap-1.5">
-                                              <Clock className="w-3.5 h-3.5 text-crimson" />
+                                              <Clock className="w-3.5 h-3.5 text-gold" />
                                               <span className="font-display font-black text-sm tracking-wide text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
                                             </div>
                                             <span className="text-[9px] text-charcoal font-black uppercase tracking-wider bg-white/5 px-2 py-1 rounded-sm">
@@ -2154,7 +2154,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                                   href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
                                                   target="_blank" 
                                                   rel="noopener noreferrer" 
-                                                  className="text-crimson hover:underline flex items-center gap-1"
+                                                  className="text-gold hover:underline flex items-center gap-1"
                                                 >
                                                   <Phone className="w-3 h-3" /> {appt.customerPhone}
                                                 </a>
@@ -2168,7 +2168,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                           {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000) > 30 ? (
                                             <button
                                               onClick={() => handleUpdateDuration(appt, 30)}
-                                              className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
+                                              className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-gold hover:text-gold transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                               title="Reducir a 30 minutos para liberar espacio"
                                             >
                                               Acortar a 30m
@@ -2177,7 +2177,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                             appt.service === 'Corte y Barba' && (
                                               <button
                                                 onClick={() => handleUpdateDuration(appt, 60)}
-                                                className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-crimson hover:text-crimson transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
+                                                className="flex-1 md:flex-none text-[9px] font-bold uppercase border border-white/10 px-2.5 py-1.5 hover:border-gold hover:text-gold transition-all text-light-gray bg-zinc-950 rounded-sm text-center"
                                                 title="Volver a 60 minutos"
                                               >
                                                 Deshacer
@@ -2205,7 +2205,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                                 setCompletingAppt(appt);
                                                 setCompletingPrice(String(appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0)));
                                               }}
-                                              className="flex-1 md:flex-none bg-crimson border border-crimson hover:bg-crimson/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-crimson/10 text-center"
+                                              className="flex-1 md:flex-none bg-gold border border-gold hover:bg-gold/80 text-white px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-gold/10 text-center"
                                               title="Registrar cobro de este corte"
                                             >
                                               Cobrar
@@ -2213,7 +2213,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                           )}
                                           <button 
                                             onClick={() => handleCancelAppointment(appt)} 
-                                            className="text-crimson hover:bg-crimson/10 p-2 border border-white/10 transition-colors rounded-sm flex items-center justify-center"
+                                            className="text-gold hover:bg-gold/10 p-2 border border-white/10 transition-colors rounded-sm flex items-center justify-center"
                                             title="Eliminar turno"
                                           >
                                             <Trash2 className="w-4 h-4" />
@@ -2236,7 +2236,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <button
                         onClick={handleBlockTime}
                         disabled={(!isRangeMode && selectedTimesForBlocking.length === 0) || loading}
-                        className="flex-1 bg-crimson py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-crimson/80 transition-all"
+                        className="flex-1 bg-gold py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-gold/80 transition-all"
                       >
                         {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : null}
                         {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Bloquear Rango Completo' : `Bloquear / Cancelar Seleccionados (${selectedTimesForBlocking.length})`}
@@ -2262,7 +2262,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         <div className="space-y-6">
               <div className="bg-black p-6 border border-white/5">
                 <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
-                  <User className="w-5 h-5 text-crimson" /> {editingBarberId ? 'Editar Barbero' : 'Agregar Nuevo Barbero'}
+                  <User className="w-5 h-5 text-gold" /> {editingBarberId ? 'Editar Barbero' : 'Agregar Nuevo Barbero'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <input
@@ -2270,14 +2270,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     placeholder="Nombre del Barbero"
                     value={newBarber.name}
                     onChange={(e) => setNewBarber({ ...newBarber, name: e.target.value })}
-                    className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-crimson outline-none"
+                    className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
                   />
                   <input
                     type="email"
                     placeholder="Email (para login)"
                     value={newBarber.email}
                     onChange={(e) => setNewBarber({ ...newBarber, email: e.target.value })}
-                    className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-crimson outline-none"
+                    className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
                   />
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold uppercase mb-2 text-charcoal">Foto del Perfil</label>
@@ -2304,7 +2304,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-crimson text-white px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all flex-1 text-left flex items-center justify-between shadow-lg shadow-crimson/20"
+                        className="bg-gold text-white px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gold/80 transition-all flex-1 text-left flex items-center justify-between shadow-lg shadow-gold/20"
                       >
                         <span>{newBarber.photo ? 'Cambiar Foto' : 'Seleccionar Foto'}</span>
                         <RefreshCcw className="w-3 h-3 opacity-50" />
@@ -2337,7 +2337,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       }
                     }}
                     disabled={loading}
-                    className="flex-1 bg-white text-black py-3 font-display font-bold uppercase tracking-widest hover:bg-crimson hover:text-white transition-all disabled:opacity-50"
+                    className="flex-1 bg-white text-black py-3 font-display font-bold uppercase tracking-widest hover:bg-gold hover:text-white transition-all disabled:opacity-50"
                   >
                     {loading ? 'Guardando...' : editingBarberId ? 'Actualizar Barbero' : 'Guardar Barbero'}
                   </button>
@@ -2357,7 +2357,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
               <div className="bg-black p-6 border border-white/5">
                 <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
-                  <Database className="w-5 h-5 text-crimson" /> Barberos Actuales
+                  <Database className="w-5 h-5 text-gold" /> Barberos Actuales
                 </h3>
                 <div className="space-y-4">
                   {barbers.map(b => (
@@ -2398,7 +2398,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 }
                               }
                             }}
-                            className="text-charcoal hover:text-crimson p-2 transition-colors"
+                            className="text-charcoal hover:text-gold p-2 transition-colors"
                             title="Eliminar Barbero"
                           >
                             <Trash2 className="w-5 h-5" />
@@ -2416,7 +2416,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         <div className="space-y-6">
           <div className="bg-black p-6 border border-white/5">
             <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-crimson" /> Configuración de Horarios
+              <Clock className="w-5 h-5 text-gold" /> Configuración de Horarios
             </h3>
 
             {/* Selector of Target: General vs Barbers */}
@@ -2441,7 +2441,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     }
                   }
                 }}
-                className="w-full bg-zinc-900 border border-white/10 p-3 text-sm rounded text-white focus:outline-none focus:border-crimson transition-colors"
+                className="w-full bg-zinc-900 border border-white/10 p-3 text-sm rounded text-white focus:outline-none focus:border-gold transition-colors"
               >
                 <option value="general">Generales de la Barbería</option>
                 {barbers.map(b => (
@@ -2467,7 +2467,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         setEditingSchedule(selectedB?.schedule || shopSettings?.schedule || DEFAULT_SCHEDULE);
                       }
                     }}
-                    className="w-4 h-4 accent-crimson rounded border-white/10"
+                    className="w-4 h-4 accent-gold rounded border-white/10"
                   />
                   <span className="font-display font-medium uppercase text-xs tracking-wider">Usar los horarios generales de la barbería</span>
                 </label>
@@ -2495,7 +2495,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               newSchedule[index] = { ...daySchedule, isOpen: e.target.checked };
                               setEditingSchedule(newSchedule);
                             }}
-                            className="accent-crimson w-4 h-4"
+                            className="accent-gold w-4 h-4"
                           />
                           Abierto
                         </label>
@@ -2509,7 +2509,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 newSchedule[index] = { ...daySchedule, start: e.target.value };
                                 setEditingSchedule(newSchedule);
                               }}
-                              className="bg-black border border-white/10 p-2 text-xs rounded text-white focus:outline-none focus:border-crimson transition-colors"
+                              className="bg-black border border-white/10 p-2 text-xs rounded text-white focus:outline-none focus:border-gold transition-colors"
                             />
                             <span>a</span>
                             <input
@@ -2520,7 +2520,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 newSchedule[index] = { ...daySchedule, end: e.target.value };
                                 setEditingSchedule(newSchedule);
                               }}
-                              className="bg-black border border-white/10 p-2 text-xs rounded text-white focus:outline-none focus:border-crimson transition-colors"
+                              className="bg-black border border-white/10 p-2 text-xs rounded text-white focus:outline-none focus:border-gold transition-colors"
                             />
                           </div>
                         )}
@@ -2556,7 +2556,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 }
               }}
               disabled={loading}
-              className="w-full bg-crimson py-4 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all disabled:opacity-50 text-white rounded"
+              className="w-full bg-gold py-4 font-display font-bold uppercase tracking-widest text-lg hover:bg-gold/80 transition-all disabled:opacity-50 text-white rounded"
             >
               {loading ? 'Guardando...' : 'Guardar Horarios'}
             </button>
@@ -2568,7 +2568,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-black p-6 border border-white/5 gap-4">
             <h3 className="font-display font-black uppercase text-2xl text-light-gray flex items-center gap-3">
-              <Database className="w-6 h-6 text-crimson" /> {finanzasViewMode === 'daily' ? 'Libro Diario' : finanzasViewMode === 'weekly' ? 'Detalle Semanal' : 'Detalle Mensual'}
+              <Database className="w-6 h-6 text-gold" /> {finanzasViewMode === 'daily' ? 'Libro Diario' : finanzasViewMode === 'weekly' ? 'Detalle Semanal' : 'Detalle Mensual'}
             </h3>
             
             <div className="flex flex-col gap-4 w-full md:w-auto mt-2 md:mt-0">
@@ -2577,19 +2577,19 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 <div className="flex bg-zinc-800 rounded-sm overflow-hidden border border-white/10 shrink-0">
                   <button 
                     onClick={() => setFinanzasViewMode('daily')}
-                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'daily' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'daily' ? 'bg-gold text-white' : 'text-charcoal hover:text-white'}`}
                   >
                     Diario
                   </button>
                   <button 
                     onClick={() => setFinanzasViewMode('weekly')}
-                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'weekly' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'weekly' ? 'bg-gold text-white' : 'text-charcoal hover:text-white'}`}
                   >
                     Semanal
                   </button>
                   <button 
                     onClick={() => setFinanzasViewMode('monthly')}
-                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'monthly' ? 'bg-crimson text-white' : 'text-charcoal hover:text-white'}`}
+                    className={`px-3 md:px-4 py-2 text-[10px] font-black uppercase transition-all ${finanzasViewMode === 'monthly' ? 'bg-gold text-white' : 'text-charcoal hover:text-white'}`}
                   >
                     Mensual
                   </button>
@@ -2601,7 +2601,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
               {/* Controles de Fecha: Flechas y Calendario */}
               <div className="flex items-center justify-between gap-2 w-full">
-                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : finanzasViewMode === 'weekly' ? addDays(finanzasDate, -7) : addMonths(finanzasDate, -1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, -1) : finanzasViewMode === 'weekly' ? addDays(finanzasDate, -7) : addMonths(finanzasDate, -1))} className="p-3 bg-zinc-800 hover:bg-gold transition-colors shrink-0 rounded-sm">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 
@@ -2634,7 +2634,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   />
                 </div>
 
-                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : finanzasViewMode === 'weekly' ? addDays(finanzasDate, 7) : addMonths(finanzasDate, 1))} className="p-3 bg-zinc-800 hover:bg-crimson transition-colors shrink-0 rounded-sm">
+                <button onClick={() => setFinanzasDate(finanzasViewMode === 'daily' ? addDays(finanzasDate, 1) : finanzasViewMode === 'weekly' ? addDays(finanzasDate, 7) : addMonths(finanzasDate, 1))} className="p-3 bg-zinc-800 hover:bg-gold transition-colors shrink-0 rounded-sm">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -2718,9 +2718,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           Pendiente: ${totalPendingRevenue.toLocaleString('es-AR')} | Total Est.: ${totalEstimatedRevenue.toLocaleString('es-AR')}
                         </p>
                       </div>
-                      <div className="bg-black p-6 border border-crimson/50">
-                        <p className="text-crimson font-bold uppercase tracking-widest text-xs mb-2">Cierre Caja Jose</p>
-                        <p className="font-display font-black text-3xl text-crimson">${totalJoseEarnsPaid.toLocaleString('es-AR')}</p>
+                      <div className="bg-black p-6 border border-gold/50">
+                        <p className="text-gold font-bold uppercase tracking-widest text-xs mb-2">Cierre Caja Jose</p>
+                        <p className="font-display font-black text-3xl text-gold">${totalJoseEarnsPaid.toLocaleString('es-AR')}</p>
                         <p className="text-[9px] text-zinc-500 mt-2 font-bold uppercase">100% cortes propios + 50% otros</p>
                       </div>
                       <div className="bg-black p-6 border border-white/5">
@@ -2732,7 +2732,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                     {/* Desglose por Barbero */}
                     <div className="mb-8 border-t border-white/5 pt-6">
-                      <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center gap-2">
+                      <h4 className="font-display font-bold uppercase text-gold text-xs mb-4 tracking-widest flex items-center gap-2">
                         <User className="w-4 h-4" /> Desglose por Barbero
                         {selectedFinanzasBarberId && (
                           <span className="text-[9px] text-zinc-500 font-normal normal-case italic">
@@ -2747,7 +2747,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             onClick={() => setSelectedFinanzasBarberId(selectedFinanzasBarberId === b.id ? null : b.id)}
                             className={`p-5 border transition-all text-left flex items-center justify-between cursor-pointer select-none rounded-sm ${
                               selectedFinanzasBarberId === b.id 
-                                ? 'bg-crimson/10 border-crimson shadow-md shadow-crimson/5' 
+                                ? 'bg-gold/10 border-gold shadow-md shadow-gold/5' 
                                 : selectedFinanzasBarberId !== null
                                   ? 'bg-black/40 border-white/5 opacity-40 hover:opacity-80 hover:border-white/10'
                                   : 'bg-black border-white/5 hover:border-white/15'
@@ -2798,11 +2798,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       return (
                         <>
                           <div className="overflow-x-auto border-t border-white/5 pt-6">
-                            <h4 className="font-display font-bold uppercase text-crimson text-xs mb-4 tracking-widest flex items-center justify-between w-full">
+                            <h4 className="font-display font-bold uppercase text-gold text-xs mb-4 tracking-widest flex items-center justify-between w-full">
                               <span className="flex items-center gap-2">
                                 <Database className="w-4 h-4" /> Detalle de Transacciones
                                 {selectedFinanzasBarberId && (
-                                  <span className="text-[10px] bg-crimson/20 text-crimson border border-crimson/30 px-2 py-0.5 font-bold uppercase tracking-wider rounded-sm ml-2">
+                                  <span className="text-[10px] bg-gold/20 text-gold border border-gold/30 px-2 py-0.5 font-bold uppercase tracking-wider rounded-sm ml-2">
                                     Filtrado por: {barbers.find(barb => barb.id === selectedFinanzasBarberId)?.name}
                                   </span>
                                 )}
@@ -2834,7 +2834,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                   <tr key={appt.id} className="hover:bg-white/5 transition-colors">
                                     <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
                                     <td className="p-3 uppercase font-bold text-xs">
-                                      {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-crimson/20 text-crimson border border-crimson/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
+                                      {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-gold/20 text-gold border border-gold/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
                                     </td>
                                     <td className="p-3 text-xs text-zinc-400">{appt.barberName}</td>
                                     <td className="p-3 text-[10px] text-charcoal">{appt.service}</td>
@@ -2850,7 +2850,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                       )}
                                     </td>
                                     <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
-                                    <td className="p-3 text-right text-crimson font-bold">
+                                    <td className="p-3 text-right text-gold font-bold">
                                       {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
                                     </td>
                                     <td className="p-3 text-right text-zinc-400 font-bold">
@@ -2870,7 +2870,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           {/* Resumen del Listado Filtrado */}
                           <div className="bg-black/60 border border-white/5 p-5 mt-4 rounded-sm space-y-4">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-3 gap-2">
-                              <h5 className="font-display font-bold text-xs tracking-widest text-crimson uppercase">Resumen de Listado</h5>
+                              <h5 className="font-display font-bold text-xs tracking-widest text-gold uppercase">Resumen de Listado</h5>
                               <p className="text-xs text-charcoal font-bold uppercase">
                                 Total Cobrado en Turnos Listados: <span className="text-light-gray font-black">${filteredRevenue.toLocaleString('es-AR')}</span>
                               </p>
@@ -2903,7 +2903,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
             <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
-              <DollarSign className="w-6 h-6 text-crimson" />
+              <DollarSign className="w-6 h-6 text-gold" />
               <div>
                 <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
                   Precios de los Servicios
@@ -2928,7 +2928,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       type="number"
                       value={editingPrices[svc.id] !== undefined ? editingPrices[svc.id] : svc.price}
                       onChange={(e) => handlePriceChange(svc.id, e.target.value)}
-                      className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-black text-lg focus:outline-none focus:border-crimson"
+                      className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-black text-lg focus:outline-none focus:border-gold"
                       placeholder="Precio"
                     />
                   </div>
@@ -2938,7 +2938,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               <button
                 onClick={handleSavePrices}
                 disabled={savingPrices}
-                className="w-full bg-crimson hover:bg-crimson/80 transition-colors py-4 font-display font-bold uppercase tracking-widest text-lg text-white rounded"
+                className="w-full bg-gold hover:bg-gold/80 transition-colors py-4 font-display font-bold uppercase tracking-widest text-lg text-white rounded"
               >
                 {savingPrices ? 'Guardando...' : 'Guardar Precios'}
               </button>
@@ -2954,7 +2954,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 onClick={() => setBookingTab('agendar')}
                 className={`px-5 py-3 font-display font-bold text-xs uppercase tracking-widest transition-all border ${
                   bookingTab === 'agendar'
-                    ? 'bg-crimson border-crimson text-white shadow-lg shadow-crimson/20'
+                    ? 'bg-gold border-gold text-white shadow-lg shadow-gold/20'
                     : 'bg-black/50 border-white/5 text-charcoal hover:border-white/20 hover:text-white'
                 }`}
               >
@@ -2964,7 +2964,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 onClick={() => setBookingTab('mis-turnos')}
                 className={`px-5 py-3 font-display font-bold text-xs uppercase tracking-widest transition-all border ${
                   bookingTab === 'mis-turnos'
-                    ? 'bg-crimson border-crimson text-white shadow-lg shadow-crimson/20'
+                    ? 'bg-gold border-gold text-white shadow-lg shadow-gold/20'
                     : 'bg-black/50 border-white/5 text-charcoal hover:border-white/20 hover:text-white'
                 }`}
               >
@@ -2975,7 +2975,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           {bookingTab === 'mis-turnos' ? (
             <div className="bg-black p-6 border border-white/5">
               <h3 className="text-xl font-display font-bold uppercase mb-6 flex items-center gap-3">
-                <CalendarIcon className="text-crimson" /> Consultar Mis Turnos
+                <CalendarIcon className="text-gold" /> Consultar Mis Turnos
               </h3>
               <form onSubmit={handleSearchAppointments} className="flex gap-4 mb-8">
                 <input
@@ -2988,7 +2988,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="bg-crimson px-8 font-bold uppercase text-white hover:bg-crimson/80 disabled:opacity-50"
+                  className="bg-gold px-8 font-bold uppercase text-white hover:bg-gold/80 disabled:opacity-50"
                 >
                   {isSearching ? '...' : 'Buscar'}
                 </button>
@@ -3003,11 +3003,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         <div>
                           <p className="font-display font-bold uppercase text-lg">{appt.service}</p>
                           <p className="text-charcoal text-sm">con {b ? b.name : 'Barbero'}</p>
-                          {appt.isFixed && <p className="text-xs text-crimson font-bold uppercase mt-1">Turno Fijo</p>}
+                          {appt.isFixed && <p className="text-xs text-gold font-bold uppercase mt-1">Turno Fijo</p>}
                         </div>
                         <div className="text-left md:text-right w-full md:w-auto flex flex-col items-start md:items-end">
                           <div>
-                            <p className="font-display font-bold text-crimson capitalize whitespace-nowrap">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
+                            <p className="font-display font-bold text-gold capitalize whitespace-nowrap">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
                             <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
                           </div>
                           <div className="flex gap-2 mt-3 md:mt-2 w-full md:w-auto justify-start md:justify-end">
@@ -3027,13 +3027,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                  <>
                                    <button
                                      onClick={() => handleCancelAppointment(appt)}
-                                     className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-3 py-2 hover:border-crimson hover:text-crimson transition-colors"
+                                     className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-3 py-2 hover:border-gold hover:text-gold transition-colors"
                                    >
                                      Cancelar
                                    </button>
                                    <button
                                      onClick={() => handleRescheduleClick(appt)}
-                                     className="text-[10px] font-bold uppercase tracking-widest bg-crimson text-white px-3 py-2 hover:bg-crimson/80 transition-colors"
+                                     className="text-[10px] font-bold uppercase tracking-widest bg-gold text-white px-3 py-2 hover:bg-gold/80 transition-colors"
                                    >
                                      Reprogramar
                                    </button>
@@ -3057,7 +3057,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   {[1, 2, 3, 4, 5].map(s => (
                     <div
                       key={s}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-display font-bold border-2 transition-all ${step >= s ? 'bg-crimson border-crimson text-white' : 'bg-black border-charcoal/30 text-charcoal'}`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-display font-bold border-2 transition-all ${step >= s ? 'bg-gold border-gold text-white' : 'bg-black border-charcoal/30 text-charcoal'}`}
                     >
                       {s}
                     </div>
@@ -3075,14 +3075,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     className="space-y-4"
                   >
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
-                      <User className="text-crimson w-5 h-5" /> Selecciona tu Barbero
+                      <User className="text-gold w-5 h-5" /> Selecciona tu Barbero
                     </h3>
                     <div className="grid grid-cols-3 gap-3 md:gap-6">
                       {barbers.map(barber => (
                         <button
                           key={barber.id}
                           onClick={() => { setSelectedBarber(barber); setStep(2); }}
-                          className="group relative aspect-square overflow-hidden border border-white/5 hover:border-crimson transition-all cursor-pointer"
+                          className="group relative aspect-square overflow-hidden border border-white/5 hover:border-gold transition-all cursor-pointer"
                         >
                           <img src={barber.photo} alt={barber.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" referrerPolicy="no-referrer" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
@@ -3103,21 +3103,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
-                    <button onClick={() => setStep(1)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
+                    <button onClick={() => setStep(1)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
-                      <Scissors className="text-crimson w-5 h-5" /> Elige el Servicio
+                      <Scissors className="text-gold w-5 h-5" /> Elige el Servicio
                     </h3>
                     <div className="grid grid-cols-1 gap-2 md:gap-4">
                       {services.map(service => (
                         <button
                           key={service.id}
                           onClick={() => { setSelectedService(service); setStep(3); }}
-                          className="p-4 md:p-6 bg-black border border-white/5 hover:border-crimson transition-all flex justify-between items-center group cursor-pointer"
+                          className="p-4 md:p-6 bg-black border border-white/5 hover:border-gold transition-all flex justify-between items-center group cursor-pointer"
                         >
                           <div className="text-left">
-                            <p className="font-display font-black uppercase text-base sm:text-xl md:text-2xl group-hover:text-crimson transition-colors">{service.name}</p>
+                            <p className="font-display font-black uppercase text-base sm:text-xl md:text-2xl group-hover:text-gold transition-colors">{service.name}</p>
                             <p className="text-charcoal font-bold uppercase tracking-widest text-[10px] sm:text-xs md:text-sm">{service.duration} MINUTOS</p>
                           </div>
                           <p className="text-base sm:text-xl md:text-2xl font-display font-bold text-light-gray">${service.price.toLocaleString('es-AR')}</p>
@@ -3135,16 +3135,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
-                    <button onClick={() => setStep(2)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
+                    <button onClick={() => setStep(2)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
-                        <CalendarIcon className="text-crimson w-5 h-5" /> Selecciona el Día
+                        <CalendarIcon className="text-gold w-5 h-5" /> Selecciona el Día
                       </h3>
                       <div className="relative">
-                        <button className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-3 py-1.5 hover:border-crimson transition-colors uppercase text-[10px] font-bold cursor-pointer">
-                          <CalendarIcon className="w-3.5 h-3.5 text-crimson" /> Elegir Día
+                        <button className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-3 py-1.5 hover:border-gold transition-colors uppercase text-[10px] font-bold cursor-pointer">
+                          <CalendarIcon className="w-3.5 h-3.5 text-gold" /> Elegir Día
                         </button>
                         <input
                           type="date"
@@ -3195,7 +3195,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               isDisabled
                                 ? 'border-white/5 bg-black/40 text-charcoal/20 cursor-not-allowed opacity-25'
                                 : isSelected
-                                ? 'border-crimson bg-crimson text-white shadow-lg shadow-crimson/20 scale-105 z-10'
+                                ? 'border-gold bg-gold text-white shadow-lg shadow-gold/20 scale-105 z-10'
                                 : isToday
                                 ? 'border-white bg-black text-white hover:bg-zinc-900'
                                 : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:bg-zinc-900'
@@ -3220,7 +3220,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-2.5 md:space-y-4"
                   >
-                    <button onClick={() => setStep(3)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-1 cursor-pointer">
+                    <button onClick={() => setStep(3)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-1 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <div className="text-center py-2 bg-zinc-900 border border-white/5 rounded-sm mb-1.5">
@@ -3235,7 +3235,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           <button
                             key={time}
                             onClick={() => { setSelectedTime(time); setStep(5); }}
-                            className={`py-2.5 sm:py-3.5 border font-display font-black text-sm sm:text-base md:text-lg transition-all cursor-pointer rounded-sm ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-crimson hover:text-crimson'}`}
+                            className={`py-2.5 sm:py-3.5 border font-display font-black text-sm sm:text-base md:text-lg transition-all cursor-pointer rounded-sm ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-gold hover:text-gold'}`}
                           >
                             {time}
                           </button>
@@ -3258,11 +3258,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
-                    <button onClick={() => setStep(4)} className="text-charcoal hover:text-crimson flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
+                    <button onClick={() => setStep(4)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
-                      <CheckCircle2 className="text-crimson w-5 h-5" /> Confirmar Datos
+                      <CheckCircle2 className="text-gold w-5 h-5" /> Confirmar Datos
                     </h3>
 
                     <form onSubmit={handleBooking} className="space-y-4">
@@ -3288,7 +3288,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           required
                           value={customerInfo.name}
                           onChange={e => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                          className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors text-base"
+                          className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base"
                         />
                         <input
                           type="tel"
@@ -3296,16 +3296,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           required
                           value={customerInfo.phone}
                           onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                          className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-crimson outline-none transition-colors text-base"
+                          className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base"
                         />
                         {!reschedulingApptId && (
                           <div className="space-y-3">
-                            <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-crimson bg-zinc-900 border border-white/10 p-4 transition-colors">
+                            <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-gold bg-zinc-900 border border-white/10 p-4 transition-colors">
                               <input
                                 type="checkbox"
                                 checked={isFixedAppointment}
                                 onChange={(e) => setIsFixedAppointment(e.target.checked)}
-                                className="w-4.5 h-4.5 accent-crimson"
+                                className="w-4.5 h-4.5 accent-gold"
                               />
                               Turno Fijo (Reservar varias fechas por 1 mes)
                             </label>
@@ -3315,14 +3315,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                 <button
                                   type="button"
                                   onClick={() => setFixedInterval('weekly')}
-                                  className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'weekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                                  className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'weekly' ? 'border-gold bg-gold/10 text-gold' : 'border-white/5 bg-black text-charcoal'}`}
                                 >
                                   Semanal (Cada 7 días)
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setFixedInterval('biweekly')}
-                                  className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'biweekly' ? 'border-crimson bg-crimson/10 text-crimson' : 'border-white/5 bg-black text-charcoal'}`}
+                                  className={`p-3 border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${fixedInterval === 'biweekly' ? 'border-gold bg-gold/10 text-gold' : 'border-white/5 bg-black text-charcoal'}`}
                                 >
                                   Quincenal (Cada 15 días)
                                 </button>
@@ -3333,7 +3333,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
 
                       {error && (
-                        <div className="p-4 bg-crimson/10 border border-crimson text-crimson text-sm font-bold uppercase flex items-center gap-3">
+                        <div className="p-4 bg-gold/10 border border-gold text-gold text-sm font-bold uppercase flex items-center gap-3">
                           <AlertCircle className="w-4 h-4" /> {error}
                         </div>
                       )}
@@ -3341,7 +3341,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-crimson py-4 md:py-6 font-display font-black uppercase tracking-widest text-base md:text-xl shadow-xl shadow-crimson/20 disabled:opacity-50 cursor-pointer"
+                        className="w-full bg-gold py-4 md:py-6 font-display font-black uppercase tracking-widest text-base md:text-xl shadow-xl shadow-gold/20 disabled:opacity-50 cursor-pointer"
                       >
                         {loading ? 'PROCESANDO...' : 'CONFIRMAR TURNO'}
                       </button>
@@ -3356,7 +3356,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-12 space-y-6"
                   >
-                    <div className="w-24 h-24 bg-crimson rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-crimson/30">
+                    <div className="w-24 h-24 bg-gold rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-gold/30">
                       <CheckCircle2 className="w-12 h-12 text-white" />
                     </div>
                     <h3 className="text-4xl md:text-6xl font-display font-black uppercase tracking-normal text-light-gray">¡Turno Confirmado!</h3>
@@ -3416,7 +3416,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     type="text"
                     value={editForm.customerName}
                     onChange={(e) => setEditForm({ ...editForm, customerName: e.target.value })}
-                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
                   />
                 </div>
 
@@ -3427,7 +3427,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     type="tel"
                     value={editForm.customerPhone}
                     onChange={(e) => setEditForm({ ...editForm, customerPhone: e.target.value })}
-                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
                   />
                 </div>
 
@@ -3442,7 +3442,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         onClick={() => setEditForm({ ...editForm, service: svc })}
                         className={`py-2 px-2 text-[10px] font-black uppercase border transition-all ${
                           editForm.service === svc
-                            ? 'bg-crimson border-crimson text-white'
+                            ? 'bg-gold border-gold text-white'
                             : 'bg-black border-white/10 text-charcoal hover:border-white/30'
                         }`}
                       >
@@ -3465,7 +3465,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       value={editForm.customPrice}
                       onChange={(e) => setEditForm({ ...editForm, customPrice: e.target.value })}
                       placeholder={String(services.find(s => s.name === editForm.service)?.price ?? '')}
-                      className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                      className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -3474,7 +3474,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleSaveEditAppointment}
-                  className="flex-1 bg-crimson py-3 font-display font-bold uppercase tracking-widest text-sm hover:bg-crimson/80 transition-all"
+                  className="flex-1 bg-gold py-3 font-display font-bold uppercase tracking-widest text-sm hover:bg-gold/80 transition-all"
                 >
                   Guardar Cambios
                 </button>
@@ -3520,7 +3520,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       value={completingPrice}
                       onChange={(e) => setCompletingPrice(e.target.value)}
                       placeholder="Ingrese el monto cobrado"
-                      className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-crimson outline-none transition-colors"
+                      className="w-full bg-black border border-white/10 pl-7 pr-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -3530,7 +3530,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 <button
                   onClick={handleCompleteAppointment}
                   disabled={loading}
-                  className="flex-1 bg-crimson py-3 font-display font-bold uppercase tracking-widest text-sm hover:bg-crimson/80 transition-all disabled:opacity-50"
+                  className="flex-1 bg-gold py-3 font-display font-bold uppercase tracking-widest text-sm hover:bg-gold/80 transition-all disabled:opacity-50"
                 >
                   Confirmar Cobro
                 </button>
@@ -3582,7 +3582,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     setFixedCancelAppt(null);
                     await executeCancelSeries(appt);
                   }}
-                  className="w-full bg-crimson hover:bg-crimson/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full bg-gold hover:bg-gold/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
                 >
                   Cancelar toda la serie (futuros)
                 </button>
@@ -3657,7 +3657,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     setStep(3); // Go to date selection
                     setBookingTab('agendar');
                   }}
-                  className="w-full bg-crimson hover:bg-crimson/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full bg-gold hover:bg-gold/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
                 >
                   Reprogramar toda la serie (futuros)
                 </button>

@@ -161,7 +161,7 @@ export default function App() {
 
   if (currentPath === '/admin' || currentPath === '/admin/') {
     return (
-      <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray py-10 px-4 md:px-12 flex flex-col justify-start">
+      <div className="min-h-screen font-sans selection:bg-gold selection:text-white bg-distressed text-light-gray py-10 px-4 md:px-12 flex flex-col justify-start">
         <Toaster 
           position="top-center" 
           toastOptions={{
@@ -210,7 +210,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen font-sans selection:bg-crimson selection:text-white bg-distressed text-light-gray">
+    <div className="min-h-screen font-sans selection:bg-gold selection:text-white bg-distressed text-light-gray">
       {/* Immersive Loader Intro */}
       <AnimatePresence>
         {showIntro && (
@@ -246,7 +246,7 @@ export default function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.9, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
-                className="flex flex-col items-center justify-center leading-[0.8] font-sans font-black text-crimson mt-1 md:mt-1.5 text-[34px] md:text-[50px] select-none"
+                className="flex flex-col items-center justify-center leading-[0.8] font-sans font-black text-gold mt-1 md:mt-1.5 text-[34px] md:text-[50px] select-none"
               >
                 <motion.span layoutId="word-punto" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
                 <motion.span layoutId="word-barba" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
@@ -283,7 +283,7 @@ export default function App() {
                   className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain opacity-0 pointer-events-none" 
                   aria-hidden="true"
                 />
-                <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-crimson select-none opacity-0 pointer-events-none" aria-hidden="true">
+                <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none opacity-0 pointer-events-none" aria-hidden="true">
                   <span className="text-[25px] md:text-[32.5px] tracking-tight">PUNTO</span>
                   <span className="text-[25px] md:text-[32.5px] tracking-tight">BARBA</span>
                 </div>
@@ -299,7 +299,7 @@ export default function App() {
                 />
                 <motion.div 
                   layoutId="logo-text"
-                  className="flex flex-col justify-center leading-[0.8] font-sans font-black text-crimson select-none"
+                  className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none"
                   transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 >
                   <motion.span layoutId="word-punto" className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
@@ -311,9 +311,9 @@ export default function App() {
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Cortes</a>
-            <a href="#productos" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Productos</a>
-            <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-crimson transition-colors">Contacto</a>
+            <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Cortes</a>
+            <a href="#productos" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Productos</a>
+            <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Contacto</a>
             {isBarberAdmin && (
               <a 
                 href="/admin" 
@@ -322,20 +322,20 @@ export default function App() {
                   window.history.pushState({}, '', '/admin');
                   setCurrentPath('/admin');
                 }}
-                className="text-sm font-bold uppercase tracking-widest text-crimson hover:text-white transition-colors"
+                className="text-sm font-bold uppercase tracking-widest text-gold hover:text-white transition-colors"
               >
                 Panel de Gestión
               </a>
             )}
             <button 
               onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
-              className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-crimson hover:text-crimson transition-all active:scale-95 text-light-gray cursor-pointer"
+              className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-gold hover:text-gold transition-all active:scale-95 text-light-gray cursor-pointer"
             >
               Mis Turnos
             </button>
             <button 
               onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-              className="bg-crimson px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-crimson/80 transition-all active:scale-95 text-neutral-900 cursor-pointer"
+              className="bg-gold px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-gold/80 transition-all active:scale-95 text-neutral-900 cursor-pointer"
             >
               Reservar
             </button>
@@ -366,7 +366,7 @@ export default function App() {
                   window.history.pushState({}, '', '/admin');
                   setCurrentPath('/admin');
                 }}
-                className="font-bold uppercase tracking-widest text-crimson animate-pulse"
+                className="font-bold uppercase tracking-widest text-gold animate-pulse"
               >
                 Panel de Gestión
               </a>
@@ -378,7 +378,7 @@ export default function App() {
                   setBookingTab('mis-turnos');
                   setIsBookingOpen(true);
                 }}
-                className="border border-white/10 py-3 font-bold uppercase tracking-widest text-center text-xs text-light-gray hover:border-crimson hover:text-white transition-all bg-black/50 cursor-pointer"
+                className="border border-white/10 py-3 font-bold uppercase tracking-widest text-center text-xs text-light-gray hover:border-gold hover:text-white transition-all bg-black/50 cursor-pointer"
               >
                 Mis Turnos
               </button>
@@ -388,7 +388,7 @@ export default function App() {
                   setBookingTab('agendar');
                   setIsBookingOpen(true);
                 }}
-                className="bg-crimson py-3 font-bold uppercase tracking-widest text-center text-xs text-neutral-900 cursor-pointer"
+                className="bg-gold py-3 font-bold uppercase tracking-widest text-center text-xs text-neutral-900 cursor-pointer"
               >
                 Reservar
               </button>
@@ -399,46 +399,48 @@ export default function App() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center overflow-hidden py-32 md:py-0 bg-gradient-to-br from-[#050505] to-[#101010] border-b border-white/5">
+        <section className="relative min-h-screen flex items-center overflow-hidden py-32 md:py-0 bg-dark-bg border-b border-white/5">
           {/* Subtle background glow */}
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-crimson/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-20 max-w-7xl mx-auto px-6 w-full">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-20 items-center">
               
               {/* Text Column */}
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="col-span-1 md:col-span-7 space-y-6 md:space-y-8 text-center md:text-left"
+                className="col-span-1 md:col-span-7 space-y-8 text-center md:text-left"
               >
-                <span className="inline-block px-4 py-1.5 bg-crimson/10 border border-crimson/20 text-crimson font-display text-sm font-bold tracking-[0.25em] uppercase rounded-full">
-                  Cortes & Rituales Premium
-                </span>
-                
-                <div className="py-2 flex justify-center md:justify-start">
-                  <img 
-                    src={logoVertical} 
-                    alt="Punto Barba" 
-                    className="h-40 sm:h-48 md:h-56 lg:h-64 xl:h-72 w-auto object-contain max-w-full"
-                  />
+                <div className="space-y-4">
+                  <span className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 text-gold font-sans text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                    Club Social & Barbería de Autor
+                  </span>
+                  
+                  <div className="py-4 flex justify-center md:justify-start">
+                    <img 
+                      src={logoVertical} 
+                      alt="Punto Barba" 
+                      className="h-44 sm:h-52 md:h-64 lg:h-72 w-auto object-contain max-w-full"
+                    />
+                  </div>
                 </div>
                 
-                <p className="text-charcoal text-base md:text-xl font-display uppercase tracking-widest max-w-lg leading-relaxed mx-auto md:mx-0">
-                  El espacio donde la precisión clásica se encuentra con la actitud urbana en el corazón de Rosario.
+                <p className="text-charcoal text-sm md:text-base font-sans tracking-wide max-w-md leading-relaxed mx-auto md:mx-0">
+                  Un taller reservado para el perfeccionamiento del detalle, donde la precisión clásica se encuentra con la actitud urbana en el corazón de Rosario.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row justify-center md:justify-start items-center gap-6 pt-6">
                   <button 
                     onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                    className="bg-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:bg-crimson/80 transition-all active:scale-95 shadow-xl shadow-crimson/10 text-center cursor-pointer text-neutral-900 rounded-sm"
+                    className="w-full sm:w-auto bg-gold px-8 py-4 font-display font-semibold uppercase tracking-[0.2em] text-sm hover:bg-gold-hover transition-all active:scale-95 text-neutral-900 cursor-pointer rounded-none border border-gold"
                   >
-                    Reservar Turno
+                    Agendar Experiencia
                   </button>
                   <button 
                     onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
-                    className="bg-transparent border border-crimson/40 text-crimson px-8 py-4 font-display font-bold uppercase tracking-widest text-base hover:border-crimson hover:bg-crimson/5 transition-all active:scale-95 text-center cursor-pointer rounded-sm"
+                    className="text-xs font-display font-semibold uppercase tracking-[0.2em] text-light-gray hover:text-gold transition-colors py-2 cursor-pointer border-b border-white/10 hover:border-gold"
                   >
                     Mis Turnos
                   </button>
@@ -447,24 +449,24 @@ export default function App() {
               
               {/* Image Frame Column */}
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="col-span-1 md:col-span-5 hidden md:block"
               >
-                <div className="relative group p-4">
+                <div className="relative group p-6">
                   {/* Decorative Gold Offset Frame */}
-                  <div className="absolute inset-0 border border-crimson/30 translate-x-4 translate-y-4 transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2 rounded-sm" />
+                  <div className="absolute inset-0 border-[0.5px] border-gold/30 translate-x-4 translate-y-4 transition-transform duration-700 group-hover:translate-x-2 group-hover:translate-y-2" />
                   
                   {/* Main Image */}
-                  <div className="relative aspect-[3/4] overflow-hidden border border-white/10 bg-zinc-950 shadow-2xl rounded-sm">
+                  <div className="relative aspect-[3/4] overflow-hidden border border-white/5 bg-zinc-950 shadow-2xl">
                     <img 
                       src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000" 
                       alt="Punto Barba Barbería" 
-                      className="w-full h-full object-cover grayscale opacity-85 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                      className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/85 via-transparent to-transparent opacity-90" />
                   </div>
                 </div>
               </motion.div>
@@ -474,104 +476,95 @@ export default function App() {
         </section>
 
         {/* Services Section */}
-        <section id="cortes" className="py-20 md:py-32 bg-black relative overflow-hidden border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-16 md:mb-24">
-              <span className="text-crimson font-display font-bold uppercase tracking-[0.2em] text-sm mb-4 block">Carta de Servicios</span>
-              <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">Menú de Autor</h2>
-              <div className="h-1 w-20 bg-crimson mt-4 mx-auto" />
+        <section id="cortes" className="py-24 md:py-36 bg-[#090909] relative overflow-hidden border-b border-white/5">
+          <div className="max-w-5xl mx-auto px-6 relative z-10">
+            <div className="text-center mb-20">
+              <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">Estilos & Rituales</span>
+              <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Servicios de Autor</h2>
+              <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
+                Técnicas de corte clásico, rituales de afeitado tradicionales y el confort de nuestro club. Los precios se detallan al momento de agendar.
+              </p>
+              <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-              {/* Menu Column (7 cols) */}
-              <div className="lg:col-span-7 bg-[#0c0c0c] border border-white/5 p-8 md:p-16 rounded-sm space-y-12 shadow-2xl relative">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-crimson/50 to-transparent" />
-                
-                {/* Categoría 1 */}
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-display font-bold uppercase text-crimson tracking-widest border-b border-white/5 pb-2">01. Cabello</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="group">
-                      <div className="flex justify-between items-baseline gap-2">
-                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Corte de Pelo Premium</h4>
-                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
-                        <span className="font-display font-bold text-lg text-crimson">$18.000</span>
-                      </div>
-                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">Degradados de precisión, tiijera clásica y texturizado personalizado. / 30 MIN</p>
-                    </div>
-
-                    <div className="group">
-                      <div className="flex justify-between items-baseline gap-2">
-                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Perfilado de Contornos</h4>
-                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
-                        <span className="font-display font-bold text-lg text-crimson">$8.000</span>
-                      </div>
-                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">Limpieza absoluta de patillas, frente y nuca para mantener tu estilo pulcro. / 15 MIN</p>
-                    </div>
+            {/* Editorial List Layout */}
+            <div className="bg-dark-surface/30 border border-white/5 p-8 md:p-16 space-y-1">
+              
+              {/* Servicio I */}
+              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
+                  <div className="flex items-baseline gap-4">
+                    <span className="font-display font-light text-2xl text-gold/60">I.</span>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Corte de Pelo Premium</h3>
                   </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 30 Minutos ]</span>
                 </div>
-
-                {/* Categoría 2 */}
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-display font-bold uppercase text-crimson tracking-widest border-b border-white/5 pb-2">02. Barba & Combos</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="group">
-                      <div className="flex justify-between items-baseline gap-2">
-                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Barba de Autor</h4>
-                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
-                        <span className="font-display font-bold text-lg text-crimson">$13.000</span>
-                      </div>
-                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">Ritual completo de toalla caliente, perfilado detallado con navaja y nutrición con aceites premium. / 30 MIN</p>
-                    </div>
-
-                    <div className="group">
-                      <div className="flex justify-between items-baseline gap-2">
-                        <h4 className="text-lg md:text-xl font-display font-bold uppercase text-light-gray tracking-wide">Corte & Barba (Combo)</h4>
-                        <div className="flex-grow border-b border-dashed border-white/10 group-hover:border-crimson/30 transition-colors mx-2" />
-                        <span className="font-display font-bold text-lg text-crimson">$25.000</span>
-                      </div>
-                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-1">El ritual definitivo de cuidado para el caballero. Incluye corte premium y spa de barba. / 60 MIN</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reservar CTA */}
-                <div className="pt-4 text-center">
-                  <button 
-                    onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                    className="w-full bg-transparent border border-crimson text-crimson py-4 font-display font-bold uppercase tracking-widest hover:bg-crimson hover:text-neutral-900 transition-all duration-300"
-                  >
-                    Agendar un Servicio
-                  </button>
-                </div>
+                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
+                  Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y lavado final.
+                </p>
               </div>
 
-              {/* Photo Column (5 cols) */}
-              <div className="lg:col-span-5 w-full hidden lg:block sticky top-28">
-                <div className="relative p-4">
-                  <div className="absolute inset-0 border border-crimson/20 -translate-x-4 translate-y-4 rounded-sm" />
-                  <div className="relative aspect-[4/5] overflow-hidden border border-white/5 rounded-sm">
-                    <img 
-                      src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=1000" 
-                      alt="Barber Tools" 
-                      className="w-full h-full object-cover grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
-                      referrerPolicy="no-referrer"
-                    />
+              {/* Servicio II */}
+              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
+                  <div className="flex items-baseline gap-4">
+                    <span className="font-display font-light text-2xl text-gold/60">II.</span>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Barba de Autor</h3>
                   </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 30 Minutos ]</span>
                 </div>
+                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
+                  Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo.
+                </p>
+              </div>
+
+              {/* Servicio III */}
+              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
+                  <div className="flex items-baseline gap-4">
+                    <span className="font-display font-light text-2xl text-gold/60">III.</span>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Perfilado de Contornos</h3>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 15 Minutos ]</span>
+                </div>
+                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
+                  Limpieza y delimitación absoluta de patillas, frente y nuca con navaja y trimmer. Ideal para mantener tu corte nítido entre visitas.
+                </p>
+              </div>
+
+              {/* Servicio IV */}
+              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
+                  <div className="flex items-baseline gap-4">
+                    <span className="font-display font-light text-2xl text-gold/60">IV.</span>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Corte & Barba (Combo)</h3>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 60 Minutos ]</span>
+                </div>
+                <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
+                  La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora.
+                </p>
+              </div>
+
+              {/* Reservar CTA */}
+              <div className="pt-10 text-center">
+                <button 
+                  onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
+                  className="w-full sm:w-auto bg-transparent border border-gold text-gold px-12 py-4 font-display font-semibold uppercase tracking-[0.2em] text-xs hover:bg-gold hover:text-neutral-900 transition-all duration-300 cursor-pointer"
+                >
+                  Agendar un Turno
+                </button>
               </div>
             </div>
           </div>
         </section>
 
         {/* Gallery / Portfolio Section */}
-        <section id="portfolio" className="py-20 bg-zinc-950 border-y border-white/5 relative overflow-hidden">
+        <section id="portfolio" className="py-24 bg-dark-bg border-b border-white/5 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <span className="text-crimson font-display font-bold uppercase tracking-widest text-sm mb-4 block">Nuestro Trabajo</span>
-              <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-normal text-light-gray">Galería</h2>
+              <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">El Registro</span>
+              <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Galería</h2>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -584,40 +577,39 @@ export default function App() {
                   <img 
                     src={img} 
                     alt={`Corte Punto Barba ${i + 1}`} 
-                    className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                    className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-crimson/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-700" />
                 </div>
               ))}
               <a 
                 href="https://www.instagram.com/puntobarba.barberia/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-900 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors"
+                className="aspect-[4/5] relative overflow-hidden group cursor-pointer border border-white/5 bg-zinc-950 flex flex-col items-center justify-center hover:bg-zinc-900 transition-colors"
               >
-                <Instagram className="w-16 h-16 md:w-20 md:h-20 text-white/30 group-hover:text-crimson transition-colors mb-4 md:mb-6" />
-                <span className="text-white/30 group-hover:text-crimson font-display font-bold uppercase tracking-widest text-xs md:text-sm transition-colors text-center px-4">Ver más en Instagram</span>
+                <Instagram className="w-10 h-10 text-white/20 group-hover:text-gold transition-colors mb-4" />
+                <span className="text-white/30 group-hover:text-gold font-display font-semibold uppercase tracking-[0.2em] text-[10px] md:text-xs transition-colors text-center px-4 leading-relaxed">@puntobarba.barberia</span>
               </a>
             </div>
           </div>
         </section>
 
         {/* Booking CTA Banner */}
-        <section id="reserva" className="py-24 bg-zinc-950 border-y border-white/5 relative overflow-hidden concrete-texture">
-          <div className="absolute inset-0 bg-distressed opacity-20 bg-cover bg-center" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-6">
-            <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-tight text-light-gray">
+        <section id="reserva" className="py-28 bg-dark-bg border-b border-white/5 relative overflow-hidden">
+          <div className="absolute inset-0 bg-cover bg-center opacity-10 filter grayscale" style={{ backgroundImage: "url('https://i.postimg.cc/kgZpvN3v/321c5b1d-a0bc-4435-ba08-c39b44025586.jpg')" }} />
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
+            <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray leading-tight">
               ¿Listo para tu cambio de estilo?
             </h2>
-            <p className="max-w-lg mx-auto text-charcoal text-sm md:text-lg font-display uppercase tracking-widest leading-relaxed">
+            <p className="max-w-md mx-auto text-charcoal text-xs md:text-sm font-sans tracking-wide leading-relaxed">
               Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
             </p>
             <div className="pt-4">
               <button 
                 onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                className="inline-block bg-crimson px-10 py-5 font-display font-bold uppercase tracking-widest text-lg hover:bg-crimson/80 transition-all active:scale-95 shadow-2xl shadow-crimson/30 cursor-pointer text-white"
+                className="inline-block bg-gold px-12 py-5 font-display font-semibold uppercase tracking-[0.2em] text-xs hover:bg-gold-hover transition-all active:scale-95 shadow-2xl shadow-gold/20 cursor-pointer text-neutral-900 rounded-none border border-gold"
               >
                 Reservar Turno Ahora
               </button>
@@ -625,20 +617,24 @@ export default function App() {
           </div>
         </section>
 
-        {/* Productos Section */}
-        <section id="productos" className="py-20 md:py-32 bg-[#0c0c0c] border-t border-white/5 relative overflow-hidden">
+        {/* Productos Section (La Botica) */}
+        <section id="productos" className="py-24 md:py-36 bg-[#090909] border-b border-white/5 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-16 md:mb-24">
-              <span className="text-crimson font-display font-bold uppercase tracking-[0.2em] text-sm mb-4 block">
-                Cuidado & Estilo Masculino
+            <div className="text-center mb-20">
+              <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">
+                La Botica de Punto Barba
               </span>
-              <h2 className="text-4xl md:text-7xl font-display font-black uppercase tracking-normal text-light-gray">
-                Catálogo de Productos
+              <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">
+                Cuidado & Estilo
               </h2>
-              <div className="h-1 w-20 bg-crimson mt-4 mx-auto" />
+              <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
+                Una curaduría de fórmulas botánicas y productos de culto esenciales para la rutina del hombre contemporáneo.
+              </p>
+              <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Apothecary Minimal Grid (No Cards) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-white/5 bg-zinc-950/20">
               {[
                 {
                   id: 'cera-matte',
@@ -646,7 +642,7 @@ export default function App() {
                   desc: 'Fijación fuerte con acabado mate natural. Aporta textura y volumen sin dejar residuos.',
                   price: '$12.000',
                   img: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=600',
-                  tag: 'Fijación Fuerte'
+                  tag: '[ FIX ]'
                 },
                 {
                   id: 'oleo-barba',
@@ -654,7 +650,7 @@ export default function App() {
                   desc: 'Hidratación profunda para la piel y suavidad extrema para el vello facial con notas a madera noble.',
                   price: '$9.500',
                   img: 'https://images.unsplash.com/photo-1626015713026-d837d172406f?auto=format&fit=crop&q=80&w=600',
-                  tag: 'Hidratación'
+                  tag: '[ HYDRATE ]'
                 },
                 {
                   id: 'pomada-brillo',
@@ -662,7 +658,7 @@ export default function App() {
                   desc: 'Fijación media con acabado de brillo clásico húmedo, ideal para peinados formales y tradicionales.',
                   price: '$11.000',
                   img: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=80&w=600',
-                  tag: 'Brillo Clásico'
+                  tag: '[ SHINE ]'
                 },
                 {
                   id: 'shampoo-purificante',
@@ -670,37 +666,47 @@ export default function App() {
                   desc: 'Desintoxicación profunda del cuero cabelludo. Elimina impurezas y el exceso de oleosidad.',
                   price: '$14.000',
                   img: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&q=80&w=600',
-                  tag: 'Desintoxicante'
+                  tag: '[ DETOX ]'
                 }
-              ].map((prod) => (
-                <div key={prod.id} className="group bg-black/40 border border-white/5 hover:border-crimson/30 transition-all duration-500 rounded-sm overflow-hidden flex flex-col justify-between">
-                  <div className="relative aspect-square overflow-hidden bg-zinc-950 border-b border-white/5">
-                    <img 
-                      src={prod.img} 
-                      alt={prod.name} 
-                      className="w-full h-full object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                      referrerPolicy="no-referrer"
-                    />
-                    <span className="absolute top-3 left-3 bg-crimson text-neutral-900 font-display font-bold uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-sm">
-                      {prod.tag}
-                    </span>
+              ].map((prod, index) => (
+                <div 
+                  key={prod.id} 
+                  className={`group p-8 flex flex-col justify-between transition-colors hover:bg-white/[0.01] border-white/5
+                    ${index < 3 ? 'lg:border-r' : ''} 
+                    ${index % 2 === 0 ? 'sm:border-r lg:border-r-0' : ''} 
+                    ${index > 1 ? 'border-t sm:border-t-0' : ''} 
+                    ${index > 0 ? 'border-t sm:border-t-0' : ''}
+                    sm:border-t lg:border-t-0`}
+                >
+                  <div className="space-y-6">
+                    <div className="relative aspect-square overflow-hidden bg-zinc-950/60 border border-white/5">
+                      <img 
+                        src={prod.img} 
+                        alt={prod.name} 
+                        className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-102 transition-all duration-1000"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className="absolute top-3 left-3 bg-zinc-950/90 text-gold font-sans font-semibold text-[8px] tracking-[0.2em] px-2.5 py-1 uppercase border border-white/10">
+                        {prod.tag}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-display font-semibold uppercase text-light-gray tracking-wide">{prod.name}</h3>
+                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed line-clamp-3">{prod.desc}</p>
+                    </div>
                   </div>
-                  <div className="p-6 flex flex-col justify-between flex-grow">
-                    <div>
-                      <h3 className="text-xl font-display font-bold uppercase text-light-gray tracking-wide">{prod.name}</h3>
-                      <p className="text-charcoal text-xs md:text-sm font-display uppercase tracking-wider mt-2 line-clamp-3">{prod.desc}</p>
-                    </div>
-                    <div>
-                      <span className="text-2xl font-display font-black text-crimson mt-4 block">{prod.price}</span>
-                      <a 
-                        href={`https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20interesa%20comprar%20el%20producto%20${encodeURIComponent(prod.name)}%20de%20su%20cat%C3%A1logo.%20%C2%BFHay%20stock%20disponible?`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full block bg-transparent border border-white/10 hover:border-crimson hover:text-neutral-900 text-center py-2.5 font-display font-bold uppercase text-xs tracking-wider transition-all duration-300 text-light-gray mt-4"
-                      >
-                        Consultar Stock
-                      </a>
-                    </div>
+
+                  <div className="pt-6 space-y-4">
+                    <span className="text-xl font-display font-bold text-gold block">{prod.price}</span>
+                    <a 
+                      href={`https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20interesa%20comprar%20el%20producto%20${encodeURIComponent(prod.name)}%20de%20su%20cat%C3%A1logo.%20%C2%BFHay%20stock%20disponible?`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full block bg-transparent border border-white/10 hover:border-gold hover:text-neutral-900 text-center py-3 font-display font-semibold uppercase text-[10px] tracking-[0.2em] transition-all duration-300 text-light-gray"
+                    >
+                      Consultar Stock
+                    </a>
                   </div>
                 </div>
               ))}
@@ -709,65 +715,69 @@ export default function App() {
         </section>
 
         {/* Contact Section */}
-        <section id="contacto" className="py-20 md:py-32 bg-black concrete-texture">
+        <section id="contacto" className="py-24 md:py-36 bg-dark-bg">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
-              <div className="space-y-10 md:space-y-12 text-center lg:text-left">
-                <div>
-                  <h2 className="text-5xl md:text-9xl font-display font-black uppercase tracking-normal mb-6 text-light-gray">Ubicanos</h2>
-                  <p className="text-charcoal text-xl md:text-2xl font-display">El taller donde la técnica se encuentra con el estilo urbano.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+              
+              {/* Info Column */}
+              <div className="space-y-12 text-center lg:text-left">
+                <div className="space-y-4">
+                  <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs block">El Taller</span>
+                  <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-wide text-light-gray">Ubicanos</h2>
+                  <div className="h-[0.5px] w-12 bg-gold/50 my-4 mx-auto lg:mx-0" />
                 </div>
 
-                <div className="space-y-6 md:space-y-8">
+                <div className="space-y-8">
                   <a 
                     href="https://www.google.com/maps/search/?api=1&query=Mendoza+2656,+Rosario,+Santa+Fe" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
+                    className="flex flex-col md:flex-row items-center gap-6 group cursor-pointer"
                   >
-                    <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
-                      <MapPin className="w-5 h-5 md:w-6 md:h-6" />
+                    <div className="w-12 h-12 bg-zinc-950/60 flex items-center justify-center border border-white/5 group-hover:border-gold transition-colors shrink-0">
+                      <MapPin className="w-4 h-4 text-gold" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">Mendoza 2656, Rosario, Santa Fe</span>
+                    <span className="text-sm md:text-base font-sans tracking-wide text-charcoal group-hover:text-gold transition-colors">Mendoza 2656, Rosario, Santa Fe</span>
                   </a>
                   <a 
                     href="https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20gustar%C3%ADa%20reservar%20un%20turno%20para%20un%20servicio%20de%20barber%C3%ADa.%20%C2%BFQu%C3%A9%20horarios%20tienen%20disponibles?" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
+                    className="flex flex-col md:flex-row items-center gap-6 group cursor-pointer"
                   >
-                    <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
-                      <Phone className="w-5 h-5 md:w-6 md:h-6" />
+                    <div className="w-12 h-12 bg-zinc-950/60 flex items-center justify-center border border-white/5 group-hover:border-gold transition-colors shrink-0">
+                      <Phone className="w-4 h-4 text-gold" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">341 3293388</span>
+                    <span className="text-sm md:text-base font-sans tracking-wide text-charcoal group-hover:text-gold transition-colors">341 3293388</span>
                   </a>
                   <a 
                     href="https://www.instagram.com/puntobarba.barberia/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex flex-col md:flex-row items-center gap-4 md:gap-8 group cursor-pointer"
+                    className="flex flex-col md:flex-row items-center gap-6 group cursor-pointer"
                   >
-                    <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-900 flex items-center justify-center border border-white/5 group-hover:bg-crimson transition-colors shrink-0">
-                      <Instagram className="w-5 h-5 md:w-6 md:h-6" />
+                    <div className="w-12 h-12 bg-zinc-950/60 flex items-center justify-center border border-white/5 group-hover:border-gold transition-colors shrink-0">
+                      <Instagram className="w-4 h-4 text-gold" />
                     </div>
-                    <span className="text-lg md:text-2xl font-display font-medium group-hover:text-crimson transition-colors text-light-gray">@puntobarba.barberia</span>
+                    <span className="text-sm md:text-base font-sans tracking-wide text-charcoal group-hover:text-gold transition-colors">@puntobarba.barberia</span>
                   </a>
                 </div>
               </div>
 
-              <div className="relative h-[400px] md:h-[600px] bg-zinc-900 border border-white/5 overflow-hidden grayscale group rounded-sm concrete-texture">
+              {/* Map Placeholder Card */}
+              <div className="relative h-[400px] md:h-[500px] bg-zinc-950 border border-white/5 overflow-hidden grayscale group">
                 <img 
                   src="https://images.unsplash.com/photo-1524666041070-9d87656c25bb?auto=format&fit=crop&q=80&w=1000" 
                   alt="Map Placeholder" 
-                  className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity"
+                  className="w-full h-full object-cover opacity-10 group-hover:opacity-25 transition-opacity duration-1000"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div 
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
                   >
-                    <MapPin className="w-12 h-12 md:w-16 md:h-16 text-crimson fill-crimson/20" />
+                    <MapPin className="w-10 h-10 text-gold fill-gold/10" />
                   </motion.div>
                 </div>
               </div>
@@ -777,12 +787,12 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-black py-16 border-t border-white/5 concrete-texture">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+      <footer className="bg-dark-bg py-20 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="flex items-center gap-1">
-            <img src={logoHorizontal} alt="Punto Barba" className="h-16 w-auto object-contain" />
+            <img src={logoHorizontal} alt="Punto Barba" className="h-14 w-auto object-contain" />
           </div>
-          <p className="text-xs text-charcoal uppercase tracking-[0.3em] text-center font-display">
+          <p className="text-[10px] text-charcoal uppercase tracking-[0.3em] text-center font-sans">
             © 2026 Punto Barba. Mendoza 2656, Rosario, Santa Fe. Tel: 341 3293388
           </p>
           <div className="flex gap-8">
@@ -790,7 +800,7 @@ export default function App() {
               href="https://www.instagram.com/puntobarba.barberia/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-xs text-charcoal hover:text-crimson uppercase tracking-widest transition-colors font-display"
+              className="text-[10px] text-charcoal hover:text-gold uppercase tracking-[0.2em] transition-colors font-display"
             >
               Instagram: @puntobarba.barberia
             </a>

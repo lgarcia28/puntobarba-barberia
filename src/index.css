@@ -1,21 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Bebas Neue", sans-serif;
+  --font-display: "Cinzel", Georgia, serif;
   
-  --color-crimson: #E6D3B6;
-  --color-charcoal: #676767;
-  --color-light-gray: #EBEBEB;
+  --color-gold: #D4C4AE;
+  --color-gold-hover: #C5B59F;
+  --color-charcoal: #8E8E93;
+  --color-light-gray: #F5F5F7;
+  --color-dark-bg: #070707;
+  --color-dark-surface: #121212;
 }
 
-/* Ensure text and SVGs/icons within bg-crimson are dark for readability */
-.bg-crimson, .bg-crimson * {
-  color: #0a0a0a !important;
+/* Ensure text and SVGs/icons within bg-gold are dark for readability */
+.bg-gold, .bg-gold * {
+  color: #050505 !important;
 }
-.bg-crimson svg, .bg-crimson svg * {
-  stroke: #0a0a0a !important;
+.bg-gold svg, .bg-gold svg * {
+  stroke: #050505 !important;
   fill: currentColor;
 }
 
