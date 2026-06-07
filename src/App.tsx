@@ -238,7 +238,7 @@ export default function App() {
                 layoutId="logo-symbol"
                 src={logoSymbol} 
                 alt="Punto Barba" 
-                className="w-[100px] h-auto md:w-[150px] object-contain"
+                className="w-[100px] h-[122.5px] md:w-[150px] md:h-[183.7px] object-contain"
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
               />
               <motion.div 
@@ -280,7 +280,7 @@ export default function App() {
                 <img 
                   src={logoSymbol} 
                   alt="" 
-                  className="h-[40px] md:h-[52px] w-auto object-contain opacity-0 pointer-events-none" 
+                  className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain opacity-0 pointer-events-none" 
                   aria-hidden="true"
                 />
                 <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-crimson select-none opacity-0 pointer-events-none" aria-hidden="true">
@@ -294,7 +294,7 @@ export default function App() {
                   layoutId="logo-symbol"
                   src={logoSymbol} 
                   alt="Punto Barba" 
-                  className="h-[40px] md:h-[52px] w-auto object-contain" 
+                  className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain" 
                   transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 />
                 <motion.div 
