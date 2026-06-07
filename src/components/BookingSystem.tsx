@@ -125,17 +125,6 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [step, setStep] = useState(1);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
-
-  useEffect(() => {
-    if (initialServiceName && services.length > 0) {
-      const foundService = services.find(
-        (s: any) => s.name.toLowerCase() === initialServiceName.toLowerCase() || s.id === initialServiceName
-      );
-      if (foundService) {
-        setSelectedService(foundService);
-      }
-    }
-  }, [initialServiceName, services]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
@@ -199,6 +188,17 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [editingSchedule, setEditingSchedule] = useState<any>(DEFAULT_SCHEDULE);
   const [useGeneralScheduleForBarber, setUseGeneralScheduleForBarber] = useState<boolean>(true);
   const [services, setServices] = useState<any[]>(DEFAULT_SERVICES);
+
+  useEffect(() => {
+    if (initialServiceName && services.length > 0) {
+      const foundService = services.find(
+        (s: any) => s.name.toLowerCase() === initialServiceName.toLowerCase() || s.id === initialServiceName
+      );
+      if (foundService) {
+        setSelectedService(foundService);
+      }
+    }
+  }, [initialServiceName, services]);
   const [editingPrices, setEditingPrices] = useState<Record<string, string>>({});
   const [savingPrices, setSavingPrices] = useState(false);
 
