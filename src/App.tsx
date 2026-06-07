@@ -636,9 +636,20 @@ export default function App() {
                       x: { type: "spring", stiffness: 300, damping: 30 },
                       opacity: { duration: 0.2 }
                     }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={1}
+                    onDragEnd={(e, info) => {
+                      const swipe = info.offset.x;
+                      if (swipe < -50) {
+                        handleNextSlide();
+                      } else if (swipe > 50) {
+                        handlePrevSlide();
+                      }
+                    }}
                     src={galleryImages[activeSlide]}
                     alt={`Corte Punto Barba ${activeSlide + 1}`}
-                    className="absolute inset-0 w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700 select-none"
+                    className="absolute inset-0 w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700 select-none cursor-grab active:cursor-grabbing"
                     referrerPolicy="no-referrer"
                   />
                 </AnimatePresence>

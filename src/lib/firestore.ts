@@ -75,7 +75,7 @@ export const BARBERS = [
   {
     id: 'ivan-nunez',
     name: 'Iván Núñez',
-    photo: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600',
+    photo: 'https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&q=80&w=600',
     bio: 'Barbero de autor especialista en cortes clásicos y rituales de barba.',
     email: 'jhbarber87@gmail.com',
     role: 'admin'
