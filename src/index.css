@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cinzel", Georgia, serif;
+  --font-display: "Bebas Neue", sans-serif;
   
   --color-gold: #D4C4AE;
   --color-gold-hover: #C5B59F;
@@ -41,4 +41,13 @@
 .reveal-color {
   filter: none !important;
   opacity: 1 !important;
+}
+
+/* Modern pill buttons design system */
+.btn-pill-solid {
+  @apply rounded-full bg-gold text-neutral-900 border border-gold px-8 py-3.5 font-display font-semibold uppercase tracking-[0.2em] text-xs transition-all duration-300 hover:bg-transparent hover:text-gold hover:scale-[1.03] active:scale-95 shadow-md shadow-gold/5 hover:shadow-gold/20 cursor-pointer;
+}
+
+.btn-pill-outline {
+  @apply rounded-full bg-transparent text-gold border border-gold/40 px-8 py-3.5 font-display font-semibold uppercase tracking-[0.2em] text-xs transition-all duration-300 hover:bg-gold hover:text-neutral-900 hover:border-gold hover:scale-[1.03] active:scale-95 shadow-sm hover:shadow-gold/15 cursor-pointer;
 }

@@ -117,13 +117,25 @@ interface BookingSystemProps {
   setBookingTab?: (tab: 'agendar' | 'mis-turnos') => void;
   onClose?: () => void;
   forceClientFlow?: boolean;
+  initialServiceName?: string | null;
 }
 
 // --- Booking System Component ---
-export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose, forceClientFlow = false }: BookingSystemProps = {}) => {
+export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose, forceClientFlow = false, initialServiceName = null }: BookingSystemProps = {}) => {
   const [step, setStep] = useState(1);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
+
+  useEffect(() => {
+    if (initialServiceName && services.length > 0) {
+      const foundService = services.find(
+        (s: any) => s.name.toLowerCase() === initialServiceName.toLowerCase() || s.id === initialServiceName
+      );
+      if (foundService) {
+        setSelectedService(foundService);
+      }
+    }
+  }, [initialServiceName, services]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
@@ -2949,23 +2961,23 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
-            <div className="flex gap-4 border-b border-white/5 pb-6 mb-8">
+            <div className="flex gap-3 border-b border-white/5 pb-6 mb-8">
               <button
                 onClick={() => setBookingTab('agendar')}
-                className={`px-5 py-3 font-display font-bold text-xs uppercase tracking-widest transition-all border ${
+                className={`px-6 py-2.5 rounded-full font-display font-bold text-xs uppercase tracking-widest transition-all border cursor-pointer ${
                   bookingTab === 'agendar'
-                    ? 'bg-gold border-gold text-white shadow-lg shadow-gold/20'
-                    : 'bg-black/50 border-white/5 text-charcoal hover:border-white/20 hover:text-white'
+                    ? 'bg-gold border-gold text-neutral-900 shadow-lg shadow-gold/15'
+                    : 'bg-black/50 border-white/10 text-charcoal hover:border-white/25 hover:text-white'
                 }`}
               >
                 Reservar Turno
               </button>
               <button
                 onClick={() => setBookingTab('mis-turnos')}
-                className={`px-5 py-3 font-display font-bold text-xs uppercase tracking-widest transition-all border ${
+                className={`px-6 py-2.5 rounded-full font-display font-bold text-xs uppercase tracking-widest transition-all border cursor-pointer ${
                   bookingTab === 'mis-turnos'
-                    ? 'bg-gold border-gold text-white shadow-lg shadow-gold/20'
-                    : 'bg-black/50 border-white/5 text-charcoal hover:border-white/20 hover:text-white'
+                    ? 'bg-gold border-gold text-neutral-900 shadow-lg shadow-gold/15'
+                    : 'bg-black/50 border-white/10 text-charcoal hover:border-white/25 hover:text-white'
                 }`}
               >
                 Mis Turnos
@@ -2977,18 +2989,18 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               <h3 className="text-xl font-display font-bold uppercase mb-6 flex items-center gap-3">
                 <CalendarIcon className="text-gold" /> Consultar Mis Turnos
               </h3>
-              <form onSubmit={handleSearchAppointments} className="flex gap-4 mb-8">
+              <form onSubmit={handleSearchAppointments} className="flex gap-3 mb-8">
                 <input
                   type="tel"
                   placeholder="Tu número de teléfono"
                   value={searchPhone}
                   onChange={(e) => setSearchPhone(e.target.value)}
-                  className="flex-1 bg-zinc-900 border border-white/10 p-4 text-white font-display uppercase tracking-widest"
+                  className="flex-1 bg-zinc-900 border border-white/10 px-6 py-3.5 rounded-full text-white font-display uppercase tracking-widest text-xs focus:outline-none focus:border-gold/50"
                 />
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="bg-gold px-8 font-bold uppercase text-white hover:bg-gold/80 disabled:opacity-50"
+                  className="bg-gold px-8 rounded-full font-display font-bold uppercase text-neutral-900 hover:bg-gold-hover transition-all duration-300 disabled:opacity-50 cursor-pointer text-xs tracking-wider"
                 >
                   {isSearching ? '...' : 'Buscar'}
                 </button>
@@ -3027,13 +3039,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                  <>
                                    <button
                                      onClick={() => handleCancelAppointment(appt)}
-                                     className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-3 py-2 hover:border-gold hover:text-gold transition-colors"
+                                     className="text-[9px] sm:text-[10px] rounded-full font-display font-bold uppercase tracking-widest border border-white/15 px-4 py-1.5 hover:border-gold hover:text-gold transition-all cursor-pointer"
                                    >
                                      Cancelar
                                    </button>
                                    <button
                                      onClick={() => handleRescheduleClick(appt)}
-                                     className="text-[10px] font-bold uppercase tracking-widest bg-gold text-white px-3 py-2 hover:bg-gold/80 transition-colors"
+                                     className="text-[9px] sm:text-[10px] rounded-full font-display font-bold uppercase tracking-widest bg-gold text-neutral-900 px-4 py-1.5 hover:bg-gold-hover transition-all cursor-pointer"
                                    >
                                      Reprogramar
                                    </button>
@@ -3081,7 +3093,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       {barbers.map(barber => (
                         <button
                           key={barber.id}
-                          onClick={() => { setSelectedBarber(barber); setStep(2); }}
+                          onClick={() => { setSelectedBarber(barber); if (selectedService) { setStep(3); } else { setStep(2); } }}
                           className="group relative aspect-square overflow-hidden border border-white/5 hover:border-gold transition-all cursor-pointer"
                         >
                           <img src={barber.photo} alt={barber.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" referrerPolicy="no-referrer" />
@@ -3341,7 +3353,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gold py-4 md:py-6 font-display font-black uppercase tracking-widest text-base md:text-xl shadow-xl shadow-gold/20 disabled:opacity-50 cursor-pointer"
+                        className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-4 md:py-5 font-display font-bold uppercase tracking-widest text-sm md:text-base shadow-xl shadow-gold/10 hover:shadow-gold/25 transition-all duration-300 active:scale-98 disabled:opacity-50 cursor-pointer"
                       >
                         {loading ? 'PROCESANDO...' : 'CONFIRMAR TURNO'}
                       </button>
@@ -3373,7 +3385,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         setIsFixedAppointment(false);
                         onClose?.();
                       }}
-                      className="bg-charcoal/20 px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-charcoal/40 transition-all"
+                      className="rounded-full bg-charcoal/20 border border-white/10 px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-charcoal/30 hover:text-white transition-all text-xs cursor-pointer"
                     >
                       Volver al Inicio
                     </button>
@@ -3572,7 +3584,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     setFixedCancelAppt(null);
                     await executeCancelSingle(appt);
                   }}
-                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-wider text-xs py-3 border border-white/5 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full rounded-full bg-zinc-800 hover:bg-zinc-700 text-white font-display font-bold uppercase tracking-widest text-[10px] py-3.5 border border-white/10 transition-all text-center cursor-pointer hover:scale-[1.01] active:scale-95"
                 >
                   Cancelar solo este turno (esta semana)
                 </button>
@@ -3582,13 +3594,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     setFixedCancelAppt(null);
                     await executeCancelSeries(appt);
                   }}
-                  className="w-full bg-gold hover:bg-gold/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 font-display font-bold uppercase tracking-widest text-[10px] py-3.5 transition-all text-center cursor-pointer hover:scale-[1.01] active:scale-95 shadow-md shadow-gold/10"
                 >
                   Cancelar toda la serie (futuros)
                 </button>
                 <button
                   onClick={() => setFixedCancelAppt(null)}
-                  className="w-full bg-black hover:bg-zinc-950 text-charcoal font-bold uppercase tracking-wider text-xs py-3 border border-white/10 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full rounded-full bg-transparent hover:bg-white/5 text-charcoal hover:text-white font-display font-bold uppercase tracking-widest text-[10px] py-3.5 border border-white/10 transition-all text-center cursor-pointer active:scale-95"
                 >
                   Volver / No cancelar
                 </button>
@@ -3635,7 +3647,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     setStep(3); // Go to date selection
                     setBookingTab('agendar');
                   }}
-                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-wider text-xs py-3 border border-white/5 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full rounded-full bg-zinc-800 hover:bg-zinc-700 text-white font-display font-bold uppercase tracking-widest text-[10px] py-3.5 border border-white/10 transition-all text-center cursor-pointer hover:scale-[1.01] active:scale-95"
                 >
                   Reprogramar solo este turno (esta semana)
                 </button>
@@ -3657,13 +3669,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     setStep(3); // Go to date selection
                     setBookingTab('agendar');
                   }}
-                  className="w-full bg-gold hover:bg-gold/80 text-white font-bold uppercase tracking-wider text-xs py-3 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 font-display font-bold uppercase tracking-widest text-[10px] py-3.5 transition-all text-center cursor-pointer hover:scale-[1.01] active:scale-95 shadow-md shadow-gold/10"
                 >
                   Reprogramar toda la serie (futuros)
                 </button>
                 <button
                   onClick={() => setFixedRescheduleAppt(null)}
-                  className="w-full bg-black hover:bg-zinc-950 text-charcoal font-bold uppercase tracking-wider text-xs py-3 border border-white/10 transition-all text-center rounded-sm cursor-pointer"
+                  className="w-full rounded-full bg-transparent hover:bg-white/5 text-charcoal hover:text-white font-display font-bold uppercase tracking-widest text-[10px] py-3.5 border border-white/10 transition-all text-center cursor-pointer active:scale-95"
                 >
                   Volver / No reprogramar
                 </button>

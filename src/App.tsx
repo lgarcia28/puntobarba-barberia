@@ -37,6 +37,7 @@ export default function App() {
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const [showIntro, setShowIntro] = useState(true);
+  const [selectedServiceForBooking, setSelectedServiceForBooking] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -328,14 +329,14 @@ export default function App() {
               </a>
             )}
             <button 
-              onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
-              className="border border-white/20 px-6 py-2 text-sm font-bold uppercase tracking-widest hover:border-gold hover:text-gold transition-all active:scale-95 text-light-gray cursor-pointer"
+              onClick={() => { setSelectedServiceForBooking(null); setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
+              className="btn-pill-outline !px-6 !py-2 text-[10px]"
             >
               Mis Turnos
             </button>
             <button 
-              onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-              className="bg-gold px-6 py-2 text-sm font-bold uppercase tracking-widest hover:bg-gold/80 transition-all active:scale-95 text-neutral-900 cursor-pointer"
+              onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
+              className="btn-pill-solid !px-6 !py-2 text-[10px]"
             >
               Reservar
             </button>
@@ -375,20 +376,22 @@ export default function App() {
               <button 
                 onClick={() => {
                   setIsMenuOpen(false);
+                  setSelectedServiceForBooking(null);
                   setBookingTab('mis-turnos');
                   setIsBookingOpen(true);
                 }}
-                className="border border-white/10 py-3 font-bold uppercase tracking-widest text-center text-xs text-light-gray hover:border-gold hover:text-white transition-all bg-black/50 cursor-pointer"
+                className="rounded-full border border-white/15 py-2.5 font-display font-semibold uppercase tracking-widest text-center text-[10px] text-light-gray hover:border-gold hover:text-white transition-all bg-black/50 cursor-pointer"
               >
                 Mis Turnos
               </button>
               <button 
                 onClick={() => {
                   setIsMenuOpen(false);
+                  setSelectedServiceForBooking(null);
                   setBookingTab('agendar');
                   setIsBookingOpen(true);
                 }}
-                className="bg-gold py-3 font-bold uppercase tracking-widest text-center text-xs text-neutral-900 cursor-pointer"
+                className="rounded-full bg-gold py-2.5 font-display font-semibold uppercase tracking-widest text-center text-[10px] text-neutral-900 hover:bg-gold-hover transition-all cursor-pointer"
               >
                 Reservar
               </button>
@@ -431,18 +434,15 @@ export default function App() {
                   Un taller reservado para el perfeccionamiento del detalle, donde la precisión clásica se encuentra con la actitud urbana en el corazón de Rosario.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row justify-center md:justify-start items-center gap-6 pt-6">
+                <div className="flex justify-center md:justify-start pt-6">
                   <button 
-                    onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                    className="w-full sm:w-auto bg-gold px-8 py-4 font-display font-semibold uppercase tracking-[0.2em] text-sm hover:bg-gold-hover transition-all active:scale-95 text-neutral-900 cursor-pointer rounded-none border border-gold"
+                    onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
+                    className="w-full sm:w-auto btn-pill-solid flex items-center justify-center gap-3"
                   >
-                    Agendar Experiencia
-                  </button>
-                  <button 
-                    onClick={() => { setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
-                    className="text-xs font-display font-semibold uppercase tracking-[0.2em] text-light-gray hover:text-gold transition-colors py-2 cursor-pointer border-b border-white/10 hover:border-gold"
-                  >
-                    Mis Turnos
+                    <span>Reservar Experiencia</span>
+                    <span className="bg-neutral-900 text-gold text-[9px] px-2 py-0.5 rounded-full font-sans font-bold tracking-normal uppercase">
+                      Online
+                    </span>
                   </button>
                 </div>
               </motion.div>
@@ -491,13 +491,21 @@ export default function App() {
             <div className="bg-dark-surface/30 border border-white/5 p-8 md:p-16 space-y-1">
               
               {/* Servicio I */}
-              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+              <div 
+                onClick={() => { setSelectedServiceForBooking("Corte de Pelo Premium"); setBookingTab("agendar"); setIsBookingOpen(true); }}
+                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
+              >
                 <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
                   <div className="flex items-baseline gap-4">
                     <span className="font-display font-light text-2xl text-gold/60">I.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Corte de Pelo Premium</h3>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Corte de Pelo Premium</h3>
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 30 Minutos ]</span>
+                  <div className="flex items-center gap-3 mt-2 md:mt-0">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 30 Minutos ]</span>
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
+                      AGENDAR →
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
                   Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y lavado final.
@@ -505,13 +513,21 @@ export default function App() {
               </div>
 
               {/* Servicio II */}
-              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+              <div 
+                onClick={() => { setSelectedServiceForBooking("Barba de Autor"); setBookingTab("agendar"); setIsBookingOpen(true); }}
+                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
+              >
                 <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
                   <div className="flex items-baseline gap-4">
                     <span className="font-display font-light text-2xl text-gold/60">II.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Barba de Autor</h3>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Barba de Autor</h3>
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 30 Minutos ]</span>
+                  <div className="flex items-center gap-3 mt-2 md:mt-0">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 30 Minutos ]</span>
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
+                      AGENDAR →
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
                   Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo.
@@ -519,13 +535,21 @@ export default function App() {
               </div>
 
               {/* Servicio III */}
-              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+              <div 
+                onClick={() => { setSelectedServiceForBooking("Perfilado de Contornos"); setBookingTab("agendar"); setIsBookingOpen(true); }}
+                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
+              >
                 <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
                   <div className="flex items-baseline gap-4">
                     <span className="font-display font-light text-2xl text-gold/60">III.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Perfilado de Contornos</h3>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Perfilado de Contornos</h3>
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 15 Minutos ]</span>
+                  <div className="flex items-center gap-3 mt-2 md:mt-0">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 15 Minutos ]</span>
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
+                      AGENDAR →
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
                   Limpieza y delimitación absoluta de patillas, frente y nuca con navaja y trimmer. Ideal para mantener tu corte nítido entre visitas.
@@ -533,27 +557,25 @@ export default function App() {
               </div>
 
               {/* Servicio IV */}
-              <div className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30">
+              <div 
+                onClick={() => { setSelectedServiceForBooking("Corte & Barba (Combo)"); setBookingTab("agendar"); setIsBookingOpen(true); }}
+                className="border-b border-white/5 py-8 group transition-colors hover:border-gold/30 cursor-pointer select-none"
+              >
                 <div className="flex flex-col md:flex-row md:items-baseline md:justify-between">
                   <div className="flex items-baseline gap-4">
                     <span className="font-display font-light text-2xl text-gold/60">IV.</span>
-                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide">Corte & Barba (Combo)</h3>
+                    <h3 className="font-display font-semibold uppercase text-xl md:text-2xl text-light-gray tracking-wide group-hover:text-gold transition-colors">Corte & Barba (Combo)</h3>
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-semibold mt-2 md:mt-0">[ Duración: 60 Minutos ]</span>
+                  <div className="flex items-center gap-3 mt-2 md:mt-0">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-semibold group-hover:text-gold/80 transition-colors">[ 60 Minutos ]</span>
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-sans font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 bg-gold/10 border border-gold/20 px-3 py-1 rounded-full hidden sm:inline-block">
+                      AGENDAR →
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-3 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-3xl leading-relaxed">
                   La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora.
                 </p>
-              </div>
-
-              {/* Reservar CTA */}
-              <div className="pt-10 text-center">
-                <button 
-                  onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                  className="w-full sm:w-auto bg-transparent border border-gold text-gold px-12 py-4 font-display font-semibold uppercase tracking-[0.2em] text-xs hover:bg-gold hover:text-neutral-900 transition-all duration-300 cursor-pointer"
-                >
-                  Agendar un Turno
-                </button>
               </div>
             </div>
           </div>
@@ -606,10 +628,10 @@ export default function App() {
             <p className="max-w-md mx-auto text-charcoal text-xs md:text-sm font-sans tracking-wide leading-relaxed">
               Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
             </p>
-            <div className="pt-4">
+            <div className="pt-4 flex justify-center">
               <button 
-                onClick={() => { setBookingTab('agendar'); setIsBookingOpen(true); }}
-                className="inline-block bg-gold px-12 py-5 font-display font-semibold uppercase tracking-[0.2em] text-xs hover:bg-gold-hover transition-all active:scale-95 shadow-2xl shadow-gold/20 cursor-pointer text-neutral-900 rounded-none border border-gold"
+                onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
+                className="btn-pill-solid !px-12 !py-4.5"
               >
                 Reservar Turno Ahora
               </button>
@@ -703,9 +725,10 @@ export default function App() {
                       href={`https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20interesa%20comprar%20el%20producto%20${encodeURIComponent(prod.name)}%20de%20su%20cat%C3%A1logo.%20%C2%BFHay%20stock%20disponible?`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full block bg-transparent border border-white/10 hover:border-gold hover:text-neutral-900 text-center py-3 font-display font-semibold uppercase text-[10px] tracking-[0.2em] transition-all duration-300 text-light-gray"
+                      className="w-full flex items-center justify-center gap-2 py-3 font-display font-semibold uppercase text-[10px] tracking-[0.25em] text-gold hover:text-white transition-all duration-300 text-light-gray border border-gold/25 hover:border-gold/60 rounded-full group/btn cursor-pointer"
                     >
-                      Consultar Stock
+                      <span>Consultar Stock</span>
+                      <span className="inline-block transform transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
                     </a>
                   </div>
                 </div>
@@ -829,7 +852,10 @@ export default function App() {
             >
               {/* Close Button */}
               <button 
-                onClick={() => setIsBookingOpen(false)}
+                onClick={() => {
+                  setIsBookingOpen(false);
+                  setSelectedServiceForBooking(null);
+                }}
                 className="absolute top-4 right-4 md:top-6 md:right-6 text-charcoal hover:text-white transition-colors cursor-pointer p-2 hover:bg-white/5 rounded-full z-50"
               >
                 <X className="w-6 h-6" />
@@ -838,8 +864,12 @@ export default function App() {
               <BookingSystem 
                 bookingTab={bookingTab} 
                 setBookingTab={setBookingTab} 
-                onClose={() => setIsBookingOpen(false)}
+                onClose={() => {
+                  setIsBookingOpen(false);
+                  setSelectedServiceForBooking(null);
+                }}
                 forceClientFlow={true}
+                initialServiceName={selectedServiceForBooking}
               />
             </motion.div>
           </motion.div>
