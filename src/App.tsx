@@ -69,7 +69,7 @@ export default function App() {
     "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=1000",
     "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000",
     "https://images.unsplash.com/photo-1512864084360-7c0c4d0a0845?auto=format&fit=crop&q=80&w=1000",
-    "MAP"
+    "https://images.unsplash.com/photo-1605497746444-ac9dbd324ce8?auto=format&fit=crop&q=80&w=1000"
   ];
 
   useEffect(() => {
@@ -671,49 +671,16 @@ export default function App() {
                   }}
                   className="flex w-full h-full cursor-grab active:cursor-grabbing"
                 >
-                  {galleryImages.map((img, idx) => {
-                    if (img === "MAP") {
-                      return (
-                        <div key={idx} className="w-full h-full shrink-0 relative select-none bg-zinc-950">
-                          {/* Dark Google Map iframe */}
-                          <iframe
-                            src="https://maps.google.com/maps?q=Mendoza%202656,%20Rosario,%20Argentina&t=&z=16&ie=UTF8&iwloc=&output=embed"
-                            className="w-full h-full border-0 grayscale invert-[0.9] contrast-[1.2] opacity-60"
-                            loading="lazy"
-                            title="Ubicación Punto Barba"
-                          />
-                          
-                          {/* Drag Overlay */}
-                          <div className="absolute inset-0 bg-transparent z-10 cursor-grab active:cursor-grabbing" />
-                          
-                          {/* Floating Info Card */}
-                          <div className="absolute top-4 left-4 z-20 max-w-[280px] sm:max-w-xs bg-zinc-950/90 backdrop-blur-md border border-white/5 p-5 rounded shadow-2xl flex flex-col gap-3 pointer-events-none">
-                            <span className="text-gold font-display font-semibold uppercase tracking-[0.2em] text-[10px]">[ UBICACIÓN ]</span>
-                            <h3 className="font-display font-bold text-xl text-white uppercase tracking-wider leading-none">Punto Barba</h3>
-                            <p className="text-charcoal text-xs font-sans leading-relaxed">Mendoza 2656, Rosario, Argentina</p>
-                            <a
-                              href="https://maps.google.com/?q=Mendoza%202656,%20Rosario,%20Argentina"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center bg-gold hover:bg-gold/80 text-zinc-950 font-display font-bold uppercase tracking-widest text-[10px] py-2.5 px-4 rounded-full transition-all duration-300 pointer-events-auto cursor-pointer select-none active:scale-95 text-center mt-1"
-                            >
-                              Cómo Llegar →
-                            </a>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div key={idx} className="w-full h-full shrink-0 relative select-none">
-                        <img
-                          src={img}
-                          alt={`Corte Punto Barba ${idx + 1}`}
-                          className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    );
-                  })}
+                  {galleryImages.map((img, idx) => (
+                    <div key={idx} className="w-full h-full shrink-0 relative select-none">
+                      <img
+                        src={img}
+                        alt={`Corte Punto Barba ${idx + 1}`}
+                        className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ))}
                 </motion.div>
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
@@ -897,22 +864,15 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Map Placeholder Card */}
-              <div className="relative h-[400px] md:h-[500px] bg-zinc-950 border border-white/5 overflow-hidden grayscale group">
-                <img 
-                  src="https://images.unsplash.com/photo-1524666041070-9d87656c25bb?auto=format&fit=crop&q=80&w=1000" 
-                  alt="Map Placeholder" 
-                  className="w-full h-full object-cover opacity-10 group-hover:opacity-25 transition-opacity duration-1000"
-                  referrerPolicy="no-referrer"
+              {/* Google Map Embedded */}
+              <div className="relative h-[400px] md:h-[500px] bg-zinc-950 border border-white/5 overflow-hidden rounded-sm">
+                <iframe
+                  src="https://maps.google.com/maps?q=Mendoza%202656,%20Rosario,%20Argentina&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                  className="w-full h-full border-0 grayscale invert-[0.9] contrast-[1.2] opacity-80"
+                  loading="lazy"
+                  title="Ubicación Punto Barba"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div 
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                  >
-                    <MapPin className="w-10 h-10 text-gold fill-gold/10" />
-                  </motion.div>
-                </div>
+                <div className="absolute inset-0 pointer-events-none border border-white/5" />
               </div>
             </div>
           </div>
