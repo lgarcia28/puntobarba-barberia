@@ -20,7 +20,7 @@ import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFiresto
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -182,6 +182,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios' | 'catalogo'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
+  const [isAddingBarber, setIsAddingBarber] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
   const [scheduleTargetId, setScheduleTargetId] = useState<string>('general');
@@ -2366,156 +2367,166 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
       {isBarberAdmin && activeAdminTab === 'barberos' && (
         <div className="space-y-6">
-              <div className="bg-black p-6 border border-white/5">
-                <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
-                  <User className="w-5 h-5 text-gold" /> {editingBarberId ? 'Editar Barbero' : 'Agregar Nuevo Barbero'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <input
-                    type="text"
-                    placeholder="Nombre del Barbero"
-                    value={newBarber.name}
-                    onChange={(e) => setNewBarber({ ...newBarber, name: e.target.value })}
-                    className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email (para login)"
-                    value={newBarber.email}
-                    onChange={(e) => setNewBarber({ ...newBarber, email: e.target.value })}
-                    className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
-                  />
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-bold uppercase mb-2 text-charcoal">Foto del Perfil</label>
-                    <div className="flex items-center gap-4">
-                      {newBarber.photo && (
-                        <img src={newBarber.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-white/10" />
-                      )}
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setNewBarber({ ...newBarber, photo: reader.result as string });
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-gold text-white px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gold/80 transition-all flex-1 text-left flex items-center justify-between shadow-lg shadow-gold/20"
-                      >
-                        <span>{newBarber.photo ? 'Cambiar Foto' : 'Seleccionar Foto'}</span>
-                        <RefreshCcw className="w-3 h-3 opacity-50" />
-                      </button>
-                    </div>
+          {!isAddingBarber && !editingBarberId ? (
+            <button
+              onClick={() => setIsAddingBarber(true)}
+              className="w-full bg-gold text-zinc-950 py-4.5 font-display font-bold uppercase tracking-widest hover:bg-gold/90 transition-all shadow-lg shadow-gold/15 flex items-center justify-center gap-2 cursor-pointer rounded-sm"
+            >
+              <UserPlus className="w-4 h-4" /> Agregar Barbero
+            </button>
+          ) : (
+            <div className="bg-black p-6 border border-white/5">
+              <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
+                <User className="w-5 h-5 text-gold" /> {editingBarberId ? 'Editar Barbero' : 'Agregar Nuevo Barbero'}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Nombre del Barbero"
+                  value={newBarber.name}
+                  onChange={(e) => setNewBarber({ ...newBarber, name: e.target.value })}
+                  className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
+                />
+                <input
+                  type="email"
+                  placeholder="Email (para login)"
+                  value={newBarber.email}
+                  onChange={(e) => setNewBarber({ ...newBarber, email: e.target.value })}
+                  className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
+                />
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold uppercase mb-2 text-charcoal">Foto del Perfil</label>
+                  <div className="flex items-center gap-4">
+                    {newBarber.photo && (
+                      <img src={newBarber.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-white/10" />
+                    )}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setNewBarber({ ...newBarber, photo: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-gold text-white px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gold/80 transition-all flex-1 text-left flex items-center justify-between shadow-lg shadow-gold/20 cursor-pointer"
+                    >
+                      <span>{newBarber.photo ? 'Cambiar Foto' : 'Seleccionar Foto'}</span>
+                      <RefreshCcw className="w-3 h-3 opacity-50" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={async () => {
-                      if (!newBarber.name || !newBarber.email || !newBarber.photo) {
-                        toast.error('Por favor completa todos los campos y sube una foto.');
-                        return;
-                      }
-                      setLoading(true);
-                      try {
-                        if (editingBarberId) {
-                          await updateBarber(editingBarberId, newBarber);
-                          toast.success('Barbero actualizado correctamente.');
-                        } else {
-                          await addBarber(newBarber);
-                          toast.success('Barbero agregado correctamente.');
-                        }
-                        setNewBarber({ name: '', email: '', photo: '', role: 'barber' });
-                        setEditingBarberId(null);
-                      } catch (err) {
-                        toast.error('Error al guardar barbero.');
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                    disabled={loading}
-                    className="flex-1 bg-white text-black py-3 font-display font-bold uppercase tracking-widest hover:bg-gold hover:text-white transition-all disabled:opacity-50"
-                  >
-                    {loading ? 'Guardando...' : editingBarberId ? 'Actualizar Barbero' : 'Guardar Barbero'}
-                  </button>
-                  {editingBarberId && (
-                    <button
-                      onClick={() => {
-                        setEditingBarberId(null);
-                        setNewBarber({ name: '', email: '', photo: '', role: 'barber' });
-                      }}
-                      className="px-6 bg-zinc-800 text-white py-3 font-display font-bold uppercase tracking-widest hover:bg-zinc-700 transition-all"
-                    >
-                      Cancelar
-                    </button>
-                  )}
-                </div>
               </div>
-
-              <div className="bg-black p-6 border border-white/5">
-                <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
-                  <Database className="w-5 h-5 text-gold" /> Barberos Actuales
-                </h3>
-                <div className="space-y-4">
-                  {barbers.map(b => (
-                    <div key={b.id} className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5">
-                      <div className="flex items-center gap-4">
-                        <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full object-cover grayscale border border-white/5" referrerPolicy="no-referrer" />
-                        <div>
-                          <p className="font-bold uppercase text-sm">{b.name}</p>
-                          <p className="text-xs text-charcoal">{b.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setEditingBarberId(b.id);
-                            setNewBarber({
-                              name: b.name,
-                              email: b.email,
-                              photo: b.photo,
-                              role: b.role || 'barber'
-                            });
-                            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }}
-                          className="text-charcoal hover:text-white p-2 transition-colors"
-                          title="Editar Barbero"
-                        >
-                          <Edit2 className="w-5 h-5" />
-                        </button>
-                        {!['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'puntobarba.barber@gmail.com'].includes(b.email) && (
-                          <button
-                            onClick={async () => {
-                              if (window.confirm(`¿Estás seguro de eliminar a ${b.name}?`)) {
-                                try {
-                                  await deleteBarber(b.id);
-                                  toast.success('Barbero eliminado.');
-                                } catch (err) {
-                                  toast.error('Error al eliminar barbero.');
-                                }
-                              }
-                            }}
-                            className="text-charcoal hover:text-gold p-2 transition-colors"
-                            title="Eliminar Barbero"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={async () => {
+                    if (!newBarber.name || !newBarber.email || !newBarber.photo) {
+                      toast.error('Por favor completa todos los campos y sube una foto.');
+                      return;
+                    }
+                    setLoading(true);
+                    try {
+                      if (editingBarberId) {
+                        await updateBarber(editingBarberId, newBarber);
+                        toast.success('Barbero actualizado correctamente.');
+                      } else {
+                        await addBarber(newBarber);
+                        toast.success('Barbero agregado correctamente.');
+                      }
+                      setNewBarber({ name: '', email: '', photo: '', role: 'barber' });
+                      setEditingBarberId(null);
+                      setIsAddingBarber(false);
+                    } catch (err) {
+                      toast.error('Error al guardar barbero.');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="flex-1 bg-white text-black py-3 font-display font-bold uppercase tracking-widest hover:bg-gold hover:text-white transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? 'Guardando...' : editingBarberId ? 'Actualizar Barbero' : 'Guardar Barbero'}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingBarberId(null);
+                    setNewBarber({ name: '', email: '', photo: '', role: 'barber' });
+                    setIsAddingBarber(false);
+                  }}
+                  className="px-6 bg-zinc-800 text-white py-3 font-display font-bold uppercase tracking-widest hover:bg-zinc-700 transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
+          )}
+
+          <div className="bg-black p-6 border border-white/5">
+            <h3 className="font-display font-bold uppercase mb-6 flex items-center gap-2">
+              <Database className="w-5 h-5 text-gold" /> Barberos Actuales
+            </h3>
+            <div className="space-y-4">
+              {barbers.map(b => (
+                <div key={b.id} className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5">
+                  <div className="flex items-center gap-4">
+                    <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full object-cover grayscale border border-white/5" referrerPolicy="no-referrer" />
+                    <div>
+                      <p className="font-bold uppercase text-sm">{b.name}</p>
+                      <p className="text-xs text-charcoal">{b.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingBarberId(b.id);
+                        setNewBarber({
+                          name: b.name,
+                          email: b.email,
+                          photo: b.photo,
+                          role: b.role || 'barber'
+                        });
+                        setIsAddingBarber(true);
+                        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="text-charcoal hover:text-white p-2 transition-colors cursor-pointer"
+                      title="Editar Barbero"
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                    {b.email !== auth.currentUser?.email && (
+                      <button
+                        onClick={async () => {
+                          if (window.confirm(`¿Estás seguro de eliminar a ${b.name}?`)) {
+                            try {
+                              await deleteBarber(b.id);
+                              toast.success('Barbero eliminado.');
+                            } catch (err) {
+                              toast.error('Error al eliminar barbero.');
+                            }
+                          }
+                        }}
+                        className="text-charcoal hover:text-gold p-2 transition-colors cursor-pointer"
+                        title="Eliminar Barbero"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {isBarberAdmin && activeAdminTab === 'horarios' && (
