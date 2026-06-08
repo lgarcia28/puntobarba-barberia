@@ -509,12 +509,9 @@ export default function App() {
                 <div className="flex justify-center md:justify-start pt-6">
                   <button 
                     onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
-                    className="w-full sm:w-auto btn-pill-solid flex items-center justify-center gap-3"
+                    className="w-full sm:w-auto btn-pill-solid"
                   >
-                    <span>Reservar Experiencia</span>
-                    <span className="bg-neutral-900 text-gold text-[9px] px-2 py-0.5 rounded-full font-sans font-bold tracking-normal uppercase">
-                      Online
-                    </span>
+                    Reservar Experiencia
                   </button>
                 </div>
               </motion.div>
