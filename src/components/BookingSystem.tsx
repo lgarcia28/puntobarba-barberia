@@ -183,6 +183,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const [isAddingBarber, setIsAddingBarber] = useState(false);
+  const [isAddingService, setIsAddingService] = useState(false);
+  const [newService, setNewService] = useState({ name: '', duration: 30, price: '', desc: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
   const [scheduleTargetId, setScheduleTargetId] = useState<string>('general');
@@ -1295,6 +1297,57 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }));
   };
 
+  const handleAddService = async () => {
+    if (!newService.name || !newService.price) {
+      toast.error('Por favor completa el nombre y el precio.');
+      return;
+    }
+    setSavingPrices(true);
+    try {
+      const newSvcObj = {
+        id: newService.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+        name: newService.name,
+        duration: Number(newService.duration) || 30,
+        price: Number(newService.price),
+        desc: newService.desc || ''
+      };
+
+      if (services.some(s => s.id === newSvcObj.id)) {
+        toast.error('Ya existe un servicio con ese nombre.');
+        return;
+      }
+
+      const updatedServices = [...services, newSvcObj];
+      await updateShopSettings({ services: updatedServices });
+      setServices(updatedServices);
+      setIsAddingService(false);
+      setNewService({ name: '', duration: 30, price: '', desc: '' });
+      toast.success('Servicio agregado correctamente.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al agregar el servicio.');
+    } finally {
+      setSavingPrices(false);
+    }
+  };
+
+  const handleDeleteService = async (svcId: string) => {
+    if (window.confirm('¿Estás seguro de eliminar este servicio? Esto podría afectar turnos agendados.')) {
+      setSavingPrices(true);
+      try {
+        const updatedServices = services.filter(s => s.id !== svcId);
+        await updateShopSettings({ services: updatedServices });
+        setServices(updatedServices);
+        toast.success('Servicio eliminado.');
+      } catch (err) {
+        console.error(err);
+        toast.error('Error al eliminar el servicio.');
+      } finally {
+        setSavingPrices(false);
+      }
+    }
+  };
+
   const handleSavePrices = async () => {
     if (!isJose) return;
     setSavingPrices(true);
@@ -1650,7 +1703,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 onClick={() => setActiveAdminTab('precios')}
                 className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'precios' ? 'text-gold' : 'text-charcoal'}`}
               >
-                Precios Servicios
+                Servicios & Precios
               </button>
               <button
                 onClick={() => setActiveAdminTab('catalogo')}
@@ -3019,24 +3072,111 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       {isBarberAdmin && isJose && activeAdminTab === 'precios' && (
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
-            <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
-              <DollarSign className="w-6 h-6 text-gold" />
-              <div>
-                <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
-                  Precios de los Servicios
-                </h3>
-                <p className="text-xs text-charcoal font-bold uppercase">
-                  Modifica el precio de venta al público de cada servicio
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-4 mb-6 gap-4">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-6 h-6 text-gold" />
+                <div>
+                  <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
+                    Servicios & Precios
+                  </h3>
+                  <p className="text-xs text-charcoal font-bold uppercase">
+                    Agrega, edita precios o elimina los servicios del taller
+                  </p>
+                </div>
               </div>
+              
+              {!isAddingService && (
+                <button
+                  onClick={() => setIsAddingService(true)}
+                  className="bg-gold text-zinc-950 px-4 py-2.5 text-xs font-display font-bold uppercase tracking-widest hover:bg-gold/80 transition-all cursor-pointer rounded-sm"
+                >
+                  + Agregar Servicio
+                </button>
+              )}
             </div>
+
+            {isAddingService && (
+              <div className="bg-black p-5 border border-white/5 mb-6 space-y-4">
+                <h4 className="font-display font-bold text-lg uppercase text-gold">Nuevo Servicio</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-charcoal font-bold uppercase">Nombre del Servicio</label>
+                    <input
+                      type="text"
+                      value={newService.name}
+                      onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                      placeholder="Ej. Limpieza Facial"
+                      className="bg-zinc-950 border border-white/10 px-3 py-2 text-sm text-light-gray focus:outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-charcoal font-bold uppercase">Duración (Minutos)</label>
+                    <input
+                      type="number"
+                      value={newService.duration}
+                      onChange={(e) => setNewService({ ...newService, duration: Number(e.target.value) })}
+                      placeholder="30"
+                      className="bg-zinc-950 border border-white/10 px-3 py-2 text-sm text-light-gray focus:outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-charcoal font-bold uppercase">Precio ($)</label>
+                    <input
+                      type="number"
+                      value={newService.price}
+                      onChange={(e) => setNewService({ ...newService, price: e.target.value })}
+                      placeholder="15000"
+                      className="bg-zinc-950 border border-white/10 px-3 py-2 text-sm text-light-gray focus:outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div className="md:col-span-3 flex flex-col gap-1">
+                    <label className="text-[10px] text-charcoal font-bold uppercase">Descripción (Opcional)</label>
+                    <textarea
+                      value={newService.desc}
+                      onChange={(e) => setNewService({ ...newService, desc: e.target.value })}
+                      placeholder="Detalles sobre el servicio..."
+                      rows={2}
+                      className="bg-zinc-950 border border-white/10 px-3 py-2 text-sm text-light-gray focus:outline-none focus:border-gold resize-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4 pt-2">
+                  <button
+                    onClick={handleAddService}
+                    disabled={savingPrices}
+                    className="flex-1 bg-white text-black py-2.5 text-xs font-display font-bold uppercase tracking-widest hover:bg-gold hover:text-white transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingPrices ? 'Guardando...' : 'Agregar Servicio'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsAddingService(false);
+                      setNewService({ name: '', duration: 30, price: '', desc: '' });
+                    }}
+                    className="px-6 bg-zinc-800 text-white py-2.5 text-xs font-display font-bold uppercase tracking-widest hover:bg-zinc-700 transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-6">
               {services.map(svc => (
                 <div key={svc.id} className="bg-black/50 border border-white/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h4 className="font-display font-bold text-xl uppercase tracking-wide text-light-gray">{svc.name}</h4>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-display font-bold text-xl uppercase tracking-wide text-light-gray">{svc.name}</h4>
+                      <button
+                        onClick={() => handleDeleteService(svc.id)}
+                        className="text-zinc-600 hover:text-gold p-1 transition-colors cursor-pointer"
+                        title="Eliminar Servicio"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                     <p className="text-[10px] text-charcoal font-bold uppercase">Duración estimada: {svc.duration} minutos</p>
+                    {svc.desc && <p className="text-xs text-zinc-500 mt-1">{svc.desc}</p>}
                   </div>
                   
                   <div className="flex items-center gap-2 max-w-xs w-full">
@@ -3055,9 +3195,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               <button
                 onClick={handleSavePrices}
                 disabled={savingPrices}
-                className="w-full bg-gold hover:bg-gold/80 transition-colors py-4 font-display font-bold uppercase tracking-widest text-lg text-white rounded"
+                className="w-full bg-gold hover:bg-gold/80 transition-colors py-4 font-display font-bold uppercase tracking-widest text-lg text-white rounded cursor-pointer"
               >
-                {savingPrices ? 'Guardando...' : 'Guardar Precios'}
+                {savingPrices ? 'Guardando...' : 'Guardar Cambios de Precios'}
               </button>
             </div>
           </div>

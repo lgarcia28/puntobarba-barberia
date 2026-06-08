@@ -25,7 +25,7 @@ import { motion, AnimatePresence, useMotionValue, animate } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { BookingSystem } from './components/BookingSystem';
 import { auth, db } from './firebase';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc } from 'firebase/firestore';
 import { Toaster } from 'react-hot-toast';
 import { DEFAULT_PRODUCTS } from './lib/firestore';
 
@@ -44,6 +44,8 @@ export default function App() {
   
   // Dynamic products catalog state
   const [products, setProducts] = useState<any[]>([]);
+  // Dynamic services state
+  const [services, setServices] = useState<any[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, 'products'));
@@ -53,6 +55,22 @@ export default function App() {
         setProducts(DEFAULT_PRODUCTS);
       } else {
         setProducts(prodsData);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const docRef = doc(db, 'settings', 'shop');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists() && docSnap.data().services) {
+        setServices(docSnap.data().services);
+      } else {
+        setServices([
+          { id: 'corte', name: 'Corte de Pelo Premium', duration: 30, price: 18000, desc: "Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y lavado final." },
+          { id: 'barba', name: 'Barba de Autor', duration: 30, price: 13000, desc: "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo." },
+          { id: 'corte-barba', name: 'Corte & Barba (Combo)', duration: 60, price: 25000, desc: "La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora." }
+        ]);
       }
     });
     return unsubscribe;
@@ -560,62 +578,48 @@ export default function App() {
             </div>
 
             {/* Modern Services Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  id: "Corte de Pelo Premium",
-                  num: "01",
-                  name: "Corte de Pelo Premium",
-                  desc: "Degradados de precisión, corte clásico a tijera and texturizado personalizado. Incluye asesoramiento de visagismo y lavado final.",
-                  duration: "30 MIN",
-                  icon: Scissors,
-                },
-                {
-                  id: "Barba de Autor",
-                  num: "02",
-                  name: "Barba de Autor",
-                  desc: "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo.",
-                  duration: "30 MIN",
-                  icon: Brush,
-                },
-                {
-                  id: "Perfilado de Contornos",
-                  num: "03",
-                  name: "Perfilado de Contornos",
-                  desc: "Limpieza y delimitación absoluta de patillas, frente y nuca con navaja y trimmer. Ideal para mantener tu corte nítido entre visitas.",
-                  duration: "15 MIN",
-                  icon: Award,
-                },
-                {
-                  id: "Corte & Barba (Combo)",
-                  num: "04",
-                  name: "Corte & Barba (Combo)",
-                  desc: "La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora.",
-                  duration: "60 MIN",
-                  icon: User,
-                },
-              ].map((svc, idx) => {
-                const IconComponent = svc.icon;
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 justify-center">
+              {services.map((svc, idx) => {
+                let IconComponent = Scissors;
+                const nameLower = svc.name.toLowerCase();
+                if (nameLower.includes('barba')) {
+                  IconComponent = Brush;
+                } else if (nameLower.includes('combo') || nameLower.includes('y')) {
+                  IconComponent = User;
+                } else if (idx % 3 === 2) {
+                  IconComponent = Award;
+                }
+
+                const description = svc.desc || (
+                  nameLower.includes('barba') 
+                    ? "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium."
+                    : nameLower.includes('combo') || nameLower.includes('y')
+                    ? "La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión."
+                    : "Servicio de alta calidad y precisión adaptado a tu estilo personal por nuestros estilistas."
+                );
+
+                const num = String(idx + 1).padStart(2, '0');
+
                 return (
                   <div
-                    key={svc.id}
+                    key={svc.id || idx}
                     onClick={() => { setSelectedServiceForBooking(svc.name); setBookingTab("agendar"); setIsBookingOpen(true); }}
                     className="group relative p-5 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between h-full rounded-sm hover:shadow-2xl hover:shadow-gold/5 hover:-translate-y-1.5 hover:border-gold/40"
                   >
                     <div>
                       <div className="flex justify-between items-start">
-                        <span className="font-display font-black text-5xl text-white/5 group-hover:text-gold/10 transition-colors duration-300">{svc.num}</span>
+                        <span className="font-display font-black text-5xl text-white/5 group-hover:text-gold/10 transition-colors duration-300">{num}</span>
                         <div className="w-9 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-gold/30 transition-colors">
                           <IconComponent className="w-3.5 h-3.5 text-gold" />
                         </div>
                       </div>
                       <div className="mt-5 space-y-2.5">
                         <h3 className="font-display font-semibold uppercase text-lg md:text-xl text-light-gray tracking-wide group-hover:text-gold transition-colors">{svc.name}</h3>
-                        <p className="text-charcoal text-xs font-sans tracking-wide leading-relaxed line-clamp-4">{svc.desc}</p>
+                        <p className="text-charcoal text-xs font-sans tracking-wide leading-relaxed line-clamp-4">{description}</p>
                       </div>
                     </div>
                     <div className="pt-4 mt-6 flex justify-between items-center border-t border-white/5 group-hover:border-gold/10 transition-colors">
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-bold group-hover:text-gold/80 transition-colors">[ {svc.duration} ]</span>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-bold group-hover:text-gold/80 transition-colors">[ {svc.duration} MIN ]</span>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-black flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         RESERVAR <span className="transform transition-transform duration-300 group-hover:translate-x-1">→</span>
                       </span>
