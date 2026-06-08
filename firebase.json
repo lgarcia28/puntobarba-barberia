@@ -4,5 +4,16 @@
       "database": "(default)",
       "rules": "firestore.rules"
     }
-  ]
+  ],
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Punto Barba",
+        "supportEmail": "leoneldariogarcia@gmail.com",
+        "authorizedRedirectUris": [
+          "https://puntobarba-barberia.vercel.app"
+        ]
+      }
+    }
+  }
 }
