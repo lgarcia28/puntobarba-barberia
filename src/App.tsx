@@ -553,20 +553,14 @@ export default function App() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold/[0.02] rounded-full blur-[120px] pointer-events-none" />
 
           <div className="max-w-5xl mx-auto px-6 relative z-10">
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-12"
-            >
+            <div className="text-center mb-12">
               <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">Estilos & Rituales</span>
               <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Servicios de Autor</h2>
               <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
                 Técnicas de corte clásico, rituales de afeitado tradicionales y el confort de nuestro club. Los precios se detallan al momento de agendar.
               </p>
               <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
-            </motion.div>
+            </div>
 
             {/* Modern Services Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -606,15 +600,10 @@ export default function App() {
               ].map((svc, idx) => {
                 const IconComponent = svc.icon;
                 return (
-                  <motion.div
+                  <div
                     key={svc.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    whileHover={{ y: -6, borderColor: "rgba(212, 196, 174, 0.4)" }}
                     onClick={() => { setSelectedServiceForBooking(svc.name); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                    className="group relative p-5 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between h-full rounded-sm hover:shadow-2xl hover:shadow-gold/5"
+                    className="group relative p-5 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between h-full rounded-sm hover:shadow-2xl hover:shadow-gold/5 hover:-translate-y-1.5 hover:border-gold/40"
                   >
                     <div>
                       <div className="flex justify-between items-start">
@@ -634,7 +623,7 @@ export default function App() {
                         RESERVAR <span className="transform transition-transform duration-300 group-hover:translate-x-1">→</span>
                       </span>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -644,16 +633,10 @@ export default function App() {
         {/* Gallery / Portfolio Section */}
         <section id="portfolio" className="py-24 bg-dark-bg border-b border-white/5 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6">
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-10"
-            >
+            <div className="text-center mb-10">
               <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">El Registro</span>
               <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Galería</h2>
-            </motion.div>
+            </div>
 
             {/* Category Filters */}
             <div className="flex justify-center gap-4 mb-8">
@@ -778,13 +761,7 @@ export default function App() {
           {/* Ambient background glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[100px] pointer-events-none" />
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8"
-          >
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
             <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray leading-tight">
               ¿Listo para tu cambio de estilo?
             </h2>
@@ -799,7 +776,7 @@ export default function App() {
                 Reservar Turno Ahora
               </button>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Productos Section (La Botica) */}
@@ -809,13 +786,7 @@ export default function App() {
           <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-gold/[0.02] rounded-full blur-[120px] pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-20"
-            >
+            <div className="text-center mb-20">
               <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">
                 La Botica de Punto Barba
               </span>
@@ -826,17 +797,13 @@ export default function App() {
                 Una curaduría de fórmulas botánicas y productos de culto esenciales para la rutina del hombre contemporáneo.
               </p>
               <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
-            </motion.div>
+            </div>
 
             {/* Apothecary Minimal Grid (No Cards) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-white/5 bg-zinc-950/20">
               {products.map((prod, index) => (
-                <motion.div 
+                <div 
                   key={prod.id} 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
                   className={`group p-8 flex flex-col justify-between transition-colors hover:bg-white/[0.01] border-white/5
                     ${index < 3 ? 'lg:border-r' : ''} 
                     ${index % 2 === 0 ? 'sm:border-r lg:border-r-0' : ''} 
@@ -875,7 +842,7 @@ export default function App() {
                       <span className="inline-block transform transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
                     </a>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -890,13 +857,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
               
               {/* Info Column */}
-              <motion.div 
-                initial={{ opacity: 0, x: -25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="space-y-12 text-center lg:text-left"
-              >
+              <div className="space-y-12 text-center lg:text-left">
                 <div className="space-y-4">
                   <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs block">El Taller</span>
                   <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-wide text-light-gray">Ubicanos</h2>
@@ -938,16 +899,10 @@ export default function App() {
                     <span className="text-sm md:text-base font-sans tracking-wide text-charcoal group-hover:text-gold transition-colors">@puntobarba.barberia</span>
                   </a>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Google Map Embedded */}
-              <motion.div 
-                initial={{ opacity: 0, x: 25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="relative h-[400px] md:h-[500px] bg-zinc-950 border border-white/5 overflow-hidden rounded-sm"
-              >
+              <div className="relative h-[400px] md:h-[500px] bg-zinc-950 border border-white/5 overflow-hidden rounded-sm">
                 <iframe
                   src="https://maps.google.com/maps?q=Mendoza%202656,%20Rosario,%20Argentina&t=&z=16&ie=UTF8&iwloc=&output=embed"
                   className="w-full h-full border-0 grayscale invert-[0.9] contrast-[1.2] opacity-80"
@@ -955,7 +910,7 @@ export default function App() {
                   title="Ubicación Punto Barba"
                 />
                 <div className="absolute inset-0 pointer-events-none border border-white/5" />
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
