@@ -3556,58 +3556,176 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <Scissors className="text-gold w-5 h-5" /> Elige el Servicio
                     </h3>
 
-                    {/* Category Filters */}
-                    <div className="flex flex-wrap gap-2 mb-4 border-b border-white/5 pb-4">
-                      {(['Todos', 'Cortes', 'Barba', 'Facial', 'Combos'] as const).map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => setActiveServiceCategory(cat)}
-                          className={`px-4 py-1.5 text-[10px] font-display font-semibold uppercase tracking-widest border transition-all duration-300 rounded-full cursor-pointer ${
-                            activeServiceCategory === cat 
-                              ? 'bg-gold border-gold text-zinc-950 shadow-md shadow-gold/10' 
-                              : 'border-white/10 hover:border-gold/50 text-charcoal hover:text-white'
-                          }`}
-                        >
-                          {cat === 'Todos' ? '[ Todos ]' : cat === 'Combos' ? '[ Combos & VIP ]' : `[ ${cat} ]`}
-                        </button>
-                      ))}
-                    </div>
+                    <div className="space-y-6 max-h-[55vh] overflow-y-auto pr-1.5">
+                      {/* Cortes & Estilo */}
+                      {services.some(s => getServiceCategory(s) === 'cortes') && (
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
+                            ✂️ Cortes & Estilo
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {services.filter(s => getServiceCategory(s) === 'cortes').map(service => {
+                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                              return (
+                                <button
+                                  key={service.id}
+                                  onClick={() => { setSelectedService(service); setStep(3); }}
+                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                                >
+                                  <div className="space-y-1.5 flex-1">
+                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                      {service.duration} MINUTOS
+                                    </span>
+                                    {desc && (
+                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                        {desc}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
-                    <div className="grid grid-cols-1 gap-3 md:gap-4 max-h-[50vh] overflow-y-auto pr-1">
-                      {services
-                        .filter(service => {
-                          if (activeServiceCategory === 'Todos') return true;
-                          const cat = getServiceCategory(service);
-                          if (activeServiceCategory === 'Combos') return cat === 'combos' || cat === 'vip';
-                          if (activeServiceCategory === 'Cortes') return cat === 'cortes';
-                          if (activeServiceCategory === 'Barba') return cat === 'barba';
-                          if (activeServiceCategory === 'Facial') return cat === 'facial';
-                          return true;
-                        })
-                        .map(service => {
-                          const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
-                          return (
-                            <button
-                              key={service.id}
-                              onClick={() => { setSelectedService(service); setStep(3); }}
-                              className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
-                            >
-                              <div className="space-y-1.5 flex-1">
-                                <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
-                                <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
-                                  {service.duration} MINUTOS
-                                </span>
-                                {desc && (
-                                  <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
-                                    {desc}
-                                  </p>
-                                )}
-                              </div>
-                              <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
-                            </button>
-                          );
-                        })}
+                      {/* Barba & Afeitado */}
+                      {services.some(s => getServiceCategory(s) === 'barba') && (
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
+                            🧔 Barba & Afeitado
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {services.filter(s => getServiceCategory(s) === 'barba').map(service => {
+                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                              return (
+                                <button
+                                  key={service.id}
+                                  onClick={() => { setSelectedService(service); setStep(3); }}
+                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                                >
+                                  <div className="space-y-1.5 flex-1">
+                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                      {service.duration} MINUTOS
+                                    </span>
+                                    {desc && (
+                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                        {desc}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Cuidado Facial */}
+                      {services.some(s => getServiceCategory(s) === 'facial') && (
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
+                            ✨ Cuidado Facial
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {services.filter(s => getServiceCategory(s) === 'facial').map(service => {
+                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                              return (
+                                <button
+                                  key={service.id}
+                                  onClick={() => { setSelectedService(service); setStep(3); }}
+                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                                >
+                                  <div className="space-y-1.5 flex-1">
+                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                      {service.duration} MINUTOS
+                                    </span>
+                                    {desc && (
+                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                        {desc}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Combos de Autor & VIP */}
+                      {services.some(s => getServiceCategory(s) === 'combos' || getServiceCategory(s) === 'vip') && (
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
+                            👑 Combos de Autor & VIP
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {services.filter(s => getServiceCategory(s) === 'combos' || getServiceCategory(s) === 'vip').map(service => {
+                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                              return (
+                                <button
+                                  key={service.id}
+                                  onClick={() => { setSelectedService(service); setStep(3); }}
+                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                                >
+                                  <div className="space-y-1.5 flex-1">
+                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                      {service.duration} MINUTOS
+                                    </span>
+                                    {desc && (
+                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                        {desc}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Otros Servicios */}
+                      {services.some(s => getServiceCategory(s) === 'otros') && (
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
+                            ➕ Otros Servicios
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {services.filter(s => getServiceCategory(s) === 'otros').map(service => {
+                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                              return (
+                                <button
+                                  key={service.id}
+                                  onClick={() => { setSelectedService(service); setStep(3); }}
+                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                                >
+                                  <div className="space-y-1.5 flex-1">
+                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                      {service.duration} MINUTOS
+                                    </span>
+                                    {desc && (
+                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                        {desc}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
