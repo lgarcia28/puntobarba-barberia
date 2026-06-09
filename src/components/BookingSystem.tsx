@@ -120,6 +120,31 @@ interface BookingSystemProps {
   initialServiceName?: string | null;
 }
 
+const SERVICE_DESCRIPTIONS: Record<string, string> = {
+  'corte-cabello': 'Corte clásico o moderno con asesoramiento de estilo y lavado final.',
+  'corte-tijera': 'Corte artesanal completo utilizando únicamente tijeras para una caída natural.',
+  'barba-express': 'Recortado rápido de barba con máquina y perfilado de contornos.',
+  'barba-moderna': 'Diseño de barba con afeitado de contornos a navaja y nutrición con óleo.',
+  'afeitado-clasico': 'Ritual tradicional con toallas calientes, espuma templada y afeitado a navaja.',
+  'ritual-facial': 'Tratamiento de hidratación y exfoliación facial para renovar la piel.',
+  'corte-perfilado-cejas': 'Combo de corte premium más diseño y perfilado de cejas detallado.',
+  'corte-b-express': 'Corte premium combinado con un recorte rápido de barba.',
+  'corte-b-moderna': 'Corte premium combinado con diseño de barba y afeitado a navaja.',
+  'corte-a-clasico': 'Combo definitivo: corte premium y el ritual completo de afeitado clásico.',
+  'corte-r-facial': 'Corte premium combinado con un relajante tratamiento facial hidratante.',
+  'servicio-vip': 'Experiencia VIP de 4 horas: Corte, barba completa, cejas, ritual facial y cortesía premium.'
+};
+
+const getServiceCategory = (service: any) => {
+  const id = service.id || '';
+  if (id === 'servicio-vip') return 'vip';
+  if (id.startsWith('corte-b-') || id.startsWith('corte-a-') || id.startsWith('corte-r-') || id === 'corte-perfilado-cejas') return 'combos';
+  if (id.startsWith('corte-')) return 'cortes';
+  if (id.startsWith('barba-') || id === 'afeitado-clasico') return 'barba';
+  if (id.includes('facial')) return 'facial';
+  return 'otros';
+};
+
 // --- Booking System Component ---
 export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose, forceClientFlow = false, initialServiceName = null }: BookingSystemProps = {}) => {
   const [step, setStep] = useState(1);
@@ -130,6 +155,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
   const [selectedCourtesy, setSelectedCourtesy] = useState<string | null>(null);
+  const [activeServiceCategory, setActiveServiceCategory] = useState<'Todos' | 'Cortes' | 'Barba' | 'Facial' | 'Combos'>('Todos');
   const [isFixedAppointment, setIsFixedAppointment] = useState(false);
   const [fixedInterval, setFixedInterval] = useState<'weekly' | 'biweekly'>('weekly');
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -3529,20 +3555,59 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
                       <Scissors className="text-gold w-5 h-5" /> Elige el Servicio
                     </h3>
-                    <div className="grid grid-cols-1 gap-2 md:gap-4">
-                      {services.map(service => (
+
+                    {/* Category Filters */}
+                    <div className="flex flex-wrap gap-2 mb-4 border-b border-white/5 pb-4">
+                      {(['Todos', 'Cortes', 'Barba', 'Facial', 'Combos'] as const).map((cat) => (
                         <button
-                          key={service.id}
-                          onClick={() => { setSelectedService(service); setStep(3); }}
-                          className="p-4 md:p-6 bg-black border border-white/5 hover:border-gold transition-all flex justify-between items-center group cursor-pointer"
+                          key={cat}
+                          type="button"
+                          onClick={() => setActiveServiceCategory(cat)}
+                          className={`px-4 py-1.5 text-[10px] font-display font-semibold uppercase tracking-widest border transition-all duration-300 rounded-full cursor-pointer ${
+                            activeServiceCategory === cat 
+                              ? 'bg-gold border-gold text-zinc-950 shadow-md shadow-gold/10' 
+                              : 'border-white/10 hover:border-gold/50 text-charcoal hover:text-white'
+                          }`}
                         >
-                          <div className="text-left">
-                            <p className="font-display font-black uppercase text-base sm:text-xl md:text-2xl group-hover:text-gold transition-colors">{service.name}</p>
-                            <p className="text-charcoal font-bold uppercase tracking-widest text-[10px] sm:text-xs md:text-sm">{service.duration} MINUTOS</p>
-                          </div>
-                          <p className="text-base sm:text-xl md:text-2xl font-display font-bold text-light-gray">${service.price.toLocaleString('es-AR')}</p>
+                          {cat === 'Todos' ? '[ Todos ]' : cat === 'Combos' ? '[ Combos & VIP ]' : `[ ${cat} ]`}
                         </button>
                       ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 md:gap-4 max-h-[50vh] overflow-y-auto pr-1">
+                      {services
+                        .filter(service => {
+                          if (activeServiceCategory === 'Todos') return true;
+                          const cat = getServiceCategory(service);
+                          if (activeServiceCategory === 'Combos') return cat === 'combos' || cat === 'vip';
+                          if (activeServiceCategory === 'Cortes') return cat === 'cortes';
+                          if (activeServiceCategory === 'Barba') return cat === 'barba';
+                          if (activeServiceCategory === 'Facial') return cat === 'facial';
+                          return true;
+                        })
+                        .map(service => {
+                          const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                          return (
+                            <button
+                              key={service.id}
+                              onClick={() => { setSelectedService(service); setStep(3); }}
+                              className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                            >
+                              <div className="space-y-1.5 flex-1">
+                                <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                  {service.duration} MINUTOS
+                                </span>
+                                {desc && (
+                                  <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                    {desc}
+                                  </p>
+                                )}
+                              </div>
+                              <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                            </button>
+                          );
+                        })}
                     </div>
                   </motion.div>
                 )}
