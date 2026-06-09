@@ -917,17 +917,41 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           const slotSnapshots = await Promise.all(slotDocRefs.map(ref => transaction.get(ref)));
           const blockSnapshots = await Promise.all(blockDocRefs.map(ref => transaction.get(ref)));
 
-          const isOccupied = slotSnapshots.some((snap, idx) => {
-            if (!snap.exists()) return false;
+          // Para cada slot que existe en Firestore, verificar si su turno asociado sigue activo y confirmado
+          let isOccupied = false;
+          for (let idx = 0; idx < slotSnapshots.length; idx++) {
+            const snap = slotSnapshots[idx];
+            if (!snap.exists()) continue;
+            
             const key = slotTimeKeys[idx];
-            // Si el slot pertenece al turno que estamos reprogramando, no está ocupado
-            if (oldSlotsToFree.includes(key)) {
-              return false;
+            if (oldSlotsToFree.includes(key)) continue;
+            
+            const slotData = snap.data();
+            const appointmentId = slotData?.appointmentId;
+            
+            if (appointmentId) {
+              const apptSnap = await transaction.get(doc(db, 'appointments', appointmentId));
+              if (apptSnap.exists()) {
+                const apptData = apptSnap.data();
+                if (apptData?.status === 'confirmed') {
+                  isOccupied = true;
+                  break;
+                } else {
+                  // El turno no está confirmado (ej: cancelado), podemos limpiar el slot huérfano
+                  transaction.delete(slotDocRefs[idx]);
+                }
+              } else {
+                // El turno asociado ya no existe en la BD, limpiamos el slot huérfano
+                transaction.delete(slotDocRefs[idx]);
+              }
+            } else {
+              // Si no tiene id de turno por alguna razón, se considera ocupado por seguridad
+              isOccupied = true;
+              break;
             }
-            return true;
-          }) || blockSnapshots.some(snap => snap.exists());
+          }
 
-          if (isOccupied) {
+          if (isOccupied || blockSnapshots.some(snap => snap.exists())) {
             throw new Error('Turno ya ocupado o bloqueado. Por favor elige otro horario.');
           }
 

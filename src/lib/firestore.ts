@@ -138,10 +138,16 @@ export async function clearAppointments() {
   
   try {
     const snapshot = await getDocs(collection(db, 'appointments'));
+    const slotsSnapshot = await getDocs(collection(db, 'slots'));
     const batch = writeBatch(db);
+    
     snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
+    slotsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    
     await batch.commit();
     return true;
   } catch (error) {
