@@ -91,10 +91,35 @@ export const BARBERS = [
 ];
 
 export const SERVICES = [
-  { id: 'corte', name: 'Corte de pelo', duration: 30, price: 18000 },
-  { id: 'barba', name: 'Barba', duration: 30, price: 13000 },
-  { id: 'corte-barba', name: 'Corte y Barba', duration: 60, price: 25000 }
+  { id: 'corte-cabello', name: 'Corte de cabello', duration: 60, price: 20000 },
+  { id: 'corte-tijera', name: 'Corte con tijera', duration: 60, price: 25000 },
+  { id: 'barba-express', name: 'Barba express', duration: 30, price: 15000 },
+  { id: 'barba-moderna', name: 'Barba Moderna', duration: 30, price: 20000 },
+  { id: 'afeitado-clasico', name: 'Afeitado Clásico', duration: 30, price: 30000 },
+  { id: 'ritual-facial', name: 'Ritual facial', duration: 30, price: 25000 },
+  { id: 'corte-perfilado-cejas', name: 'Corte + Perfilado de cejas', duration: 60, price: 24000 },
+  { id: 'corte-b-express', name: 'Corte + B. Express', duration: 60, price: 28000 },
+  { id: 'corte-b-moderna', name: 'Corte + B. Moderna', duration: 60, price: 32000 },
+  { id: 'corte-a-clasico', name: 'Corte + A. Clásico', duration: 60, price: 40000 },
+  { id: 'corte-r-facial', name: 'Corte + R. Facial', duration: 60, price: 36000 },
+  { id: 'servicio-vip', name: 'Servicio VIP', duration: 240, price: 200000 }
 ];
+
+export async function seedServices() {
+  try {
+    if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+      console.log('Skipping services seeding: user not authenticated as admin.');
+      return;
+    }
+
+    const settingsRef = doc(db, 'settings', 'shop');
+    await setDoc(settingsRef, { services: SERVICES }, { merge: true });
+    console.log('Services seeded/synced successfully in Firestore.');
+  } catch (error) {
+    console.error('Error seeding services:', error);
+  }
+}
+
 
 export async function seedBarbers() {
   try {

@@ -402,7 +402,6 @@ export default function App() {
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#cortes" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Cortes</a>
             <a href="#productos" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Productos</a>
             <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Contacto</a>
             {isBarberAdmin && (
@@ -445,7 +444,6 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden bg-[#0e0e0e] border-b border-white/5 p-6 flex flex-col space-y-4"
           >
-            <a href="#cortes" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Cortes</a>
             <a href="#productos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Productos</a>
             <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
             {isBarberAdmin && (
@@ -508,7 +506,7 @@ export default function App() {
               >
                 <div className="space-y-4">
                   <span className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 text-gold font-sans text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
-                    Club Social & Barbería de Autor
+                    Cortes | Barbas | Facial | Styling
                   </span>
                   
                   <div className="py-4 flex justify-center md:justify-start">
@@ -521,7 +519,7 @@ export default function App() {
                 </div>
                 
                 <p className="text-charcoal text-sm md:text-base font-sans tracking-wide max-w-md leading-relaxed mx-auto md:mx-0">
-                  Un taller reservado para el perfeccionamiento del detalle, donde la precisión clásica se encuentra con la actitud urbana en el corazón de Rosario.
+                  Tu estilo habla antes que vos.
                 </p>
                 
                 <div className="flex justify-center md:justify-start pt-6">
@@ -529,7 +527,7 @@ export default function App() {
                     onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
                     className="w-full sm:w-auto btn-pill-solid"
                   >
-                    Reservar Experiencia
+                    Reservar turno
                   </button>
                 </div>
               </motion.div>
@@ -558,75 +556,6 @@ export default function App() {
                 </div>
               </motion.div>
 
-            </div>
-          </div>
-        </section>
-
-        {/* Services Section */}
-        <section id="cortes" className="py-20 md:py-28 bg-[#090909] relative overflow-hidden border-b border-white/5">
-          {/* Ambient background glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold/[0.02] rounded-full blur-[120px] pointer-events-none" />
-
-          <div className="max-w-5xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-12">
-              <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">Estilos & Rituales</span>
-              <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Servicios de Autor</h2>
-              <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
-                Técnicas de corte clásico, rituales de afeitado tradicionales y el confort de nuestro club. Los precios se detallan al momento de agendar.
-              </p>
-              <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
-            </div>
-
-            {/* Modern Services Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 justify-center">
-              {services.map((svc, idx) => {
-                let IconComponent = Scissors;
-                const nameLower = svc.name.toLowerCase();
-                if (nameLower.includes('barba')) {
-                  IconComponent = Brush;
-                } else if (nameLower.includes('combo') || nameLower.includes('y')) {
-                  IconComponent = User;
-                } else if (idx % 3 === 2) {
-                  IconComponent = Award;
-                }
-
-                const description = svc.desc || (
-                  nameLower.includes('barba') 
-                    ? "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium."
-                    : nameLower.includes('combo') || nameLower.includes('y')
-                    ? "La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión."
-                    : "Servicio de alta calidad y precisión adaptado a tu estilo personal por nuestros estilistas."
-                );
-
-                const num = String(idx + 1).padStart(2, '0');
-
-                return (
-                  <div
-                    key={svc.id || idx}
-                    onClick={() => { setSelectedServiceForBooking(svc.name); setBookingTab("agendar"); setIsBookingOpen(true); }}
-                    className="group relative p-5 bg-zinc-950/40 border border-white/5 backdrop-blur-md transition-all duration-300 cursor-pointer select-none flex flex-col justify-between h-full rounded-sm hover:shadow-2xl hover:shadow-gold/5 hover:-translate-y-1.5 hover:border-gold/40"
-                  >
-                    <div>
-                      <div className="flex justify-between items-start">
-                        <span className="font-display font-black text-5xl text-white/5 group-hover:text-gold/10 transition-colors duration-300">{num}</span>
-                        <div className="w-9 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-gold/30 transition-colors">
-                          <IconComponent className="w-3.5 h-3.5 text-gold" />
-                        </div>
-                      </div>
-                      <div className="mt-5 space-y-2.5">
-                        <h3 className="font-display font-semibold uppercase text-lg md:text-xl text-light-gray tracking-wide group-hover:text-gold transition-colors">{svc.name}</h3>
-                        <p className="text-charcoal text-xs font-sans tracking-wide leading-relaxed line-clamp-4">{description}</p>
-                      </div>
-                    </div>
-                    <div className="pt-4 mt-6 flex justify-between items-center border-t border-white/5 group-hover:border-gold/10 transition-colors">
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-charcoal font-sans font-bold group-hover:text-gold/80 transition-colors">[ {svc.duration} MIN ]</span>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-sans font-black flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                        RESERVAR <span className="transform transition-transform duration-300 group-hover:translate-x-1">→</span>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </section>

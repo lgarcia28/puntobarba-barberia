@@ -16,7 +16,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, addProduct, deleteProduct, DEFAULT_PRODUCTS } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, seedServices, addProduct, deleteProduct, DEFAULT_PRODUCTS } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -129,6 +129,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
+  const [selectedCourtesy, setSelectedCourtesy] = useState<string | null>(null);
   const [isFixedAppointment, setIsFixedAppointment] = useState(false);
   const [fixedInterval, setFixedInterval] = useState<'weekly' | 'biweekly'>('weekly');
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -416,6 +417,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   useEffect(() => {
     if (isBarberAdmin) {
       seedBarbers();
+      seedServices();
     }
   }, [isBarberAdmin]);
 
@@ -599,7 +601,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     const interval = eachMinuteOfInterval({
       start: startTime,
       end: endTime
-    }, { step: 30 });
+    }, { step: 60 });
 
     for (const time of interval) {
       const slotStart = time;
@@ -625,27 +627,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         return (isBefore(slotStart, blockEnd) && isAfter(slotEnd, blockStart));
       });
 
-      // Special validation for 60 min services: must have 2 consecutive 30 min slots
-      if (selectedService.duration === 60) {
-        const midPoint = addMinutes(slotStart, 30);
-        const isMidOccupied = appointments.some(appt => {
-          if (appt.completed) return false; // Ignorar turnos ya cobrados/completados
-          const apptStart = appt.startTime.toDate();
-          const apptEnd = appt.endTime.toDate();
-          return (isBefore(midPoint, apptEnd) && isAfter(addMinutes(midPoint, 30), apptStart));
-        }) || blocks.some(block => {
-          const blockStart = block.startTime.toDate();
-          const blockEnd = block.endTime.toDate();
-          return (isBefore(midPoint, blockEnd) && isAfter(addMinutes(midPoint, 30), blockStart));
-        });
-
-        if (!isOccupied && !isMidOccupied) {
-          slots.push(slotStartStr);
-        }
-      } else {
-        if (!isOccupied) {
-          slots.push(slotStartStr);
-        }
+      if (!isOccupied) {
+        slots.push(slotStartStr);
       }
     }
 
@@ -818,7 +801,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               status: 'confirmed',
               createdAt: Timestamp.now(),
               isFixed: true,
-              groupId: groupId
+              groupId: groupId,
+              courtesy: selectedCourtesy || 'Ninguna'
             });
 
             // Escribir los slots para el turno fijo
@@ -965,7 +949,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             startTime: Timestamp.fromDate(baseStartTime),
             endTime: Timestamp.fromDate(baseEndTime),
             status: 'confirmed',
-            createdAt: Timestamp.now()
+            createdAt: Timestamp.now(),
+            courtesy: selectedCourtesy || 'Ninguna'
           });
 
           // Escribir los slots individuales ocupados en Firestore
@@ -1009,7 +994,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       }
 
       setSuccess(true);
-      setStep(6);
+      setStep(7);
       setReschedulingApptId(null);
     } catch (err: any) {
       setError(err.message || 'Error al agendar el turno.');
@@ -1253,7 +1238,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         completed: true,
         isWalkIn: true,
         customPrice: price,
-        createdAt: Timestamp.now()
+        createdAt: Timestamp.now(),
+        courtesy: 'Ninguna'
       });
 
       toast.success('Corte rápido registrado con éxito.');
@@ -2195,6 +2181,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-charcoal font-bold uppercase">
                                       <span>{appt.service}</span>
+                                      {appt.courtesy && appt.courtesy !== 'Ninguna' && (
+                                        <span className="bg-gold/15 border border-gold/30 text-gold px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                          Cortesía: {appt.courtesy}
+                                        </span>
+                                      )}
                                       {appt.customerPhone && (
                                         <a 
                                           href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
@@ -2333,6 +2324,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                             </div>
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-charcoal font-bold uppercase">
                                               <span>{appt.service}</span>
+                                              {appt.courtesy && appt.courtesy !== 'Ninguna' && (
+                                                <span className="bg-gold/15 border border-gold/30 text-gold px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm">
+                                                  Cortesía: {appt.courtesy}
+                                                </span>
+                                              )}
                                               {appt.customerPhone && (
                                                 <a 
                                                   href={`https://wa.me/${appt.customerPhone.replace(/\D/g, '')}`} 
@@ -3475,10 +3471,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           ) : (
             <>
               {/* Steps Indicator */}
-              {step <= 5 && (
+              {step <= 6 && (
                 <div className="flex justify-between mb-12 relative">
                   <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/30 -z-10" />
-                  {[1, 2, 3, 4, 5].map(s => (
+                  {[1, 2, 3, 4, 5, 6].map(s => (
                     <div
                       key={s}
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-display font-bold border-2 transition-all ${step >= s ? 'bg-gold border-gold text-white' : 'bg-black border-charcoal/30 text-charcoal'}`}
@@ -3680,9 +3676,93 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
+                    className="space-y-6"
                   >
                     <button onClick={() => setStep(4)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
+                      <ChevronLeft className="w-4 h-4" /> Volver
+                    </button>
+                    
+                    <div className="text-center py-2.5 bg-zinc-900 border border-white/5 rounded-sm mb-2">
+                      <h3 className="font-display font-black text-lg sm:text-2xl uppercase text-white tracking-wide py-1">
+                        Selección de cortesía
+                      </h3>
+                      <p className="text-[10px] sm:text-xs text-charcoal uppercase font-bold tracking-wider">
+                        Elegí una cortesía de la casa para acompañar tu experiencia
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* Cafetería */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
+                          ☕ Cafetería
+                        </h4>
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                          {['Café', 'Cortado', 'Capuchino'].map(item => (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => setSelectedCourtesy(item)}
+                              className={`py-4 px-2 border font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer rounded-sm ${selectedCourtesy === item ? 'border-gold bg-gold/10 text-gold shadow-lg shadow-gold/10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:text-white'}`}
+                            >
+                              {item}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Bebidas con Alcohol */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
+                          🍺 Bebida con Alcohol
+                        </h4>
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                          {['Corona', 'Whisky', 'Licor de crema'].map(item => (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => setSelectedCourtesy(item)}
+                              className={`py-4 px-2 border font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer rounded-sm ${selectedCourtesy === item ? 'border-gold bg-gold/10 text-gold shadow-lg shadow-gold/10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:text-white'}`}
+                            >
+                              {item}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Controls */}
+                      <div className="pt-4 border-t border-white/5 flex gap-3 justify-end items-center">
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedCourtesy('Ninguna'); setStep(6); }}
+                          className={`py-3 px-6 border font-display font-black text-xs uppercase tracking-widest transition-all cursor-pointer rounded-sm ${selectedCourtesy === 'Ninguna' ? 'border-gold bg-gold/10 text-gold' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:text-white'}`}
+                        >
+                          Ninguna
+                        </button>
+                        
+                        {selectedCourtesy && selectedCourtesy !== 'Ninguna' && (
+                          <button
+                            type="button"
+                            onClick={() => setStep(6)}
+                            className="rounded-full bg-gold hover:bg-gold-hover text-neutral-900 px-8 py-3.5 font-display font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-lg shadow-gold/10 hover:shadow-gold/25 cursor-pointer"
+                          >
+                            Continuar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {step === 6 && (
+                  <motion.div
+                    key="step6"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    <button onClick={() => setStep(5)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
@@ -3703,6 +3783,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           <span className="text-charcoal uppercase text-xs font-bold tracking-widest">Fecha</span>
                           <span className="font-display font-bold uppercase text-base md:text-lg">{format(selectedDate, 'dd/MM/yyyy')} - {selectedTime} HS</span>
                         </div>
+                        {selectedCourtesy && selectedCourtesy !== 'Ninguna' && (
+                          <div className="flex justify-between border-b border-white/5 pb-3 md:pb-4">
+                            <span className="text-charcoal uppercase text-xs font-bold tracking-widest">Cortesía</span>
+                            <span className="font-display font-bold uppercase text-base md:text-lg text-gold">{selectedCourtesy}</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-3">
@@ -3773,9 +3859,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   </motion.div>
                 )}
 
-                {step === 6 && (
+                {step === 7 && (
                   <motion.div
-                    key="step6"
+                    key="step7"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-12 space-y-6"
@@ -3793,6 +3879,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         setSelectedBarber(null);
                         setSelectedService(null);
                         setSelectedTime(null);
+                        setSelectedCourtesy(null);
                         setSuccess(false);
                         setIsFixedAppointment(false);
                         onClose?.();
