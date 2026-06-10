@@ -68,7 +68,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 }
 
 function isAdminEmail(email: string | null | undefined) {
-  return email === 'leoneldariogarcia@gmail.com' || email === 'jhbarber87@gmail.com' || email === 'puntobarba.barber@gmail.com' || email === 'puntobarbabarberia@gmail.com';
+  return email === 'leoneldariogarcia@gmail.com' || email === 'puntobarba.barber@gmail.com' || email === 'puntobarbabarberia@gmail.com';
 }
 
 export const BARBERS = [
@@ -77,7 +77,7 @@ export const BARBERS = [
     name: 'Iván Núñez',
     photo: 'https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&q=80&w=600',
     bio: 'Barbero de autor especialista en cortes clásicos y rituales de barba.',
-    email: 'jhbarber87@gmail.com',
+    email: 'puntobarbabarberia@gmail.com',
     role: 'admin'
   },
   {
