@@ -754,7 +754,7 @@ export default function App() {
                 transition={{ duration: 0.8 }}
                 className="col-span-1 md:col-span-7 space-y-8 text-center md:text-left"
               >
-                <div className="space-y-4">
+                <div className="space-y-4 mb-16 md:mb-0">
                   <span className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 text-gold font-sans text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                     Cortes | Barbas | Facial | Styling
                   </span>
