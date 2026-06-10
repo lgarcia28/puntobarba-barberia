@@ -740,7 +740,7 @@ export default function App() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center overflow-hidden py-32 md:py-0 bg-dark-bg border-b border-white/5">
+        <section className="relative min-h-screen flex items-start md:items-center overflow-hidden pt-28 pb-16 md:py-0 bg-dark-bg border-b border-white/5">
           {/* Ambient background glow */}
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gold/[0.03] rounded-full blur-[150px] pointer-events-none" />
           
@@ -754,7 +754,7 @@ export default function App() {
                 transition={{ duration: 0.8 }}
                 className="col-span-1 md:col-span-7 space-y-8 text-center md:text-left"
               >
-                <div className="space-y-4 mb-16 md:mb-0">
+                <div className="space-y-4 mb-6 md:mb-0">
                   <span className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 text-gold font-sans text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                     Cortes | Barbas | Facial | Styling
                   </span>
