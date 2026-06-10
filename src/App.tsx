@@ -703,25 +703,22 @@ export default function App() {
             transition={{ duration: 0.8, ease: 'easeInOut' }}
             className="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center"
           >
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ 
-                scale: [0.6, 1.05, 1], 
-                opacity: [0, 1, 1] 
-              }}
-              transition={{ 
-                duration: 1.6, 
-                ease: 'easeInOut',
-                times: [0, 0.6, 1]
-              }}
-              className="flex flex-col items-center justify-center p-6"
-            >
+            <div className="flex flex-col items-center justify-center p-6">
               <motion.img 
                 layoutId="logo-symbol"
                 src={logoSymbol} 
                 alt="Punto Barba" 
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ 
+                  scale: [0.6, 1.05, 1], 
+                  opacity: [0, 1, 1] 
+                }}
+                transition={{ 
+                  default: { type: "spring", stiffness: 45, damping: 15 },
+                  scale: { duration: 1.6, ease: 'easeInOut', times: [0, 0.6, 1] },
+                  opacity: { duration: 1.6, ease: 'easeInOut', times: [0, 0.6, 1] }
+                }}
                 className="w-[100px] h-[122.5px] md:w-[150px] md:h-[183.7px] object-contain"
-                transition={{ type: "spring", stiffness: 45, damping: 15 }}
               />
               <motion.img 
                 layoutId="logo-text"
@@ -729,10 +726,14 @@ export default function App() {
                 alt="Punto Barba" 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
+                transition={{ 
+                  default: { type: "spring", stiffness: 45, damping: 15 },
+                  opacity: { delay: 0.6, duration: 1.0, ease: "easeInOut" },
+                  y: { delay: 0.6, duration: 1.0, ease: "easeInOut" }
+                }}
                 className="h-[60px] md:h-[90px] w-auto object-contain mt-3 select-none"
               />
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
