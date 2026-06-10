@@ -324,7 +324,7 @@ export default function App() {
               <img 
                 src={logoTextOnly} 
                 alt="" 
-                className="h-[28px] md:h-[37px] w-auto object-contain opacity-0 pointer-events-none ml-1.5 md:ml-2" 
+                className="h-[28px] w-[62.6px] md:h-[37px] md:w-[82.7px] object-contain opacity-0 pointer-events-none ml-1.5 md:ml-2" 
                 aria-hidden="true"
               />
             </>
@@ -341,7 +341,7 @@ export default function App() {
                 layoutId={currentPath === '/' ? "logo-text" : undefined}
                 src={logoTextOnly} 
                 alt="Punto Barba" 
-                className="h-[28px] md:h-[37px] w-auto object-contain ml-1.5 md:ml-2" 
+                className="h-[28px] w-[62.6px] md:h-[37px] md:w-[82.7px] object-contain ml-1.5 md:ml-2" 
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
               />
             </>
@@ -719,7 +719,7 @@ export default function App() {
                   transition: { delay: 0.6, duration: 1.0, ease: "easeInOut" }
                 }}
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
-                className="h-[60px] md:h-[90px] w-auto object-contain mt-3 select-none"
+                className="h-[60px] w-[134px] md:h-[90px] md:w-[201px] object-contain mt-3 select-none"
               />
             </motion.div>
           </motion.div>
