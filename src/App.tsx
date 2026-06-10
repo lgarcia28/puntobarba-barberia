@@ -758,21 +758,17 @@ export default function App() {
                   <span className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 text-gold font-sans text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                     Cortes | Barbas | Facial | Styling
                   </span>
-                  
-                  <div className="py-4 flex justify-center md:justify-start">
-                    <img 
-                      src={logoVertical} 
-                      alt="Punto Barba" 
-                      className="h-44 sm:h-52 md:h-64 lg:h-72 w-auto object-contain max-w-full"
-                    />
-                  </div>
                 </div>
                 
-                <p className="text-charcoal text-sm md:text-base font-sans tracking-wide max-w-md leading-relaxed mx-auto md:mx-0">
+                <h1 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray leading-tight">
                   Tu estilo habla antes que vos.
+                </h1>
+                
+                <p className="max-w-md mx-auto md:mx-0 text-charcoal text-sm md:text-base font-sans tracking-wide leading-relaxed">
+                  Agenda tu turno en línea en solo 1 minuto
                 </p>
                 
-                <div className="flex justify-center md:justify-start pt-6">
+                <div className="flex justify-center md:justify-start pt-4">
                   <button 
                     onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
                     className="w-full sm:w-auto btn-pill-solid"
@@ -806,32 +802,6 @@ export default function App() {
                 </div>
               </motion.div>
 
-            </div>
-          </div>
-        </section>
-
-
-
-        {/* Booking CTA Banner */}
-        <section id="reserva" className="py-28 bg-dark-bg border-b border-white/5 relative overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center opacity-10 filter grayscale" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000')" }} />
-          {/* Ambient background glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[100px] pointer-events-none" />
-
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-8">
-            <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray leading-tight">
-              ¿Listo para tu cambio de estilo?
-            </h2>
-            <p className="max-w-md mx-auto text-charcoal text-xs md:text-sm font-sans tracking-wide leading-relaxed">
-              Agenda tu turno en línea en solo 1 minuto con confirmación instantánea por WhatsApp
-            </p>
-            <div className="pt-4 flex justify-center">
-              <button 
-                onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
-                className="btn-pill-solid !px-12 !py-4.5"
-              >
-                Reservar Turno Ahora
-              </button>
             </div>
           </div>
         </section>
