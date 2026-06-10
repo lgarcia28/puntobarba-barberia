@@ -41,6 +41,7 @@ export default function App() {
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const [showIntro, setShowIntro] = useState(true);
+  const [introFinished, setIntroFinished] = useState(false);
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState<string | null>(null);
   
   // Dynamic products catalog state
@@ -134,7 +135,13 @@ export default function App() {
     const timer = setTimeout(() => {
       setShowIntro(false);
     }, 2800);
-    return () => clearTimeout(timer);
+    const timer2 = setTimeout(() => {
+      setIntroFinished(true);
+    }, 3700);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
   }, []);
 
   const isBookingOpenRef = useRef(isBookingOpen);
@@ -307,7 +314,11 @@ export default function App() {
 
   // Shared navigation bar for all public pages
   const renderNav = () => (
-    <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+    <nav className={`fixed top-0 w-full transition-all duration-500 ${
+      (introFinished || currentPath !== '/')
+        ? 'z-50 bg-black/80 backdrop-blur-md border-b border-white/5' 
+        : 'z-[10000] bg-transparent border-transparent pointer-events-none'
+    }`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <div 
           className="flex items-center gap-2 md:gap-2.5 cursor-pointer"
@@ -349,7 +360,9 @@ export default function App() {
         </div>
         
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-8">
+        <div className={`hidden md:flex items-center space-x-8 transition-opacity duration-500 ${
+          (introFinished || currentPath !== '/') ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}>
           <a href="/galeria" onClick={(e) => { e.preventDefault(); navigateTo('/galeria'); }} className={`text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors ${currentPath === '/galeria' ? 'text-gold' : ''}`}>Galería</a>
           <a href="/catalogo" onClick={(e) => { e.preventDefault(); navigateTo('/catalogo'); }} className={`text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors ${currentPath === '/catalogo' ? 'text-gold' : ''}`}>Productos</a>
           <a href="/#contacto" onClick={(e) => { e.preventDefault(); navigateTo('/'); setTimeout(() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Contacto</a>
@@ -380,7 +393,9 @@ export default function App() {
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <button className={`md:hidden transition-opacity duration-500 ${
+          (introFinished || currentPath !== '/') ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`} onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
