@@ -2084,7 +2084,17 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             const slotAppts = adminAppts.filter(a => {
                               const aStart = a.startTime.toDate();
                               const aEnd = a.endTime.toDate();
-                              return isBefore(slotStart, aEnd) && isAfter(slotEnd, aStart);
+                              
+                              // Calcular minutos de coincidencia para evitar que turnos no alineados
+                              // (como los cortes rápidos registrados al minuto actual) se desborden en celdas adyacentes.
+                              const overlapStart = aStart > slotStart ? aStart : slotStart;
+                              const overlapEnd = aEnd < slotEnd ? aEnd : slotEnd;
+                              
+                              if (overlapStart < overlapEnd) {
+                                const overlapMinutes = Math.round((overlapEnd.getTime() - overlapStart.getTime()) / 60000);
+                                return overlapMinutes > 10;
+                              }
+                              return false;
                             });
                             slotAppts.sort((a, b) => {
                               if (a.completed && !b.completed) return 1;
@@ -2132,8 +2142,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                        <div key={a.id || idx} className="flex flex-col items-center w-full border-t border-white/5 first:border-0 pt-1 first:pt-0">
                                          <span 
                                            onClick={(e) => {
-                                             e.stopPropagation();
                                              if (!a.completed) {
+                                               e.stopPropagation();
                                                setCompletingAppt(a);
                                                setCompletingPrice(String(a.customPrice != null ? a.customPrice : (services.find(s => s.name === a.service)?.price || 0)));
                                              }
