@@ -713,8 +713,12 @@ export default function App() {
                 src={logoTextOnly} 
                 alt="Punto Barba" 
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { delay: 0.6, duration: 1.0, ease: "easeInOut" }
+                }}
+                transition={{ type: "spring", stiffness: 45, damping: 15 }}
                 className="h-[60px] md:h-[90px] w-auto object-contain mt-3 select-none"
               />
             </motion.div>
