@@ -2082,6 +2082,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               return isBefore(slotStart, bEnd) && isAfter(slotEnd, bStart);
                             });
                             const slotAppts = adminAppts.filter(a => {
+                              if (a.isWalkIn) return false; // Excluir cortes rápidos (walk-ins) de las celdas horarias
+                              
                               const aStart = a.startTime.toDate();
                               const aEnd = a.endTime.toDate();
                               
