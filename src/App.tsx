@@ -250,6 +250,14 @@ export default function App() {
     };
   }, [isBookingOpen, showIntro]);
 
+  // Helper to navigate between pages
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    setIsMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
   if (currentPath === '/admin' || currentPath === '/admin/') {
     return (
       <div className="min-h-screen font-sans selection:bg-gold selection:text-white bg-distressed text-light-gray py-10 px-4 md:px-12 flex flex-col justify-start">
@@ -274,10 +282,7 @@ export default function App() {
           <div className="flex justify-between items-center mb-10 pb-6 border-b border-white/5">
             <div 
               className="flex items-center gap-1 cursor-pointer"
-              onClick={() => {
-                window.history.pushState({}, '', '/');
-                setCurrentPath('/');
-              }}
+              onClick={() => navigateTo('/')}
             >
               <img src={logoHorizontal} alt="Punto Barba" className="h-14 md:h-18 w-auto object-contain" />
             </div>
@@ -285,8 +290,7 @@ export default function App() {
               href="/" 
               onClick={(e) => {
                 e.preventDefault();
-                window.history.pushState({}, '', '/');
-                setCurrentPath('/');
+                navigateTo('/');
               }}
               className="text-sm font-bold uppercase tracking-widest text-charcoal hover:text-white transition-colors"
             >
@@ -296,6 +300,376 @@ export default function App() {
 
           <BookingSystem bookingTab={bookingTab} setBookingTab={setBookingTab} />
         </div>
+      </div>
+    );
+  }
+
+  // Shared navigation bar for all public pages
+  const renderNav = () => (
+    <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div 
+          className="flex items-center gap-2 md:gap-2.5 cursor-pointer"
+          onClick={() => navigateTo('/')}
+        >
+          {showIntro && currentPath === '/' ? (
+            <>
+              <img 
+                src={logoSymbol} 
+                alt="" 
+                className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain opacity-0 pointer-events-none" 
+                aria-hidden="true"
+              />
+              <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none opacity-0 pointer-events-none" aria-hidden="true">
+                <span className="text-[25px] md:text-[32.5px] tracking-tight">PUNTO</span>
+                <span className="text-[25px] md:text-[32.5px] tracking-tight">BARBA</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <motion.img 
+                layoutId={currentPath === '/' ? "logo-symbol" : undefined}
+                src={logoSymbol} 
+                alt="Punto Barba" 
+                className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain" 
+                transition={{ type: "spring", stiffness: 45, damping: 15 }}
+              />
+              <motion.div 
+                layoutId={currentPath === '/' ? "logo-text" : undefined}
+                className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none"
+                transition={{ type: "spring", stiffness: 45, damping: 15 }}
+              >
+                <motion.span layoutId={currentPath === '/' ? "word-punto" : undefined} className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
+                <motion.span layoutId={currentPath === '/' ? "word-barba" : undefined} className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
+              </motion.div>
+            </>
+          )}
+        </div>
+        
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center space-x-8">
+          <a href="/galeria" onClick={(e) => { e.preventDefault(); navigateTo('/galeria'); }} className={`text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors ${currentPath === '/galeria' ? 'text-gold' : ''}`}>Galería</a>
+          <a href="/catalogo" onClick={(e) => { e.preventDefault(); navigateTo('/catalogo'); }} className={`text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors ${currentPath === '/catalogo' ? 'text-gold' : ''}`}>Productos</a>
+          <a href="/#contacto" onClick={(e) => { e.preventDefault(); navigateTo('/'); setTimeout(() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Contacto</a>
+          {isBarberAdmin && (
+            <a 
+              href="/admin" 
+              onClick={(e) => {
+                e.preventDefault();
+                navigateTo('/admin');
+              }}
+              className="text-sm font-bold uppercase tracking-widest text-gold hover:text-white transition-colors"
+            >
+              Panel de Gestión
+            </a>
+          )}
+          <button 
+            onClick={() => { setSelectedServiceForBooking(null); setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
+            className="btn-pill-outline !px-6 !py-2 text-[10px]"
+          >
+            Mis Turnos
+          </button>
+          <button 
+            onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
+            className="btn-pill-solid !px-6 !py-2 text-[10px]"
+          >
+            Reservar
+          </button>
+        </div>
+
+        {/* Mobile Toggle */}
+        <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? <X /> : <Menu />}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:hidden bg-[#0e0e0e] border-b border-white/5 p-6 flex flex-col space-y-4"
+        >
+          <a href="/" onClick={(e) => { e.preventDefault(); navigateTo('/'); }} className={`font-bold uppercase tracking-widest ${currentPath === '/' ? 'text-gold' : ''}`}>Inicio</a>
+          <a href="/galeria" onClick={(e) => { e.preventDefault(); navigateTo('/galeria'); }} className={`font-bold uppercase tracking-widest ${currentPath === '/galeria' ? 'text-gold' : ''}`}>Galería</a>
+          <a href="/catalogo" onClick={(e) => { e.preventDefault(); navigateTo('/catalogo'); }} className={`font-bold uppercase tracking-widest ${currentPath === '/catalogo' ? 'text-gold' : ''}`}>Productos</a>
+          <a href="/#contacto" onClick={(e) => { e.preventDefault(); navigateTo('/'); setTimeout(() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="font-bold uppercase tracking-widest">Contacto</a>
+          {isBarberAdmin && (
+            <a 
+              href="/admin" 
+              onClick={(e) => {
+                e.preventDefault();
+                navigateTo('/admin');
+              }}
+              className="font-bold uppercase tracking-widest text-gold animate-pulse"
+            >
+              Panel de Gestión
+            </a>
+          )}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button 
+              onClick={() => {
+                setIsMenuOpen(false);
+                setSelectedServiceForBooking(null);
+                setBookingTab('mis-turnos');
+                setIsBookingOpen(true);
+              }}
+              className="rounded-full border border-white/15 py-2.5 font-display font-semibold uppercase tracking-widest text-center text-[10px] text-light-gray hover:border-gold hover:text-white transition-all bg-black/50 cursor-pointer"
+            >
+              Mis Turnos
+            </button>
+            <button 
+              onClick={() => {
+                setIsMenuOpen(false);
+                setSelectedServiceForBooking(null);
+                setBookingTab('agendar');
+                setIsBookingOpen(true);
+              }}
+              className="rounded-full bg-gold py-2.5 font-display font-semibold uppercase tracking-widest text-center text-[10px] text-neutral-900 hover:bg-gold-hover transition-all cursor-pointer"
+            >
+              Reservar
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </nav>
+  );
+
+  // Shared booking modal for all pages
+  const renderBookingModal = () => (
+    <AnimatePresence>
+      {isBookingOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 md:p-6 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsBookingOpen(false);
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="relative w-[92%] h-auto max-h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl p-5 sm:p-8 md:p-10 text-white overflow-y-auto rounded-md concrete-texture flex flex-col justify-start"
+          >
+            {/* Close Button */}
+            <button 
+              onClick={() => {
+                setIsBookingOpen(false);
+                setSelectedServiceForBooking(null);
+              }}
+              className="absolute top-4 right-4 md:top-6 md:right-6 text-charcoal hover:text-white transition-colors cursor-pointer p-2 hover:bg-white/5 rounded-full z-50"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <BookingSystem 
+              bookingTab={bookingTab} 
+              setBookingTab={setBookingTab} 
+              onClose={() => {
+                setIsBookingOpen(false);
+                setSelectedServiceForBooking(null);
+              }}
+              forceClientFlow={true}
+              initialServiceName={selectedServiceForBooking}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // ==================== GALLERY PAGE ====================
+  if (currentPath === '/galeria' || currentPath === '/galeria/') {
+    return (
+      <div className="min-h-screen font-sans selection:bg-gold selection:text-white bg-distressed text-light-gray">
+        <Toaster position="top-center" toastOptions={{ style: { background: '#18181b', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0px', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontSize: '14px', letterSpacing: '1px' }, success: { iconTheme: { primary: '#dc2626', secondary: '#fff' } } }} />
+        {renderNav()}
+        <main className="pt-24">
+          <section className="py-24 bg-dark-bg relative overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="text-center mb-10">
+                <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Galería</h2>
+              </div>
+
+              {/* Category Filters */}
+              <div className="flex justify-center gap-4 mb-8">
+                {['Todos', 'Cortes', 'Barba'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat as any)}
+                    className={`px-4 py-1.5 text-[10px] font-display font-semibold uppercase tracking-widest border transition-all duration-300 rounded-full cursor-pointer ${
+                      activeCategory === cat 
+                        ? 'bg-gold border-gold text-zinc-950 shadow-md shadow-gold/10' 
+                        : 'border-white/10 hover:border-gold/50 text-charcoal hover:text-white'
+                    }`}
+                  >
+                    {cat === 'Todos' ? '[ Todos ]' : cat === 'Cortes' ? '[ Cortes ]' : '[ Barbas ]'}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Gallery Carousel */}
+              <div className="relative max-w-4xl mx-auto">
+                <div 
+                  ref={galleryContainerRef}
+                  className="relative aspect-[16/10] sm:aspect-[16/9] md:aspect-[21/10] overflow-hidden border border-white/5 bg-zinc-950/60 shadow-2xl"
+                >
+                  <motion.div
+                    drag="x"
+                    dragConstraints={{
+                      left: -galleryContainerWidth * (filteredImages.length - 1),
+                      right: 0
+                    }}
+                    dragElastic={0.6}
+                    style={{ x: galleryDragX }}
+                    onDragEnd={(event, info) => {
+                      const offset = info.offset.x;
+                      const velocity = info.velocity.x;
+                      const swipeThreshold = galleryContainerWidth * 0.15;
+                      let newSlide = activeSlide;
+                      if (offset < -swipeThreshold || velocity < -400) {
+                        newSlide = Math.min(filteredImages.length - 1, activeSlide + 1);
+                      } else if (offset > swipeThreshold || velocity > 400) {
+                        newSlide = Math.max(0, activeSlide - 1);
+                      }
+                      if (newSlide === activeSlide) {
+                        animate(galleryDragX, -activeSlide * galleryContainerWidth, { type: "spring", stiffness: 300, damping: 30 });
+                      } else {
+                        setActiveSlide(newSlide);
+                      }
+                    }}
+                    className="flex w-full h-full cursor-grab active:cursor-grabbing"
+                  >
+                    {filteredImages.map((img, idx) => (
+                      <div key={idx} className="w-full h-full shrink-0 relative select-none">
+                        <img
+                          src={img.url}
+                          alt={`Corte Punto Barba ${idx + 1}`}
+                          className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ))}
+                  </motion.div>
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                  
+                  <button
+                    onClick={handlePrevSlide}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/10 bg-black/60 hover:bg-black hover:border-gold/50 flex items-center justify-center text-white hover:text-gold transition-all duration-300 z-10 cursor-pointer active:scale-90"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleNextSlide}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/10 bg-black/60 hover:bg-black hover:border-gold/50 flex items-center justify-center text-white hover:text-gold transition-all duration-300 z-10 cursor-pointer active:scale-90"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex justify-center gap-2 mt-6">
+                  {filteredImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === activeSlide ? 'w-6 bg-gold' : 'w-1.5 bg-white/20 hover:bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+                
+                <div className="text-center mt-8">
+                  <a 
+                    href="https://www.instagram.com/puntobarba.barberia/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-charcoal hover:text-gold font-display font-semibold uppercase tracking-[0.2em] text-xs transition-colors duration-300"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    <span>Seguinos en @puntobarba.barberia</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+        {renderBookingModal()}
+      </div>
+    );
+  }
+
+  // ==================== CATALOG PAGE ====================
+  if (currentPath === '/catalogo' || currentPath === '/catalogo/') {
+    return (
+      <div className="min-h-screen font-sans selection:bg-gold selection:text-white bg-distressed text-light-gray">
+        <Toaster position="top-center" toastOptions={{ style: { background: '#18181b', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0px', textTransform: 'uppercase', fontFamily: 'Inter, sans-serif', fontSize: '14px', letterSpacing: '1px' }, success: { iconTheme: { primary: '#dc2626', secondary: '#fff' } } }} />
+        {renderNav()}
+        <main className="pt-24">
+          <section className="py-24 md:py-36 bg-[#090909] relative overflow-hidden">
+            {/* Ambient background glows */}
+            <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-gold/[0.02] rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+              <div className="text-center mb-16 md:mb-20">
+                <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">
+                  Cuidado & Estilo
+                </h2>
+                <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
+                  Una curaduría de fórmulas botánicas y productos de culto esenciales para la rutina del hombre contemporáneo.
+                </p>
+                <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
+              </div>
+
+              {/* Product Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[1px] bg-white/5 border border-white/5">
+                {products.map((prod) => (
+                  <div 
+                    key={prod.id} 
+                    className="group p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors hover:bg-white/[0.02] bg-[#090909]"
+                  >
+                    <div className="space-y-3 sm:space-y-6">
+                      <div className="relative aspect-square overflow-hidden bg-zinc-950/60 border border-white/5">
+                        <img 
+                          src={prod.img} 
+                          alt={prod.name} 
+                          className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-102 transition-all duration-1000"
+                          referrerPolicy="no-referrer"
+                        />
+                        <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-zinc-950/90 text-gold font-sans font-semibold text-[7px] sm:text-[8px] tracking-[0.2em] px-1.5 sm:px-2.5 py-0.5 sm:py-1 uppercase border border-white/10">
+                          {prod.tag}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-1 sm:space-y-2">
+                        <h3 className="text-xs sm:text-lg font-display font-semibold uppercase text-light-gray tracking-wide leading-tight">{prod.name}</h3>
+                        <p className="text-charcoal text-[9px] sm:text-[11px] font-sans tracking-wide leading-relaxed line-clamp-2 sm:line-clamp-3 hidden sm:block">{prod.desc}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 sm:pt-6 space-y-2 sm:space-y-4">
+                      <span className="text-sm sm:text-xl font-display font-bold text-gold block">{prod.price}</span>
+                      <a 
+                        href={`https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20interesa%20comprar%20el%20producto%20${encodeURIComponent(prod.name)}%20de%20su%20cat%C3%A1logo.%20%C2%BFHay%20stock%20disponible?`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 font-display font-semibold uppercase text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.25em] text-gold hover:text-white transition-all duration-300 text-light-gray border border-gold/25 hover:border-gold/60 rounded-full group/btn cursor-pointer"
+                      >
+                        <span>Consultar</span>
+                        <span className="inline-block transform transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </main>
+        {renderBookingModal()}
       </div>
     );
   }
@@ -362,131 +736,7 @@ export default function App() {
           success: { iconTheme: { primary: '#dc2626', secondary: '#fff' } }
         }} 
       />
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 md:gap-2.5">
-            {showIntro ? (
-              <>
-                <img 
-                  src={logoSymbol} 
-                  alt="" 
-                  className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain opacity-0 pointer-events-none" 
-                  aria-hidden="true"
-                />
-                <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none opacity-0 pointer-events-none" aria-hidden="true">
-                  <span className="text-[25px] md:text-[32.5px] tracking-tight">PUNTO</span>
-                  <span className="text-[25px] md:text-[32.5px] tracking-tight">BARBA</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <motion.img 
-                  layoutId="logo-symbol"
-                  src={logoSymbol} 
-                  alt="Punto Barba" 
-                  className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain" 
-                  transition={{ type: "spring", stiffness: 45, damping: 15 }}
-                />
-                <motion.div 
-                  layoutId="logo-text"
-                  className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none"
-                  transition={{ type: "spring", stiffness: 45, damping: 15 }}
-                >
-                  <motion.span layoutId="word-punto" className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
-                  <motion.span layoutId="word-barba" className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
-                </motion.div>
-              </>
-            )}
-          </div>
-          
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#productos" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Productos</a>
-            <a href="#contacto" className="text-sm font-bold uppercase tracking-widest hover:text-gold transition-colors">Contacto</a>
-            {isBarberAdmin && (
-              <a 
-                href="/admin" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.pushState({}, '', '/admin');
-                  setCurrentPath('/admin');
-                }}
-                className="text-sm font-bold uppercase tracking-widest text-gold hover:text-white transition-colors"
-              >
-                Panel de Gestión
-              </a>
-            )}
-            <button 
-              onClick={() => { setSelectedServiceForBooking(null); setBookingTab('mis-turnos'); setIsBookingOpen(true); }}
-              className="btn-pill-outline !px-6 !py-2 text-[10px]"
-            >
-              Mis Turnos
-            </button>
-            <button 
-              onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
-              className="btn-pill-solid !px-6 !py-2 text-[10px]"
-            >
-              Reservar
-            </button>
-          </div>
-
-          {/* Mobile Toggle */}
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-[#0e0e0e] border-b border-white/5 p-6 flex flex-col space-y-4"
-          >
-            <a href="#productos" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Productos</a>
-            <a href="#contacto" onClick={() => setIsMenuOpen(false)} className="font-bold uppercase tracking-widest">Contacto</a>
-            {isBarberAdmin && (
-              <a 
-                href="/admin" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsMenuOpen(false);
-                  window.history.pushState({}, '', '/admin');
-                  setCurrentPath('/admin');
-                }}
-                className="font-bold uppercase tracking-widest text-gold animate-pulse"
-              >
-                Panel de Gestión
-              </a>
-            )}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button 
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setSelectedServiceForBooking(null);
-                  setBookingTab('mis-turnos');
-                  setIsBookingOpen(true);
-                }}
-                className="rounded-full border border-white/15 py-2.5 font-display font-semibold uppercase tracking-widest text-center text-[10px] text-light-gray hover:border-gold hover:text-white transition-all bg-black/50 cursor-pointer"
-              >
-                Mis Turnos
-              </button>
-              <button 
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setSelectedServiceForBooking(null);
-                  setBookingTab('agendar');
-                  setIsBookingOpen(true);
-                }}
-                className="rounded-full bg-gold py-2.5 font-display font-semibold uppercase tracking-widest text-center text-[10px] text-neutral-900 hover:bg-gold-hover transition-all cursor-pointer"
-              >
-                Reservar
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </nav>
+      {renderNav()}
 
       <main>
         {/* Hero Section */}
@@ -560,130 +810,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* Gallery / Portfolio Section */}
-        <section id="portfolio" className="py-24 bg-dark-bg border-b border-white/5 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-10">
-              <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">El Registro</span>
-              <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">Galería</h2>
-            </div>
 
-            {/* Category Filters */}
-            <div className="flex justify-center gap-4 mb-8">
-              {['Todos', 'Cortes', 'Barba'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat as any)}
-                  className={`px-4 py-1.5 text-[10px] font-display font-semibold uppercase tracking-widest border transition-all duration-300 rounded-full cursor-pointer ${
-                    activeCategory === cat 
-                      ? 'bg-gold border-gold text-zinc-950 shadow-md shadow-gold/10' 
-                      : 'border-white/10 hover:border-gold/50 text-charcoal hover:text-white'
-                  }`}
-                >
-                  {cat === 'Todos' ? '[ Todos ]' : cat === 'Cortes' ? '[ Cortes ]' : '[ Barbas ]'}
-                </button>
-              ))}
-            </div>
-            
-            {/* Gallery Carousel */}
-            <div className="relative max-w-4xl mx-auto">
-              {/* Carousel Viewport */}
-              <div 
-                ref={galleryContainerRef}
-                className="relative aspect-[16/10] sm:aspect-[16/9] md:aspect-[21/10] overflow-hidden border border-white/5 bg-zinc-950/60 shadow-2xl"
-              >
-                <motion.div
-                  drag="x"
-                  dragConstraints={{
-                    left: -galleryContainerWidth * (filteredImages.length - 1),
-                    right: 0
-                  }}
-                  dragElastic={0.6}
-                  style={{ x: galleryDragX }}
-                  onDragEnd={(event, info) => {
-                    const offset = info.offset.x;
-                    const velocity = info.velocity.x;
-                    const swipeThreshold = galleryContainerWidth * 0.15; // 15% of container width
-                    
-                    let newSlide = activeSlide;
-                    
-                    if (offset < -swipeThreshold || velocity < -400) {
-                      // Swiped left -> next slide
-                      newSlide = Math.min(filteredImages.length - 1, activeSlide + 1);
-                    } else if (offset > swipeThreshold || velocity > 400) {
-                      // Swiped right -> prev slide
-                      newSlide = Math.max(0, activeSlide - 1);
-                    }
-                    
-                    if (newSlide === activeSlide) {
-                      // Snap back to current slide
-                      animate(galleryDragX, -activeSlide * galleryContainerWidth, {
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30
-                      });
-                    } else {
-                      setActiveSlide(newSlide);
-                    }
-                  }}
-                  className="flex w-full h-full cursor-grab active:cursor-grabbing"
-                >
-                  {filteredImages.map((img, idx) => (
-                    <div key={idx} className="w-full h-full shrink-0 relative select-none">
-                      <img
-                        src={img.url}
-                        alt={`Corte Punto Barba ${idx + 1}`}
-                        className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                  ))}
-                </motion.div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                
-                {/* Arrow Navigation Controls */}
-                <button
-                  onClick={handlePrevSlide}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/10 bg-black/60 hover:bg-black hover:border-gold/50 flex items-center justify-center text-white hover:text-gold transition-all duration-300 z-10 cursor-pointer active:scale-90"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handleNextSlide}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/10 bg-black/60 hover:bg-black hover:border-gold/50 flex items-center justify-center text-white hover:text-gold transition-all duration-300 z-10 cursor-pointer active:scale-90"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Slider dots indicator */}
-              <div className="flex justify-center gap-2 mt-6">
-                {filteredImages.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveSlide(idx);
-                    }}
-                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === activeSlide ? 'w-6 bg-gold' : 'w-1.5 bg-white/20 hover:bg-white/40'}`}
-                  />
-                ))}
-              </div>
-              
-              <div className="text-center mt-8">
-                <a 
-                  href="https://www.instagram.com/puntobarba.barberia/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-charcoal hover:text-gold font-display font-semibold uppercase tracking-[0.2em] text-xs transition-colors duration-300"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>Seguinos en @puntobarba.barberia</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Booking CTA Banner */}
         <section id="reserva" className="py-28 bg-dark-bg border-b border-white/5 relative overflow-hidden">
@@ -709,74 +836,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* Productos Section (La Botica) */}
-        <section id="productos" className="py-24 md:py-36 bg-[#090909] border-b border-white/5 relative overflow-hidden">
-          {/* Ambient background glows */}
-          <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-gold/[0.02] rounded-full blur-[120px] pointer-events-none" />
 
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-20">
-              <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs mb-3 block">
-                La Botica de Punto Barba
-              </span>
-              <h2 className="text-3xl md:text-5xl font-display font-bold uppercase tracking-wide text-light-gray">
-                Cuidado & Estilo
-              </h2>
-              <p className="mt-4 text-charcoal text-xs md:text-sm font-sans tracking-wide max-w-md mx-auto">
-                Una curaduría de fórmulas botánicas y productos de culto esenciales para la rutina del hombre contemporáneo.
-              </p>
-              <div className="h-[0.5px] w-16 bg-gold/50 mt-6 mx-auto" />
-            </div>
-
-            {/* Apothecary Minimal Grid (No Cards) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-white/5 bg-zinc-950/20">
-              {products.map((prod, index) => (
-                <div 
-                  key={prod.id} 
-                  className={`group p-8 flex flex-col justify-between transition-colors hover:bg-white/[0.01] border-white/5
-                    ${index < 3 ? 'lg:border-r' : ''} 
-                    ${index % 2 === 0 ? 'sm:border-r lg:border-r-0' : ''} 
-                    ${index > 1 ? 'border-t sm:border-t-0' : ''} 
-                    ${index > 0 ? 'border-t sm:border-t-0' : ''}
-                    sm:border-t lg:border-t-0`}
-                >
-                  <div className="space-y-6">
-                    <div className="relative aspect-square overflow-hidden bg-zinc-950/60 border border-white/5">
-                      <img 
-                        src={prod.img} 
-                        alt={prod.name} 
-                        className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-102 transition-all duration-1000"
-                        referrerPolicy="no-referrer"
-                      />
-                      <span className="absolute top-3 left-3 bg-zinc-950/90 text-gold font-sans font-semibold text-[8px] tracking-[0.2em] px-2.5 py-1 uppercase border border-white/10">
-                        {prod.tag}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-display font-semibold uppercase text-light-gray tracking-wide">{prod.name}</h3>
-                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed line-clamp-3">{prod.desc}</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 space-y-4">
-                    <span className="text-xl font-display font-bold text-gold block">{prod.price}</span>
-                    <a 
-                      href={`https://wa.me/5493413293388?text=Hola%20Punto%20Barba!%20Me%20interesa%20comprar%20el%20producto%20${encodeURIComponent(prod.name)}%20de%20su%20cat%C3%A1logo.%20%C2%BFHay%20stock%20disponible?`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 py-3 font-display font-semibold uppercase text-[10px] tracking-[0.25em] text-gold hover:text-white transition-all duration-300 text-light-gray border border-gold/25 hover:border-gold/60 rounded-full group/btn cursor-pointer"
-                    >
-                      <span>Consultar Stock</span>
-                      <span className="inline-block transform transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* Contact Section */}
         <section id="contacto" className="py-24 md:py-36 bg-dark-bg relative overflow-hidden">
@@ -789,7 +849,6 @@ export default function App() {
               {/* Info Column */}
               <div className="space-y-12 text-center lg:text-left">
                 <div className="space-y-4">
-                  <span className="text-gold font-display font-semibold uppercase tracking-[0.25em] text-xs block">El Taller</span>
                   <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-wide text-light-gray">Ubicanos</h2>
                   <div className="h-[0.5px] w-12 bg-gold/50 my-4 mx-auto lg:mx-0" />
                 </div>
@@ -868,50 +927,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Immersive Booking App Modal Overlay */}
-      <AnimatePresence>
-        {isBookingOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 md:p-6 overflow-y-auto"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setIsBookingOpen(false);
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-[92%] h-auto max-h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl p-5 sm:p-8 md:p-10 text-white overflow-y-auto rounded-md concrete-texture flex flex-col justify-start"
-            >
-              {/* Close Button */}
-              <button 
-                onClick={() => {
-                  setIsBookingOpen(false);
-                  setSelectedServiceForBooking(null);
-                }}
-                className="absolute top-4 right-4 md:top-6 md:right-6 text-charcoal hover:text-white transition-colors cursor-pointer p-2 hover:bg-white/5 rounded-full z-50"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <BookingSystem 
-                bookingTab={bookingTab} 
-                setBookingTab={setBookingTab} 
-                onClose={() => {
-                  setIsBookingOpen(false);
-                  setSelectedServiceForBooking(null);
-                }}
-                forceClientFlow={true}
-                initialServiceName={selectedServiceForBooking}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {renderBookingModal()}
     </div>
   );
 }
