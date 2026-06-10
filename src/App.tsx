@@ -32,6 +32,7 @@ import { DEFAULT_PRODUCTS } from './lib/firestore';
 import logoSymbol from './assets/logo_symbol.png';
 import logoHorizontal from './assets/logo_horizontal.png';
 import logoVertical from './assets/logo_vertical.png';
+import logoTextOnly from './assets/logo_text_only.png';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -320,10 +321,12 @@ export default function App() {
                 className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain opacity-0 pointer-events-none" 
                 aria-hidden="true"
               />
-              <div className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none opacity-0 pointer-events-none" aria-hidden="true">
-                <span className="text-[25px] md:text-[32.5px] tracking-tight">PUNTO</span>
-                <span className="text-[25px] md:text-[32.5px] tracking-tight">BARBA</span>
-              </div>
+              <img 
+                src={logoTextOnly} 
+                alt="" 
+                className="h-[28px] md:h-[37px] w-auto object-contain opacity-0 pointer-events-none ml-1.5 md:ml-2" 
+                aria-hidden="true"
+              />
             </>
           ) : (
             <>
@@ -334,14 +337,13 @@ export default function App() {
                 className="h-[40px] w-[32.6px] md:h-[52px] md:w-[42.4px] object-contain" 
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
               />
-              <motion.div 
+              <motion.img 
                 layoutId={currentPath === '/' ? "logo-text" : undefined}
-                className="flex flex-col justify-center leading-[0.8] font-sans font-black text-gold select-none"
+                src={logoTextOnly} 
+                alt="Punto Barba" 
+                className="h-[28px] md:h-[37px] w-auto object-contain ml-1.5 md:ml-2" 
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
-              >
-                <motion.span layoutId={currentPath === '/' ? "word-punto" : undefined} className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
-                <motion.span layoutId={currentPath === '/' ? "word-barba" : undefined} className="text-[25px] md:text-[32.5px] tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
-              </motion.div>
+              />
             </>
           )}
         </div>
@@ -706,16 +708,15 @@ export default function App() {
                 className="w-[100px] h-[122.5px] md:w-[150px] md:h-[183.7px] object-contain"
                 transition={{ type: "spring", stiffness: 45, damping: 15 }}
               />
-              <motion.div 
+              <motion.img 
                 layoutId="logo-text"
+                src={logoTextOnly} 
+                alt="Punto Barba" 
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 0.9, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 1.0, ease: "easeInOut" }}
-                className="flex flex-col items-center justify-center leading-[0.8] font-sans font-black text-gold mt-1 md:mt-1.5 text-[34px] md:text-[50px] select-none"
-              >
-                <motion.span layoutId="word-punto" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>PUNTO</motion.span>
-                <motion.span layoutId="word-barba" className="tracking-tight" transition={{ type: "spring", stiffness: 45, damping: 15 }}>BARBA</motion.span>
-              </motion.div>
+                className="h-[60px] md:h-[90px] w-auto object-contain mt-3 select-none"
+              />
             </motion.div>
           </motion.div>
         )}
