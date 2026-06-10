@@ -204,7 +204,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   // Barber Admin State
   const [user, setUser] = useState<any>(null);
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
-  const [isJose, setIsJose] = useState(false);
+  const [isIvan, setIsIvan] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios' | 'catalogo'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
@@ -388,7 +388,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       const adminEmails = ['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
       const barbersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Barber));
 
-      // Sort: Admin (Jose) first, then others by name
+      // Sort: Admin (Ivan) first, then others by name
       const sortedBarbers = barbersData.sort((a, b) => {
         const aName = a.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const bName = b.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -397,8 +397,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         if (adminEmails.includes(b.email)) return 1;
 
         // Fallback to name if email doesn't match
-        if (aName.includes('jose')) return -1;
-        if (bName.includes('jose')) return 1;
+        if (aName.includes('ivan')) return -1;
+        if (bName.includes('ivan')) return 1;
 
         return a.name.localeCompare(b.name);
       });
@@ -418,15 +418,15 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       setUser(u);
       if (u) {
         const adminEmails = ['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
-        const isJoseUser = adminEmails.includes(u.email || '');
-        setIsJose(isJoseUser && !forceClientFlow);
+        const isIvanUser = adminEmails.includes(u.email || '');
+        setIsIvan(isIvanUser && !forceClientFlow);
 
         // Check if user is a barber in the dynamic list
         const barber = barbers.find(b => b.email === u.email);
-        if ((barber || isJoseUser) && !forceClientFlow) {
+        if ((barber || isIvanUser) && !forceClientFlow) {
           setIsBarberAdmin(true);
-          // If not Jose, auto-select the barber
-          if (!isJoseUser && barber && !selectedBarber) {
+          // If not Ivan, auto-select the barber
+          if (!isIvanUser && barber && !selectedBarber) {
             setSelectedBarber(barber);
           }
         } else {
@@ -434,7 +434,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         }
       } else {
         setIsBarberAdmin(false);
-        setIsJose(false);
+        setIsIvan(false);
       }
     });
     return unsubscribe;
@@ -525,7 +525,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
   // Finanzas Data Fetching
   useEffect(() => {
-    if (!isJose || activeAdminTab !== 'finanzas') return;
+    if (!isIvan || activeAdminTab !== 'finanzas') return;
     
     let start, end;
     if (finanzasViewMode === 'monthly') {
@@ -551,7 +551,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'appointments'));
 
     return () => unsubAppts();
-  }, [finanzasDate, isJose, activeAdminTab, finanzasViewMode]);
+  }, [finanzasDate, isIvan, activeAdminTab, finanzasViewMode]);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -1385,7 +1385,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   };
 
   const handleSavePrices = async () => {
-    if (!isJose) return;
+    if (!isIvan) return;
     setSavingPrices(true);
     try {
       const updatedServices = services.map(svc => {
@@ -1701,9 +1701,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         )}
       </div>
 
-      {isBarberAdmin && (
+       {isBarberAdmin && (
         <div className="space-y-8 mb-8">
-          {isJose ? (
+          {isIvan ? (
             <div className="flex flex-wrap gap-4 border-b border-white/5 pb-4">
               <button
                 onClick={() => setActiveAdminTab('agenda')}
@@ -1771,7 +1771,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {barbers
-                  .filter(b => isJose || b.email === user?.email)
+                  .filter(b => isIvan || b.email === user?.email)
                   .map(b => (
                     <button
                       key={b.id}
@@ -2792,7 +2792,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         </div>
       )}
 
-      {isBarberAdmin && isJose && activeAdminTab === 'finanzas' && (
+      {isBarberAdmin && isIvan && activeAdminTab === 'finanzas' && (
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-black p-6 border border-white/5 gap-4">
             <h3 className="font-display font-black uppercase text-2xl text-light-gray flex items-center gap-3">
@@ -2872,45 +2872,45 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           <div className="bg-zinc-900 border border-white/5 p-6">
             <div className="space-y-4">
               {(() => {
-                let totalJoseCuts = 0;
+                let totalIvanCuts = 0;
                 let totalOthersCuts = 0;
                 
-                let totalJosePending = 0;
+                let totalIvanPending = 0;
                 let totalOthersPending = 0;
 
                 const processedAppts = finanzasAppts.map(appt => {
                   const barber = barbers.find(b => b.id === appt.barberId);
-                  const isJoseCut = barber?.id === 'jose-hernandez' || barber?.email === 'puntobarba.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || barber?.email === 'puntobarbabarberia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+                  const isIvanCut = barber?.id === 'ivan-nunez' || barber?.email === 'puntobarba.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || barber?.email === 'puntobarbabarberia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
                   const svcPrice = appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0);
                   
-                  let joseShare = 0;
+                  let ivanShare = 0;
                   let barberShare = 0;
 
                   if (appt.completed) {
-                    if (isJoseCut) {
-                      joseShare = svcPrice;
-                      totalJoseCuts += svcPrice;
+                    if (isIvanCut) {
+                      ivanShare = svcPrice;
+                      totalIvanCuts += svcPrice;
                     } else {
-                      joseShare = svcPrice * 0.5;
+                      ivanShare = svcPrice * 0.5;
                       barberShare = svcPrice * 0.5;
                       totalOthersCuts += svcPrice;
                     }
                   } else {
-                    if (isJoseCut) {
-                      totalJosePending += svcPrice;
+                    if (isIvanCut) {
+                      totalIvanPending += svcPrice;
                     } else {
                       totalOthersPending += svcPrice;
                     }
                   }
 
-                  return { ...appt, barberName: barber?.name || 'Desconocido', isJoseCut, svcPrice, joseShare, barberShare };
+                  return { ...appt, barberName: barber?.name || 'Desconocido', isIvanCut, svcPrice, ivanShare, barberShare };
                 }).sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
 
-                const totalRevenuePaid = totalJoseCuts + totalOthersCuts;
-                const totalJoseEarnsPaid = totalJoseCuts + (totalOthersCuts * 0.5);
+                const totalRevenuePaid = totalIvanCuts + totalOthersCuts;
+                const totalIvanEarnsPaid = totalIvanCuts + (totalOthersCuts * 0.5);
                 const totalOthersEarnsPaid = totalOthersCuts * 0.5;
 
-                const totalPendingRevenue = totalJosePending + totalOthersPending;
+                const totalPendingRevenue = totalIvanPending + totalOthersPending;
                 const totalEstimatedRevenue = totalRevenuePaid + totalPendingRevenue;
 
                 // Desglose individual por barbero (solo cobrados/completados)
@@ -2919,16 +2919,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   const completedAppts = barberAppts.filter(a => a.completed);
                   const pendingAppts = barberAppts.filter(a => !a.completed);
 
-                  const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || barber.email === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
+                  const isIvanBarber = barber.id === 'ivan-nunez' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || barber.email === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
 
                   const totalEarnedVal = completedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
-                  const commissionVal = isJoseBarber ? totalEarnedVal : totalEarnedVal * 0.5;
+                  const commissionVal = isIvanBarber ? totalEarnedVal : totalEarnedVal * 0.5;
 
                   return {
                     id: barber.id,
                     name: barber.name,
                     photo: barber.photo,
-                    isJoseBarber,
+                    isIvanBarber,
                     cutsCount: completedAppts.length,
                     pendingCount: pendingAppts.length,
                     totalEarned: totalEarnedVal,
@@ -2947,8 +2947,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         </p>
                       </div>
                       <div className="bg-black p-6 border border-gold/50">
-                        <p className="text-gold font-bold uppercase tracking-widest text-xs mb-2">Cierre Caja Jose</p>
-                        <p className="font-display font-black text-3xl text-gold">${totalJoseEarnsPaid.toLocaleString('es-AR')}</p>
+                        <p className="text-gold font-bold uppercase tracking-widest text-xs mb-2">Cierre Caja Iván</p>
+                        <p className="font-display font-black text-3xl text-gold">${totalIvanEarnsPaid.toLocaleString('es-AR')}</p>
                         <p className="text-[9px] text-zinc-500 mt-2 font-bold uppercase">100% cortes propios + 50% otros</p>
                       </div>
                       <div className="bg-black p-6 border border-white/5">
@@ -2991,7 +2991,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-[9px] text-charcoal font-bold uppercase">{b.isJoseBarber ? 'Dueño (100%)' : 'Comisión (50%)'}</p>
+                              <p className="text-[9px] text-charcoal font-bold uppercase">{b.isIvanBarber ? 'Dueño (100%)' : 'Comisión (50%)'}</p>
                               <p className="font-display font-black text-lg text-light-gray">
                                 ${b.commission.toLocaleString('es-AR')}
                               </p>
@@ -3008,15 +3008,15 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         : processedAppts;
 
                       const filteredRevenue = filteredAppts.reduce((sum, a) => sum + (a.completed ? a.svcPrice : 0), 0);
-                      const filteredJoseShare = filteredAppts.reduce((sum, a) => sum + (a.completed ? a.joseShare : 0), 0);
-                      const filteredBarberShare = filteredAppts.reduce((sum, a) => sum + (a.completed ? (a.isJoseCut ? 0 : a.barberShare) : 0), 0);
+                      const filteredIvanShare = filteredAppts.reduce((sum, a) => sum + (a.completed ? a.ivanShare : 0), 0);
+                      const filteredBarberShare = filteredAppts.reduce((sum, a) => sum + (a.completed ? (a.isIvanCut ? 0 : a.barberShare) : 0), 0);
 
                       // Cómputo de lo que cobra cada barbero en el listado actual
                       const individualBarberEarnings = barbers.map(barber => {
                         const barberCompletedAppts = filteredAppts.filter(a => a.barberId === barber.id && a.completed);
                         const totalEarnedVal = barberCompletedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
-                        const isJoseBarber = barber.id === 'jose-hernandez' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || barber.email === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('jose'));
-                        const commissionVal = isJoseBarber ? totalEarnedVal : totalEarnedVal * 0.5;
+                        const isIvanBarber = barber.id === 'ivan-nunez' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || barber.email === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
+                        const commissionVal = isIvanBarber ? totalEarnedVal : totalEarnedVal * 0.5;
                         return {
                           name: barber.name,
                           commission: commissionVal
@@ -3053,7 +3053,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                   <th className="p-3">Servicio</th>
                                   <th className="p-3">Estado</th>
                                   <th className="p-3 text-right">Precio</th>
-                                  <th className="p-3 text-right">Para Jose</th>
+                                  <th className="p-3 text-right">Para Iván</th>
                                   <th className="p-3 text-right">Para Barbero</th>
                                 </tr>
                               </thead>
@@ -3079,10 +3079,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                     </td>
                                     <td className="p-3 text-right font-bold">${appt.svcPrice.toLocaleString('es-AR')}</td>
                                     <td className="p-3 text-right text-gold font-bold">
-                                      {appt.completed ? `$${appt.joseShare.toLocaleString('es-AR')}` : '-'}
+                                      {appt.completed ? `$${appt.ivanShare.toLocaleString('es-AR')}` : '-'}
                                     </td>
                                     <td className="p-3 text-right text-zinc-400 font-bold">
-                                      {appt.completed ? (appt.isJoseCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
+                                      {appt.completed ? (appt.isIvanCut ? '-' : `$${appt.barberShare.toLocaleString('es-AR')}`) : '-'}
                                     </td>
                                   </tr>
                                 ))}
@@ -3127,7 +3127,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         </div>
       )}
 
-      {isBarberAdmin && isJose && activeAdminTab === 'precios' && (
+      {isBarberAdmin && isIvan && activeAdminTab === 'precios' && (
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-4 mb-6 gap-4">
@@ -3262,7 +3262,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         </div>
       )}
 
-      {isBarberAdmin && isJose && activeAdminTab === 'catalogo' && (
+      {isBarberAdmin && isIvan && activeAdminTab === 'catalogo' && (
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
             <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">

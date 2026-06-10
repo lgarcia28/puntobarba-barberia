@@ -113,8 +113,11 @@ export async function seedServices() {
     }
 
     const settingsRef = doc(db, 'settings', 'shop');
-    await setDoc(settingsRef, { services: SERVICES }, { merge: true });
-    console.log('Services seeded/synced successfully in Firestore.');
+    const snap = await getDoc(settingsRef);
+    if (!snap.exists() || !snap.data()?.services) {
+      await setDoc(settingsRef, { services: SERVICES }, { merge: true });
+      console.log('Services seeded successfully in Firestore (was empty/missing).');
+    }
   } catch (error) {
     console.error('Error seeding services:', error);
   }
@@ -132,21 +135,16 @@ export async function seedBarbers() {
     // Get all current barbers in Firestore
     const snapshot = await getDocs(collection(db, 'barbers'));
     
-    // Delete any barber doc whose ID is NOT in our local BARBERS array
-    const localIds = BARBERS.map(b => b.id);
-    for (const docSnap of snapshot.docs) {
-      if (!localIds.includes(docSnap.id)) {
-        await deleteDoc(doc(db, 'barbers', docSnap.id));
-        console.log(`Deleted old barber from DB: ${docSnap.id}`);
+    // Only seed if there are no barbers in the database
+    if (snapshot.empty) {
+      for (const barber of BARBERS) {
+        const barberRef = doc(db, 'barbers', barber.id);
+        await setDoc(barberRef, barber);
       }
+      console.log('Barbers seeded successfully (DB was empty).');
+    } else {
+      console.log('Skipping barber seeding: database already has barbers.');
     }
-
-    // Write/Update local barbers
-    for (const barber of BARBERS) {
-      const barberRef = doc(db, 'barbers', barber.id);
-      await setDoc(barberRef, barber, { merge: true });
-    }
-    console.log('Barbers seeded/synced successfully.');
   } catch (error) {
     if (error instanceof Error && error.message.includes('insufficient permissions')) {
       console.log('Insufficient permissions to seed barbers.');
