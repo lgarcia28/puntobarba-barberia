@@ -756,15 +756,15 @@ export default function App() {
           {/* Ambient background glow */}
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gold/[0.03] rounded-full blur-[150px] pointer-events-none" />
           
-          <div className="relative z-20 max-w-7xl mx-auto px-6 w-full">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-20 items-center">
+          <div className="relative z-20 max-w-4xl mx-auto px-6 w-full">
+            <div className="flex justify-center items-center">
               
               {/* Text Column */}
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="col-span-1 md:col-span-7 space-y-8 text-center md:text-left"
+                className="space-y-8 text-center"
               >
                 <div className="space-y-4 hidden md:block">
                   <span className="inline-block px-4 py-1 bg-gold/10 border border-gold/20 text-gold font-sans text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
@@ -776,41 +776,17 @@ export default function App() {
                   Tu estilo habla antes que vos.
                 </h1>
                 
-                <p className="max-w-md mx-auto md:mx-0 text-charcoal text-sm md:text-base font-sans tracking-wide leading-relaxed">
+                <p className="max-w-md mx-auto text-charcoal text-sm md:text-base font-sans tracking-wide leading-relaxed">
                   Agenda tu turno en línea en solo 1 minuto
                 </p>
                 
-                <div className="flex justify-center md:justify-start pt-4">
+                <div className="flex justify-center pt-4">
                   <button 
                     onClick={() => { setSelectedServiceForBooking(null); setBookingTab('agendar'); setIsBookingOpen(true); }}
                     className="w-full sm:w-auto btn-pill-solid"
                   >
                     Reservar turno
                   </button>
-                </div>
-              </motion.div>
-              
-              {/* Image Frame Column */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="col-span-1 md:col-span-5 hidden md:block"
-              >
-                <div className="relative group p-6">
-                  {/* Decorative Gold Offset Frame */}
-                  <div className="absolute inset-0 border-[0.5px] border-gold/30 translate-x-4 translate-y-4 transition-transform duration-700 group-hover:translate-x-2 group-hover:translate-y-2" />
-                  
-                  {/* Main Image */}
-                  <div className="relative aspect-[3/4] overflow-hidden border border-white/5 bg-zinc-950 shadow-2xl">
-                    <img 
-                      src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1000" 
-                      alt="Punto Barba Barbería" 
-                      className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/85 via-transparent to-transparent opacity-90" />
-                  </div>
                 </div>
               </motion.div>
 
