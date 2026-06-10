@@ -154,7 +154,7 @@ export default function App() {
     let unsubBarbers = () => {};
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'puntobarba.barber@gmail.com'];
+        const adminEmails = ['leoneldariogarcia@gmail.com', 'jhbarber87@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
         const isJoseUser = adminEmails.includes(user.email || '');
         const q = query(collection(db, 'barbers'));
         unsubBarbers = onSnapshot(q, (snapshot) => {

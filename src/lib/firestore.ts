@@ -68,7 +68,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 }
 
 function isAdminEmail(email: string | null | undefined) {
-  return email === 'leoneldariogarcia@gmail.com' || email === 'jhbarber87@gmail.com' || email === 'puntobarba.barber@gmail.com';
+  return email === 'leoneldariogarcia@gmail.com' || email === 'jhbarber87@gmail.com' || email === 'puntobarba.barber@gmail.com' || email === 'puntobarbabarberia@gmail.com';
 }
 
 export const BARBERS = [
