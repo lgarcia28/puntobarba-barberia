@@ -121,18 +121,18 @@ interface BookingSystemProps {
 }
 
 const SERVICE_DESCRIPTIONS: Record<string, string> = {
-  'corte-cabello': 'Corte clásico o moderno con asesoramiento de estilo y lavado final.',
+  'corte-cabello': 'Corte clásico o moderno con asesoramiento de estilo y peinado.',
   'corte-tijera': 'Corte artesanal completo utilizando únicamente tijeras para una caída natural.',
-  'barba-express': 'Recortado rápido de barba con máquina y perfilado de contornos.',
-  'barba-moderna': 'Diseño de barba con afeitado de contornos a navaja y nutrición con óleo.',
-  'afeitado-clasico': 'Ritual tradicional con toallas calientes, espuma templada y afeitado a navaja.',
+  'barba-express': 'Recorte de barba y perfilado con máquina.',
+  'barba-moderna': 'Diseño de barba con afeitado de contorno a navaja, toallas calientes, masajes y nutrición con óleo.',
+  'afeitado-clasico': 'Ritual tradicional con toallas calientes, espuma templada, masajes y afeitado a navaja.',
   'ritual-facial': 'Tratamiento de hidratación y exfoliación facial para renovar la piel.',
-  'corte-perfilado-cejas': 'Combo de corte premium más diseño y perfilado de cejas detallado.',
-  'corte-b-express': 'Corte premium combinado con un recorte rápido de barba.',
-  'corte-b-moderna': 'Corte premium combinado con diseño de barba y afeitado a navaja.',
-  'corte-a-clasico': 'Combo definitivo: corte premium y el ritual completo de afeitado clásico.',
-  'corte-r-facial': 'Corte premium combinado con un relajante tratamiento facial hidratante.',
-  'servicio-vip': 'Experiencia VIP de 4 horas: Corte, barba completa, cejas, ritual facial y cortesía premium.'
+  'corte-perfilado-cejas': 'Combo de corte más diseño y perfilado de cejas detallado.',
+  'corte-b-express': 'Corte combinado con un recorte rápido de barba.',
+  'corte-b-moderna': 'Corte combinado con diseño de barba y afeitado a navaja.',
+  'corte-a-clasico': 'Combo definitivo: corte y el ritual completo de afeitado clásico.',
+  'corte-r-facial': 'Corte combinado con un relajante tratamiento facial hidratante.',
+  'servicio-vip': 'Experiencia VIP de 4 horas: Corte, barba completa, cejas, ritual facial y cortesía.'
 };
 
 const getServiceCategory = (service: any) => {
@@ -153,7 +153,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
-  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
+  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', birthdate: '' });
   const [selectedCourtesy, setSelectedCourtesy] = useState<string | null>(null);
   const [activeServiceCategory, setActiveServiceCategory] = useState<'Todos' | 'Cortes' | 'Barba' | 'Facial' | 'Combos'>('Todos');
   const [isFixedAppointment, setIsFixedAppointment] = useState(false);
@@ -337,7 +337,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
   // Edit Appointment Modal State
   const [editingAppt, setEditingAppt] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ customerName: '', customerPhone: '', service: '', customPrice: '' });
+  const [editForm, setEditForm] = useState({ customerName: '', customerPhone: '', service: '', customPrice: '', customerBirthdate: '' });
 
   // Finanzas State
   const [finanzasDate, setFinanzasDate] = useState(new Date());
@@ -691,7 +691,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBarber || !selectedService || !selectedTime || !customerInfo.name || !customerInfo.phone) return;
+    if (!selectedBarber || !selectedService || !selectedTime || !customerInfo.name || !customerInfo.phone || !customerInfo.birthdate) return;
 
     setLoading(true);
     setError(null);
@@ -821,6 +821,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               barberId: selectedBarber.id,
               customerName: customerInfo.name,
               customerPhone: normalizePhone(customerInfo.phone),
+              customerBirthdate: customerInfo.birthdate,
               service: selectedService.name,
               startTime: Timestamp.fromDate(currentStartTime),
               endTime: Timestamp.fromDate(currentEndTime),
@@ -971,6 +972,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             barberId: selectedBarber.id,
             customerName: customerInfo.name,
             customerPhone: normalizePhone(customerInfo.phone),
+            customerBirthdate: customerInfo.birthdate,
             service: selectedService.name,
             startTime: Timestamp.fromDate(baseStartTime),
             endTime: Timestamp.fromDate(baseEndTime),
@@ -1210,6 +1212,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       const updates: any = {
         customerName: editForm.customerName.trim(),
         customerPhone: normalizePhone(editForm.customerPhone.trim()),
+        customerBirthdate: editForm.customerBirthdate || '',
         service: editForm.service,
       };
       if (editForm.customPrice !== '') {
@@ -2266,7 +2269,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                         customerName: appt.customerName,
                                         customerPhone: appt.customerPhone,
                                         service: appt.service,
-                                        customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
+                                        customPrice: appt.customPrice != null ? String(appt.customPrice) : '',
+                                        customerBirthdate: appt.customerBirthdate || ''
                                       });
                                     }}
                                     className="text-charcoal hover:text-white p-2 hover:bg-white/10 transition-colors border border-white/10 rounded-sm flex items-center justify-center"
@@ -2409,7 +2413,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                                 customerName: appt.customerName,
                                                 customerPhone: appt.customerPhone,
                                                 service: appt.service,
-                                                customPrice: appt.customPrice != null ? String(appt.customPrice) : ''
+                                                customPrice: appt.customPrice != null ? String(appt.customPrice) : '',
+                                                customerBirthdate: appt.customerBirthdate || ''
                                               });
                                             }}
                                             className="text-charcoal hover:text-white p-2 hover:bg-white/10 transition-colors border border-white/10 rounded-sm flex items-center justify-center"
@@ -4003,6 +4008,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                           className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base"
                         />
+                        <div className="space-y-1 text-left bg-black p-4 border border-white/10">
+                          <label className="block text-[10px] font-black uppercase text-charcoal tracking-widest mb-1 pl-1">Fecha de Nacimiento</label>
+                          <input
+                            type="date"
+                            required
+                            value={customerInfo.birthdate}
+                            onChange={e => setCustomerInfo({ ...customerInfo, birthdate: e.target.value })}
+                            className="w-full bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base text-light-gray"
+                          />
+                        </div>
                         {!reschedulingApptId && (
                           <div className="space-y-3">
                             <label className="flex items-center gap-3 text-sm font-bold uppercase cursor-pointer hover:text-gold bg-zinc-900 border border-white/10 p-4 transition-colors">
@@ -4133,6 +4148,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     type="tel"
                     value={editForm.customerPhone}
                     onChange={(e) => setEditForm({ ...editForm, customerPhone: e.target.value })}
+                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Fecha de Nacimiento</label>
+                  <input
+                    type="date"
+                    value={editForm.customerBirthdate}
+                    onChange={(e) => setEditForm({ ...editForm, customerBirthdate: e.target.value })}
                     className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
                   />
                 </div>

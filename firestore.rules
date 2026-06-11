@@ -94,6 +94,11 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    match /birthday_logs/{logId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     match /blocks/{blockId} {
       allow read: if true;
       allow create: if isAuthenticated() && (isAdmin() || isBarber(request.resource.data.barberId));

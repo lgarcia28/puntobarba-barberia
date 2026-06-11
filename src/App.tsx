@@ -68,9 +68,9 @@ export default function App() {
         setServices(docSnap.data().services);
       } else {
         setServices([
-          { id: 'corte', name: 'Corte de Pelo Premium', duration: 30, price: 18000, desc: "Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y lavado final." },
-          { id: 'barba', name: 'Barba de Autor', duration: 30, price: 13000, desc: "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites premium de cedro y sándalo." },
-          { id: 'corte-barba', name: 'Corte & Barba (Combo)', duration: 60, price: 25000, desc: "La experiencia de cuidado definitiva. Combina nuestro corte premium y el spa completo de barba en una única sesión de una hora." }
+          { id: 'corte', name: 'Corte de Pelo', duration: 30, price: 18000, desc: "Degradados de precisión, corte clásico a tijera y texturizado personalizado. Incluye asesoramiento de visagismo y peinado." },
+          { id: 'barba', name: 'Barba de Autor', duration: 30, price: 13000, desc: "Ritual completo de toallas calientes, perfilado detallado con navaja, recortado simétrico y nutrición con aceites de cedro y sándalo." },
+          { id: 'corte-barba', name: 'Corte & Barba (Combo)', duration: 60, price: 25000, desc: "La experiencia de cuidado definitiva. Combina nuestro corte y el spa completo de barba en una única sesión de una hora." }
         ]);
       }
     });

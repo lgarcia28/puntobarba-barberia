@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp, getDoc, runTransaction } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, Timestamp, getDoc, runTransaction, setDoc } from 'firebase/firestore';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -55,6 +55,96 @@ async function sendWhatsAppMessage(phone: string, message: string) {
   } else {
     throw new Error("API de mensajes no configurada");
   }
+}
+
+function getArgentinaDate() {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const argTime = new Date(utc - (3 * 3600000));
+  return argTime;
+}
+
+async function processBirthdays(db: any) {
+  const results: { sent: string[], errors: string[] } = { sent: [], errors: [] };
+  if (!db) {
+    throw new Error("Base de datos no inicializada");
+  }
+
+  try {
+    const argDate = getArgentinaDate();
+    const argHour = argDate.getHours();
+
+    // Solo enviar felicitaciones entre las 9:00 y las 20:00 (hora de Argentina)
+    if (argHour < 9 || argHour >= 20) {
+      console.log(`[Birthdays Cron] Fuera de horario permitido (Hora actual Argentina: ${argHour}hs). No se enviarán saludos de cumpleaños.`);
+      return results;
+    }
+
+    const argYear = argDate.getFullYear();
+    const argMonth = String(argDate.getMonth() + 1).padStart(2, '0');
+    const argDay = String(argDate.getDate()).padStart(2, '0');
+    const todayMMDD = `${argMonth}-${argDay}`;
+
+    // Obtener todos los turnos confirmados para agrupar por cliente
+    const apptsQuery = query(
+      collection(db, 'appointments'),
+      where('status', '==', 'confirmed')
+    );
+    const snap = await getDocs(apptsQuery);
+
+    // Agrupar por teléfono para tener clientes únicos
+    const customersMap = new Map<string, { name: string, birthdate: string }>();
+    snap.forEach(docSnap => {
+      const appt = docSnap.data();
+      if (appt.customerPhone && appt.customerBirthdate) {
+        customersMap.set(appt.customerPhone, {
+          name: appt.customerName || 'Cliente',
+          birthdate: appt.customerBirthdate
+        });
+      }
+    });
+
+    for (const [phone, customer] of customersMap.entries()) {
+      const parts = customer.birthdate.split('-');
+      if (parts.length < 3) continue; // Formato inválido
+      const birthMMDD = `${parts[1]}-${parts[2]}`;
+
+      if (birthMMDD === todayMMDD) {
+        // Verificar si ya se envió el saludo este año
+        const logId = `birthday_${phone}_${argYear}`;
+        const logRef = doc(db, 'birthday_logs', logId);
+        const logSnap = await getDoc(logRef);
+
+        if (!logSnap.exists()) {
+          const firstName = customer.name.trim().split(" ")[0];
+          const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+          const message = `¡Feliz cumpleaños, ${formattedName}! 🎉🎂\nTe deseamos un excelente día y muchas felicidades de parte de todo el equipo de Punto Barba. ¡Que pases un gran día! 💈✂️`;
+
+          try {
+            await sendWhatsAppMessage(phone, message);
+            
+            // Registrar marca de envío
+            await setDoc(logRef, {
+              phone,
+              name: customer.name,
+              year: argYear,
+              sentAt: Timestamp.now()
+            });
+
+            console.log(`[Birthdays] Saludo enviado exitosamente a ${customer.name} (${phone})`);
+            results.sent.push(`${customer.name} (${phone})`);
+          } catch (waErr: any) {
+            console.error(`[Birthdays] Error enviando saludo a ${phone}:`, waErr.message || waErr);
+            results.errors.push(`${phone}: ${waErr.message || String(waErr)}`);
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error("Error en processBirthdays:", err);
+    throw err;
+  }
+  return results;
 }
 
 export default async function handler(req: any, res: any) {
@@ -196,9 +286,10 @@ export default async function handler(req: any, res: any) {
       }
     }
     
-    return res.status(200).json({ success: true, ...results });
+    const bdays = await processBirthdays(db);
+    return res.status(200).json({ success: true, reminders: results, birthdays: bdays });
   } catch (error: any) {
     console.error("Error en handler de cron-reminders:", error);
-    return res.status(500).json({ error: "Error interno al enviar recordatorios", details: error.message });
+    return res.status(500).json({ error: "Error interno al enviar recordatorios o cumpleaños", details: error.message });
   }
 }
