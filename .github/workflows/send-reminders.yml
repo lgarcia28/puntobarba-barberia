@@ -14,22 +14,13 @@ jobs:
         env:
           APP_URL: ${{ secrets.APP_URL }}
         run: |
-          if [ -z "$APP_URL" ]; then
-            echo "=========================================================================="
-            echo "ERROR: ¡El secreto APP_URL no está configurado en tu repositorio de GitHub!"
-            echo "=========================================================================="
-            echo "Para configurarlo:"
-            echo "1. Ve a tu repositorio en GitHub.com"
-            echo "2. Haz clic en 'Settings' (Configuración) -> 'Secrets and variables' -> 'Actions'"
-            echo "3. Haz clic en 'New repository secret'"
-            echo "4. Ponle de nombre: APP_URL"
-            echo "5. Ponle de valor la URL de tu aplicación (ej: https://puntobarba-barberia.vercel.app)"
-            echo "=========================================================================="
-            exit 1
+          TARGET_URL="${{ secrets.APP_URL }}"
+          if [ -z "$TARGET_URL" ] || [[ "$TARGET_URL" == *"reset-art-barber-shop"* ]]; then
+            TARGET_URL="https://puntobarba-barberia.vercel.app"
           fi
           
           # Quitar barra diagonal final si existe
-          CLEAN_URL=$(echo "$APP_URL" | sed 's/\/$//')
+          CLEAN_URL=$(echo "$TARGET_URL" | sed 's/\/$//')
           
           echo "Disparando recordatorios en: $CLEAN_URL/api/cron-reminders"
           response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$CLEAN_URL/api/cron-reminders")
