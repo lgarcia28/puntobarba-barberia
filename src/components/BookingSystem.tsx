@@ -592,6 +592,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     return days;
   };
 
+  const isSundayEnabled = () => {
+    const sundaySchedule = getBarberDaySchedule(selectedBarber, 0);
+    return !!(sundaySchedule && sundaySchedule.isOpen);
+  };
+
   const getCalendarDays = () => {
     const days = [];
     const today = startOfDay(new Date());
@@ -600,9 +605,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     const startMonday = addDays(today, -daysToSubtract);
     
     let current = startMonday;
-    // We want to show 5 weeks of Monday-Saturday, which is 30 days
-    while (days.length < 30) {
-      if (getDay(current) !== 0) { // Skip Sunday
+    const showSunday = isSundayEnabled();
+    const targetLength = showSunday ? 35 : 30;
+    
+    while (days.length < targetLength) {
+      if (showSunday || getDay(current) !== 0) {
         days.push(current);
       }
       current = addDays(current, 1);
@@ -3784,16 +3791,19 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
                     </div>
 
-                    {/* Column Headers (Lunes a Sábado) */}
-                    <div className="grid grid-cols-6 gap-2 text-center mb-1 border-b border-white/5 pb-2">
-                      {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(dayName => (
-                        <span key={dayName} className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-charcoal">
+                    {/* Column Headers (Lunes a Sábado o Domingo) */}
+                    <div className={`grid ${isSundayEnabled() ? 'grid-cols-7' : 'grid-cols-6'} gap-1.5 sm:gap-2 text-center mb-1 border-b border-white/5 pb-2`}>
+                      {(isSundayEnabled() 
+                        ? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+                        : ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+                      ).map(dayName => (
+                        <span key={dayName} className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-charcoal">
                           {dayName}
                         </span>
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-6 gap-2 pb-2">
+                    <div className={`grid ${isSundayEnabled() ? 'grid-cols-7' : 'grid-cols-6'} gap-1.5 sm:gap-2 pb-2`}>
                       {getCalendarDays().map((date, i) => {
                         const today = startOfDay(new Date());
                         const isSelected = isSameDay(date, selectedDate);
