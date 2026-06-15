@@ -59,9 +59,7 @@ async function sendWhatsAppMessage(phone: string, message: string) {
 
 function getArgentinaDate() {
   const now = new Date();
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const argTime = new Date(utc - (3 * 3600000));
-  return argTime;
+  return new Date(now.getTime() - 3 * 3600000);
 }
 
 async function processBirthdays(db: any) {
@@ -72,7 +70,7 @@ async function processBirthdays(db: any) {
 
   try {
     const argDate = getArgentinaDate();
-    const argHour = argDate.getHours();
+    const argHour = argDate.getUTCHours();
 
     // Solo enviar felicitaciones entre las 9:00 y las 20:00 (hora de Argentina)
     if (argHour < 9 || argHour >= 20) {
@@ -80,9 +78,9 @@ async function processBirthdays(db: any) {
       return results;
     }
 
-    const argYear = argDate.getFullYear();
-    const argMonth = String(argDate.getMonth() + 1).padStart(2, '0');
-    const argDay = String(argDate.getDate()).padStart(2, '0');
+    const argYear = argDate.getUTCFullYear();
+    const argMonth = String(argDate.getUTCMonth() + 1).padStart(2, '0');
+    const argDay = String(argDate.getUTCDate()).padStart(2, '0');
     const todayMMDD = `${argMonth}-${argDay}`;
 
     // Obtener todos los turnos confirmados para agrupar por cliente
@@ -92,15 +90,20 @@ async function processBirthdays(db: any) {
     );
     const snap = await getDocs(apptsQuery);
 
-    // Agrupar por teléfono para tener clientes únicos
-    const customersMap = new Map<string, { name: string, birthdate: string }>();
+    // Agrupar por teléfono para tener clientes únicos, priorizando la fecha de nacimiento de la reserva más reciente
+    const customersMap = new Map<string, { name: string, birthdate: string, startTime: Date }>();
     snap.forEach(docSnap => {
       const appt = docSnap.data();
-      if (appt.customerPhone && appt.customerBirthdate) {
-        customersMap.set(appt.customerPhone, {
-          name: appt.customerName || 'Cliente',
-          birthdate: appt.customerBirthdate
-        });
+      if (appt.customerPhone && appt.customerBirthdate && appt.startTime) {
+        const existing = customersMap.get(appt.customerPhone);
+        const apptTime = appt.startTime.toDate();
+        if (!existing || apptTime > existing.startTime) {
+          customersMap.set(appt.customerPhone, {
+            name: appt.customerName || 'Cliente',
+            birthdate: appt.customerBirthdate,
+            startTime: apptTime
+          });
+        }
       }
     });
 
