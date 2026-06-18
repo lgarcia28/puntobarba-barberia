@@ -238,6 +238,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [newProduct, setNewProduct] = useState({ name: '', desc: '', price: '', tag: '', img: '' });
   const [catalogLoading, setCatalogLoading] = useState(false);
   const productFileInputRef = useRef<HTMLInputElement>(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, 'products'));
@@ -319,6 +320,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       toast.success('Producto agregado al catálogo');
       setNewProduct({ name: '', desc: '', price: '', tag: '', img: '' });
       if (productFileInputRef.current) productFileInputRef.current.value = '';
+      setIsProductModalOpen(false);
     } catch (err) {
       console.error(err);
       toast.error('Error al agregar producto');
@@ -3302,107 +3304,31 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       {isBarberAdmin && isIvan && activeAdminTab === 'catalogo' && (
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
-            <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
-              <ShoppingBag className="w-6 h-6 text-gold" />
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/5 pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <ShoppingBag className="w-6 h-6 text-gold" />
+                <div>
+                  <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
+                    Catálogo de Productos
+                  </h3>
+                  <p className="text-xs text-charcoal font-bold uppercase">
+                    Agrega, edita y elimina los productos disponibles en la botica
+                  </p>
+                </div>
+              </div>
               <div>
-                <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
-                  Catálogo de Productos
-                </h3>
-                <p className="text-xs text-charcoal font-bold uppercase">
-                  Agrega, edita y elimina los productos disponibles en la botica
-                </p>
+                <button
+                  onClick={() => {
+                    setNewProduct({ name: '', desc: '', price: '', tag: '', img: '' });
+                    if (productFileInputRef.current) productFileInputRef.current.value = '';
+                    setIsProductModalOpen(true);
+                  }}
+                  className="rounded-full bg-gold hover:bg-gold-hover text-neutral-900 px-6 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 flex items-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" /> Agregar Nuevo Producto
+                </button>
               </div>
             </div>
-
-            {/* Form to add a new product */}
-            <form onSubmit={handleNewProductSubmit} className="space-y-4 bg-black/50 border border-white/5 p-6 mb-8 rounded-sm">
-              <h4 className="font-display font-bold text-lg uppercase text-light-gray mb-4">Agregar Nuevo Producto</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre del Producto</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
-                    placeholder="Ej. CERA MATTE CLAY"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Precio (Texto con símbolo)</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProduct.price}
-                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
-                    placeholder="Ej. $12.000"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Etiqueta / Tag</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProduct.tag}
-                    onChange={(e) => setNewProduct({ ...newProduct, tag: e.target.value })}
-                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
-                    placeholder="Ej. [ FIX ], [ SHINE ], [ HYDRATE ]"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Foto del Producto (Click para seleccionar)</label>
-                  <div className="flex gap-4 items-center">
-                    <button
-                      type="button"
-                      onClick={() => productFileInputRef.current?.click()}
-                      className="px-4 py-3 bg-zinc-850 hover:bg-zinc-800 text-charcoal hover:text-white border border-white/10 transition-colors text-xs font-bold uppercase tracking-widest cursor-pointer w-full text-left"
-                    >
-                      {newProduct.img ? '✓ Foto Seleccionada' : 'Seleccionar Archivo...'}
-                    </button>
-                    <input
-                      type="file"
-                      ref={productFileInputRef}
-                      accept="image/*"
-                      onChange={handleProductFileChange}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2 col-span-full">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Descripción Corta</label>
-                  <textarea
-                    required
-                    rows={2}
-                    value={newProduct.desc}
-                    onChange={(e) => setNewProduct({ ...newProduct, desc: e.target.value })}
-                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-sans focus:outline-none focus:border-gold"
-                    placeholder="Ej. Fijación fuerte con acabado mate natural..."
-                  />
-                </div>
-              </div>
-
-              {newProduct.img && (
-                <div className="mt-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-charcoal mb-2">Vista previa de imagen:</p>
-                  <img src={newProduct.img} alt="Preview" className="h-24 w-auto object-contain border border-white/10" />
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={catalogLoading}
-                className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-3.5 mt-6 font-display font-bold uppercase tracking-widest text-sm shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
-              >
-                {catalogLoading ? 'Guardando...' : 'Guardar Producto'}
-              </button>
-            </form>
 
             {/* List of current products */}
             <div className="space-y-4">
@@ -4711,6 +4637,125 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
                   >
                     {savingPrices ? 'Guardando...' : editingServiceId ? 'Guardar Cambios' : 'Agregar Servicio'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* ── Product Catalog Modal ── */}
+        {isProductModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setIsProductModalOpen(false); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 p-6 w-full max-w-md shadow-2xl relative rounded-md"
+            >
+              <button
+                onClick={() => setIsProductModalOpen(false)}
+                className="absolute top-4 right-4 text-charcoal hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="font-display font-black uppercase text-xl mb-4 text-light-gray">
+                Agregar Nuevo Producto
+              </h3>
+
+              <form onSubmit={handleNewProductSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre del Producto</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
+                    placeholder="Ej. CERA MATTE CLAY"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Precio (Con símbolo)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.price}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                      className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
+                      placeholder="Ej. $12.000"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Etiqueta / Tag</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.tag}
+                      onChange={(e) => setNewProduct({ ...newProduct, tag: e.target.value })}
+                      className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
+                      placeholder="Ej. [ FIX ], [ SHINE ]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Foto del Producto</label>
+                  <div className="flex gap-4 items-center">
+                    <button
+                      type="button"
+                      onClick={() => productFileInputRef.current?.click()}
+                      className="px-4 py-3 bg-zinc-950 hover:bg-zinc-800 text-charcoal hover:text-white border border-white/10 transition-colors text-xs font-bold uppercase tracking-widest cursor-pointer w-full text-left"
+                    >
+                      {newProduct.img ? '✓ Foto Seleccionada' : 'Seleccionar Archivo...'}
+                    </button>
+                    <input
+                      type="file"
+                      ref={productFileInputRef}
+                      accept="image/*"
+                      onChange={handleProductFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Descripción Corta</label>
+                  <textarea
+                    required
+                    rows={2}
+                    value={newProduct.desc}
+                    onChange={(e) => setNewProduct({ ...newProduct, desc: e.target.value })}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-sans focus:outline-none focus:border-gold resize-none"
+                    placeholder="Ej. Fijación fuerte con acabado mate natural..."
+                  />
+                </div>
+
+                {newProduct.img && (
+                  <div className="mt-2 flex items-center gap-3 bg-black/20 p-2 border border-white/5 rounded-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Vista previa:</p>
+                    <img src={newProduct.img} alt="Preview" className="h-12 w-auto object-contain border border-white/10" />
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4 border-t border-white/5">
+                  <button
+                    type="submit"
+                    disabled={catalogLoading}
+                    className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                  >
+                    {catalogLoading ? 'Guardando...' : 'Guardar Producto'}
                   </button>
                 </div>
               </form>
