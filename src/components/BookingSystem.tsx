@@ -230,6 +230,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }
   }, [initialServiceName, services]);
   const [editingPrices, setEditingPrices] = useState<Record<string, string>>({});
+  const [editingDurations, setEditingDurations] = useState<Record<string, string>>({});
   const [savingPrices, setSavingPrices] = useState(false);
 
   // Product catalog states and handlers
@@ -1415,6 +1416,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }));
   };
 
+  const handleDurationChange = (svcId: string, val: string) => {
+    setEditingDurations(prev => ({
+      ...prev,
+      [svcId]: val
+    }));
+  };
+
   const handleAddService = async () => {
     if (!newService.name || !newService.price) {
       toast.error('Por favor completa el nombre y el precio.');
@@ -1472,11 +1480,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     try {
       const updatedServices = services.map(svc => {
         const customPrice = editingPrices[svc.id];
+        const customDuration = editingDurations[svc.id];
         return {
           ...svc,
-          price: customPrice !== undefined && customPrice !== '' ? Number(customPrice) : svc.price
+          price: customPrice !== undefined && customPrice !== '' ? Number(customPrice) : svc.price,
+          duration: customDuration !== undefined && customDuration !== '' ? Number(customDuration) : svc.duration
         };
-      });
+       });
 
       await updateShopSettings({
         services: updatedServices
@@ -1484,10 +1494,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
       setServices(updatedServices);
       setEditingPrices({});
-      toast.success('Precios actualizados correctamente.');
+      setEditingDurations({});
+      toast.success('Servicios actualizados correctamente.');
     } catch (err: any) {
-      console.error('Error al guardar precios:', err);
-      toast.error('Error al guardar los precios.');
+      console.error('Error al guardar servicios:', err);
+      toast.error('Error al guardar los servicios.');
     } finally {
       setSavingPrices(false);
     }
@@ -3311,7 +3322,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
             <div className="space-y-6">
               {services.map(svc => (
-                <div key={svc.id} className="bg-black/50 border border-white/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div key={svc.id} className="bg-black/50 border border-white/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <h4 className="font-display font-bold text-xl uppercase tracking-wide text-light-gray">{svc.name}</h4>
@@ -3323,19 +3334,34 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <p className="text-[10px] text-charcoal font-bold uppercase">Duración estimada: {svc.duration} minutos</p>
                     {svc.desc && <p className="text-xs text-zinc-500 mt-1">{svc.desc}</p>}
                   </div>
                   
-                  <div className="flex items-center gap-2 max-w-xs w-full">
-                    <span className="text-zinc-500 font-display font-bold text-lg">$</span>
-                    <input
-                      type="number"
-                      value={editingPrices[svc.id] !== undefined ? editingPrices[svc.id] : svc.price}
-                      onChange={(e) => handlePriceChange(svc.id, e.target.value)}
-                      className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-black text-lg focus:outline-none focus:border-gold"
-                      placeholder="Precio"
-                    />
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-md w-full">
+                    <div className="flex-1 flex flex-col gap-1">
+                      <label className="text-[9px] text-charcoal font-bold uppercase tracking-wider">Duración (minutos)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editingDurations[svc.id] !== undefined ? editingDurations[svc.id] : svc.duration}
+                        onChange={(e) => handleDurationChange(svc.id, e.target.value)}
+                        className="w-full bg-zinc-950 border border-white/10 px-3 py-2 text-light-gray font-display font-bold text-sm focus:outline-none focus:border-gold"
+                        placeholder="Minutos"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-1">
+                      <label className="text-[9px] text-charcoal font-bold uppercase tracking-wider">Precio ($)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal font-bold text-sm">$</span>
+                        <input
+                          type="number"
+                          value={editingPrices[svc.id] !== undefined ? editingPrices[svc.id] : svc.price}
+                          onChange={(e) => handlePriceChange(svc.id, e.target.value)}
+                          className="w-full bg-zinc-950 border border-white/10 pl-7 pr-3 py-2 text-light-gray font-display font-black text-sm focus:outline-none focus:border-gold"
+                          placeholder="Precio"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -3345,7 +3371,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 disabled={savingPrices}
                 className="w-full bg-gold hover:bg-gold/80 transition-colors py-4 font-display font-bold uppercase tracking-widest text-lg text-white rounded cursor-pointer"
               >
-                {savingPrices ? 'Guardando...' : 'Guardar Cambios de Precios'}
+                {savingPrices ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </div>
           </div>
