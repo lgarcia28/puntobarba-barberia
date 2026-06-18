@@ -329,6 +329,19 @@ export async function deleteProduct(productId: string) {
   }
 }
 
+export async function updateProduct(productId: string, data: any) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    const productRef = doc(db, 'products', productId);
+    await updateDoc(productRef, data);
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'products');
+  }
+}
+
 export const DEFAULT_DRINKS = [
   { name: 'Café', category: 'cafeteria', available: true },
   { name: 'Cortado', category: 'cafeteria', available: true },

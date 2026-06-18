@@ -16,7 +16,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, seedServices, addProduct, deleteProduct, DEFAULT_PRODUCTS, seedDrinks, addDrink, updateDrink, deleteDrink } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, seedServices, addProduct, deleteProduct, DEFAULT_PRODUCTS, seedDrinks, addDrink, updateDrink, deleteDrink, updateProduct } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -239,6 +239,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [catalogLoading, setCatalogLoading] = useState(false);
   const productFileInputRef = useRef<HTMLInputElement>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingProductForm, setEditingProductForm] = useState({ name: '', desc: '', price: '', tag: '', img: '' });
 
   useEffect(() => {
     const q = query(collection(db, 'products'));
@@ -301,9 +303,17 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             
             // Compress to JPEG at 85% quality
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-            setNewProduct(prev => ({ ...prev, img: compressedBase64 }));
+            if (editingProductId) {
+              setEditingProductForm(prev => ({ ...prev, img: compressedBase64 }));
+            } else {
+              setNewProduct(prev => ({ ...prev, img: compressedBase64 }));
+            }
           } else {
-            setNewProduct(prev => ({ ...prev, img: reader.result as string }));
+            if (editingProductId) {
+              setEditingProductForm(prev => ({ ...prev, img: reader.result as string }));
+            } else {
+              setNewProduct(prev => ({ ...prev, img: reader.result as string }));
+            }
           }
         };
         img.src = reader.result as string;
@@ -337,6 +347,25 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     } catch (err) {
       console.error(err);
       toast.error('Error al eliminar producto');
+    }
+  };
+
+  const handleEditProductSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProductId) return;
+    setCatalogLoading(true);
+    try {
+      await updateProduct(editingProductId, editingProductForm);
+      toast.success('Producto actualizado');
+      setEditingProductId(null);
+      setEditingProductForm({ name: '', desc: '', price: '', tag: '', img: '' });
+      if (productFileInputRef.current) productFileInputRef.current.value = '';
+      setIsProductModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al actualizar producto');
+    } finally {
+      setCatalogLoading(false);
     }
   };
 
@@ -3349,12 +3378,30 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       </div>
                     </div>
                     
-                    <button
-                      onClick={() => handleProductDelete(prod.id)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors border border-red-500/20 px-3 py-1.5 rounded-full hover:bg-red-500/5 cursor-pointer"
-                    >
-                      Eliminar
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingProductId(prod.id);
+                          setEditingProductForm({
+                            name: prod.name || '',
+                            desc: prod.desc || '',
+                            price: prod.price || '',
+                            tag: prod.tag || '',
+                            img: prod.img || ''
+                          });
+                          setIsProductModalOpen(true);
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-widest text-gold hover:text-gold-hover transition-colors border border-gold/20 px-3 py-1.5 rounded-full hover:bg-gold/5 cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleProductDelete(prod.id)}
+                        className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors border border-red-500/20 px-3 py-1.5 rounded-full hover:bg-red-500/5 cursor-pointer"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 ))}
                 {products.length === 0 && (
@@ -4651,7 +4698,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-            onClick={(e) => { if (e.target === e.currentTarget) setIsProductModalOpen(false); }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setIsProductModalOpen(false); setEditingProductId(null); } }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -4661,24 +4708,30 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               className="bg-zinc-900 border border-white/10 p-6 w-full max-w-md shadow-2xl relative rounded-md"
             >
               <button
-                onClick={() => setIsProductModalOpen(false)}
+                onClick={() => { setIsProductModalOpen(false); setEditingProductId(null); }}
                 className="absolute top-4 right-4 text-charcoal hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <h3 className="font-display font-black uppercase text-xl mb-4 text-light-gray">
-                Agregar Nuevo Producto
+                {editingProductId ? 'Editar Producto' : 'Agregar Nuevo Producto'}
               </h3>
 
-              <form onSubmit={handleNewProductSubmit} className="space-y-4">
+              <form onSubmit={editingProductId ? handleEditProductSubmit : handleNewProductSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre del Producto</label>
                   <input
                     type="text"
                     required
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    value={editingProductId ? editingProductForm.name : newProduct.name}
+                    onChange={(e) => {
+                      if (editingProductId) {
+                        setEditingProductForm({ ...editingProductForm, name: e.target.value });
+                      } else {
+                        setNewProduct({ ...newProduct, name: e.target.value });
+                      }
+                    }}
                     className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
                     placeholder="Ej. CERA MATTE CLAY"
                   />
@@ -4690,8 +4743,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <input
                       type="text"
                       required
-                      value={newProduct.price}
-                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                      value={editingProductId ? editingProductForm.price : newProduct.price}
+                      onChange={(e) => {
+                        if (editingProductId) {
+                          setEditingProductForm({ ...editingProductForm, price: e.target.value });
+                        } else {
+                          setNewProduct({ ...newProduct, price: e.target.value });
+                        }
+                      }}
                       className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
                       placeholder="Ej. $12.000"
                     />
@@ -4702,8 +4761,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <input
                       type="text"
                       required
-                      value={newProduct.tag}
-                      onChange={(e) => setNewProduct({ ...newProduct, tag: e.target.value })}
+                      value={editingProductId ? editingProductForm.tag : newProduct.tag}
+                      onChange={(e) => {
+                        if (editingProductId) {
+                          setEditingProductForm({ ...editingProductForm, tag: e.target.value });
+                        } else {
+                          setNewProduct({ ...newProduct, tag: e.target.value });
+                        }
+                      }}
                       className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
                       placeholder="Ej. [ FIX ], [ SHINE ]"
                     />
@@ -4718,7 +4783,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       onClick={() => productFileInputRef.current?.click()}
                       className="px-4 py-3 bg-zinc-950 hover:bg-zinc-800 text-charcoal hover:text-white border border-white/10 transition-colors text-xs font-bold uppercase tracking-widest cursor-pointer w-full text-left"
                     >
-                      {newProduct.img ? '✓ Foto Seleccionada' : 'Seleccionar Archivo...'}
+                      {editingProductId 
+                        ? (editingProductForm.img ? '✓ Foto Seleccionada' : 'Seleccionar Archivo...')
+                        : (newProduct.img ? '✓ Foto Seleccionada' : 'Seleccionar Archivo...')}
                     </button>
                     <input
                       type="file"
@@ -4735,17 +4802,27 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   <textarea
                     required
                     rows={2}
-                    value={newProduct.desc}
-                    onChange={(e) => setNewProduct({ ...newProduct, desc: e.target.value })}
+                    value={editingProductId ? editingProductForm.desc : newProduct.desc}
+                    onChange={(e) => {
+                      if (editingProductId) {
+                        setEditingProductForm({ ...editingProductForm, desc: e.target.value });
+                      } else {
+                        setNewProduct({ ...newProduct, desc: e.target.value });
+                      }
+                    }}
                     className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-sans focus:outline-none focus:border-gold resize-none"
                     placeholder="Ej. Fijación fuerte con acabado mate natural..."
                   />
                 </div>
 
-                {newProduct.img && (
+                {((editingProductId && editingProductForm.img) || (!editingProductId && newProduct.img)) && (
                   <div className="mt-2 flex items-center gap-3 bg-black/20 p-2 border border-white/5 rounded-sm">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Vista previa:</p>
-                    <img src={newProduct.img} alt="Preview" className="h-12 w-auto object-contain border border-white/10" />
+                    <img 
+                      src={editingProductId ? editingProductForm.img : newProduct.img} 
+                      alt="Preview" 
+                      className="h-12 w-auto object-contain border border-white/10" 
+                    />
                   </div>
                 )}
 
@@ -4755,7 +4832,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     disabled={catalogLoading}
                     className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
                   >
-                    {catalogLoading ? 'Guardando...' : 'Guardar Producto'}
+                    {catalogLoading ? 'Guardando...' : editingProductId ? 'Guardar Cambios' : 'Guardar Producto'}
                   </button>
                 </div>
               </form>
