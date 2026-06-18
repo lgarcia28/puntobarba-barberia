@@ -3391,15 +3391,17 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           });
                           setIsProductModalOpen(true);
                         }}
-                        className="text-[10px] font-bold uppercase tracking-widest text-gold hover:text-gold-hover transition-colors border border-gold/20 px-3 py-1.5 rounded-full hover:bg-gold/5 cursor-pointer"
+                        className="bg-zinc-800/80 hover:bg-zinc-700 text-light-gray p-2 transition-colors cursor-pointer rounded-sm border border-white/5 flex items-center justify-center"
+                        title="Editar Producto"
                       >
-                        Editar
+                        <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleProductDelete(prod.id)}
-                        className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors border border-red-500/20 px-3 py-1.5 rounded-full hover:bg-red-500/5 cursor-pointer"
+                        className="text-zinc-600 hover:text-red-500 p-2 transition-colors cursor-pointer flex items-center justify-center"
+                        title="Eliminar Producto"
                       >
-                        Eliminar
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
