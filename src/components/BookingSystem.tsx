@@ -16,11 +16,11 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, seedServices, addProduct, deleteProduct, DEFAULT_PRODUCTS } from '../lib/firestore';
+import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFirestoreError, OperationType, clearAppointments, addBarber, deleteBarber, updateBarber, getShopSettings, updateShopSettings, DEFAULT_SCHEDULE, seedBarbers, seedServices, addProduct, deleteProduct, DEFAULT_PRODUCTS, seedDrinks, addDrink, updateDrink, deleteDrink } from '../lib/firestore';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -206,7 +206,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [isBarberAdmin, setIsBarberAdmin] = useState(false);
   const [isIvan, setIsIvan] = useState(false);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios' | 'catalogo'>('agenda');
+  const [activeAdminTab, setActiveAdminTab] = useState<'agenda' | 'barberos' | 'horarios' | 'agendar' | 'finanzas' | 'precios' | 'catalogo' | 'cortesia'>('agenda');
   const [newBarber, setNewBarber] = useState({ name: '', email: '', photo: '', role: 'barber' });
   const [editingBarberId, setEditingBarberId] = useState<string | null>(null);
   const [isAddingBarber, setIsAddingBarber] = useState(false);
@@ -243,6 +243,22 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const prodsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setProducts(prodsData);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Courtesy drinks states and handlers
+  const [drinks, setDrinks] = useState<any[]>([]);
+  const [newDrink, setNewDrink] = useState({ name: '', category: 'cafeteria', available: true });
+  const [drinksLoading, setDrinksLoading] = useState(false);
+  const [editingDrinkId, setEditingDrinkId] = useState<string | null>(null);
+  const [editingDrinkForm, setEditingDrinkForm] = useState({ name: '', category: 'cafeteria', available: true });
+
+  useEffect(() => {
+    const q = query(collection(db, 'drinks'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const drinksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setDrinks(drinksData);
     });
     return unsubscribe;
   }, []);
@@ -317,6 +333,58 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     } catch (err) {
       console.error(err);
       toast.error('Error al eliminar producto');
+    }
+  };
+
+  const handleNewDrinkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDrinksLoading(true);
+    try {
+      await addDrink(newDrink);
+      toast.success('Bebida agregada al catálogo de cortesías');
+      setNewDrink({ name: '', category: 'cafeteria', available: true });
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al agregar bebida');
+    } finally {
+      setDrinksLoading(false);
+    }
+  };
+
+  const handleDrinkDelete = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de eliminar esta bebida?')) return;
+    try {
+      await deleteDrink(id);
+      toast.success('Bebida eliminada');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al eliminar bebida');
+    }
+  };
+
+  const handleDrinkToggleAvailability = async (id: string, currentAvailable: boolean) => {
+    try {
+      await updateDrink(id, { available: !currentAvailable });
+      toast.success('Disponibilidad actualizada');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al actualizar disponibilidad');
+    }
+  };
+
+  const handleEditDrinkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDrinkId) return;
+    setDrinksLoading(true);
+    try {
+      await updateDrink(editingDrinkId, editingDrinkForm);
+      toast.success('Bebida actualizada');
+      setEditingDrinkId(null);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al actualizar bebida');
+    } finally {
+      setDrinksLoading(false);
     }
   };
 
@@ -444,6 +512,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     if (isBarberAdmin) {
       seedBarbers();
       seedServices();
+      seedDrinks();
     }
   }, [isBarberAdmin]);
 
@@ -1756,6 +1825,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'catalogo' ? 'text-gold' : 'text-charcoal'}`}
               >
                 Catálogo
+              </button>
+              <button
+                onClick={() => setActiveAdminTab('cortesia')}
+                className={`text-xs font-bold uppercase tracking-widest ${activeAdminTab === 'cortesia' ? 'text-gold' : 'text-charcoal'}`}
+              >
+                Cortesías
               </button>
             </div>
           ) : (
@@ -3417,6 +3492,145 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         </div>
       )}
 
+      {isBarberAdmin && isIvan && activeAdminTab === 'cortesia' && (
+        <div className="space-y-8">
+          <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
+              <Coffee className="w-6 h-6 text-gold" />
+              <div>
+                <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
+                  Cortesías de la Casa
+                </h3>
+                <p className="text-xs text-charcoal font-bold uppercase">
+                  Agrega, edita y elimina las bebidas disponibles para los clientes
+                </p>
+              </div>
+            </div>
+
+            {/* Form to add or edit a drink */}
+            <form 
+              onSubmit={editingDrinkId ? handleEditDrinkSubmit : handleNewDrinkSubmit} 
+              className="space-y-4 bg-black/50 border border-white/5 p-6 mb-8 rounded-sm"
+            >
+              <h4 className="font-display font-bold text-lg uppercase text-light-gray mb-4">
+                {editingDrinkId ? 'Editar Bebida' : 'Agregar Nueva Bebida'}
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre de la Bebida</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingDrinkId ? editingDrinkForm.name : newDrink.name}
+                    onChange={(e) => {
+                      if (editingDrinkId) {
+                        setEditingDrinkForm({ ...editingDrinkForm, name: e.target.value });
+                      } else {
+                        setNewDrink({ ...newDrink, name: e.target.value });
+                      }
+                    }}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
+                    placeholder="Ej. CERVEZA CORONA, CAFE, COLA..."
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Categoría</label>
+                  <select
+                    value={editingDrinkId ? editingDrinkForm.category : newDrink.category}
+                    onChange={(e) => {
+                      if (editingDrinkId) {
+                        setEditingDrinkForm({ ...editingDrinkForm, category: e.target.value as any });
+                      } else {
+                        setNewDrink({ ...newDrink, category: e.target.value as any });
+                      }
+                    }}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
+                  >
+                    <option value="cafeteria">☕ Cafetería</option>
+                    <option value="alcohol">🍺 Bebida con Alcohol</option>
+                    <option value="sin_alcohol">🥤 Bebida sin Alcohol</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-white/5">
+                <button
+                  type="submit"
+                  disabled={drinksLoading}
+                  className="rounded-full bg-gold hover:bg-gold-hover text-neutral-900 px-8 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                >
+                  {drinksLoading ? 'Guardando...' : editingDrinkId ? 'Guardar Cambios' : 'Guardar Bebida'}
+                </button>
+                {editingDrinkId && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingDrinkId(null)}
+                    className="rounded-full bg-zinc-800 hover:bg-zinc-700 text-light-gray px-8 py-3 font-display font-bold uppercase tracking-widest text-xs transition-all duration-300 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* List of current drinks */}
+            <div className="space-y-4">
+              <h4 className="font-display font-bold text-lg uppercase text-light-gray border-b border-white/5 pb-2">Bebidas Registradas</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {drinks.map((drink) => (
+                  <div key={drink.id} className="bg-black/40 border border-white/5 p-4 flex flex-col justify-between gap-4 rounded-sm">
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <span className="text-[8px] bg-gold/10 text-gold border border-gold/20 px-2 py-0.5 font-sans font-bold uppercase tracking-wider rounded">
+                          {drink.category === 'cafeteria' ? 'Cafetería' : drink.category === 'alcohol' ? 'Con Alcohol' : 'Sin Alcohol'}
+                        </span>
+                        <h5 className="font-display font-bold text-base uppercase text-light-gray mt-2">{drink.name}</h5>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleDrinkToggleAvailability(drink.id, drink.available)}
+                        className={`text-[8px] font-bold uppercase tracking-widest border px-2 py-1 rounded transition-colors cursor-pointer ${
+                          drink.available 
+                            ? 'border-green-500/25 text-green-400 bg-green-500/5 hover:bg-green-500/10' 
+                            : 'border-red-500/25 text-red-400 bg-red-500/5 hover:bg-red-500/10'
+                        }`}
+                      >
+                        {drink.available ? 'Disponible' : 'Sin Stock'}
+                      </button>
+                    </div>
+
+                    <div className="flex justify-end gap-2 border-t border-white/5 pt-3">
+                      <button
+                        onClick={() => {
+                          setEditingDrinkId(drink.id);
+                          setEditingDrinkForm({ name: drink.name, category: drink.category, available: drink.available });
+                        }}
+                        className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/5 cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDrinkDelete(drink.id)}
+                        className="text-[9px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors border border-red-500/20 px-3 py-1.5 rounded-full hover:bg-red-500/5 cursor-pointer"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {drinks.length === 0 && (
+                  <div className="col-span-full py-8 text-center text-charcoal uppercase font-bold text-xs">
+                    No hay bebidas en el catálogo de cortesía.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
             <div className="flex gap-3 border-b border-white/5 pb-6 mb-8">
@@ -3902,43 +4116,35 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     </div>
 
                     <div className="space-y-6">
-                      {/* Cafetería */}
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
-                          ☕ Cafetería
-                        </h4>
-                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                          {['Café', 'Cortado', 'Capuchino'].map(item => (
-                            <button
-                              key={item}
-                              type="button"
-                              onClick={() => setSelectedCourtesy(item)}
-                              className={`py-4 px-2 border font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer rounded-sm ${selectedCourtesy === item ? 'border-gold bg-gold/10 text-gold shadow-lg shadow-gold/10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:text-white'}`}
-                            >
-                              {item}
-                            </button>
-                          ))}
+                      {[
+                        { id: 'cafeteria', label: 'Cafetería', icon: '☕', list: drinks.filter(d => d.available && d.category === 'cafeteria') },
+                        { id: 'alcohol', label: 'Bebida con Alcohol', icon: '🍺', list: drinks.filter(d => d.available && d.category === 'alcohol') },
+                        { id: 'sin_alcohol', label: 'Bebida sin Alcohol', icon: '🥤', list: drinks.filter(d => d.available && d.category === 'sin_alcohol') }
+                      ].filter(cat => cat.list.length > 0).map(cat => (
+                        <div key={cat.id} className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
+                            {cat.icon} {cat.label}
+                          </h4>
+                          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                            {cat.list.map(drink => (
+                              <button
+                                key={drink.id}
+                                type="button"
+                                onClick={() => setSelectedCourtesy(drink.name)}
+                                className={`py-4 px-2 border font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer rounded-sm ${selectedCourtesy === drink.name ? 'border-gold bg-gold/10 text-gold shadow-lg shadow-gold/10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:text-white'}`}
+                              >
+                                {drink.name}
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      ))}
 
-                      {/* Bebidas con Alcohol */}
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-gold flex items-center gap-2">
-                          🍺 Bebida con Alcohol
-                        </h4>
-                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                          {['Corona', 'Whisky', 'Licor de crema'].map(item => (
-                            <button
-                              key={item}
-                              type="button"
-                              onClick={() => setSelectedCourtesy(item)}
-                              className={`py-4 px-2 border font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer rounded-sm ${selectedCourtesy === item ? 'border-gold bg-gold/10 text-gold shadow-lg shadow-gold/10' : 'border-white/5 bg-black text-charcoal hover:border-white/20 hover:text-white'}`}
-                            >
-                              {item}
-                            </button>
-                          ))}
+                      {drinks.filter(d => d.available).length === 0 && (
+                        <div className="text-center py-8 text-charcoal uppercase font-bold text-xs border border-white/5 bg-black/20 rounded-sm">
+                          No hay bebidas de cortesía disponibles en este momento.
                         </div>
-                      </div>
+                      )}
 
                       {/* Controls */}
                       <div className="pt-4 border-t border-white/5 flex gap-3 justify-end items-center">

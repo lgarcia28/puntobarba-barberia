@@ -328,3 +328,72 @@ export async function deleteProduct(productId: string) {
     handleFirestoreError(error, OperationType.DELETE, 'products');
   }
 }
+
+export const DEFAULT_DRINKS = [
+  { name: 'Café', category: 'cafeteria', available: true },
+  { name: 'Cortado', category: 'cafeteria', available: true },
+  { name: 'Capuchino', category: 'cafeteria', available: true },
+  { name: 'Corona', category: 'alcohol', available: true },
+  { name: 'Whisky', category: 'alcohol', available: true },
+  { name: 'Licor de crema', category: 'alcohol', available: true }
+];
+
+export async function addDrink(drink: any) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    const drinkRef = doc(collection(db, 'drinks'));
+    await setDoc(drinkRef, { ...drink, id: drinkRef.id });
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'drinks');
+  }
+}
+
+export async function updateDrink(drinkId: string, data: any) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    const drinkRef = doc(db, 'drinks', drinkId);
+    await updateDoc(drinkRef, data);
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'drinks');
+  }
+}
+
+export async function deleteDrink(drinkId: string) {
+  if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+    throw new Error('No tienes permisos para realizar esta acción.');
+  }
+  try {
+    await deleteDoc(doc(db, 'drinks', drinkId));
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'drinks');
+  }
+}
+
+export async function seedDrinks() {
+  try {
+    if (!auth.currentUser || !isAdminEmail(auth.currentUser.email)) {
+      console.log('Skipping drinks seeding: user not authenticated as admin.');
+      return;
+    }
+
+    const snapshot = await getDocs(collection(db, 'drinks'));
+    if (snapshot.empty) {
+      const batch = writeBatch(db);
+      DEFAULT_DRINKS.forEach(drink => {
+        const drinkRef = doc(collection(db, 'drinks'));
+        batch.set(drinkRef, { ...drink, id: drinkRef.id });
+      });
+      await batch.commit();
+      console.log('Drinks seeded successfully (DB was empty).');
+    }
+  } catch (error) {
+    console.error('Error seeding drinks:', error);
+  }
+}
