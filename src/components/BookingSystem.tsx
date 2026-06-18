@@ -3260,14 +3260,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
                     <div className="flex flex-row gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                      <div className="flex items-center gap-2 bg-zinc-950 border border-white/5 px-4 py-2 rounded-sm">
-                        <span className="text-[8px] text-charcoal font-bold uppercase tracking-wider">Duración</span>
-                        <span className="font-display font-black text-xs text-light-gray">{svc.duration} Min</span>
+                      <div className="flex items-center gap-3 bg-zinc-950 border border-white/5 px-4 py-2.5 rounded-sm">
+                        <span className="text-[10px] text-charcoal font-bold uppercase tracking-wider">Duración</span>
+                        <span className="font-display font-black text-base text-light-gray">{svc.duration} Min</span>
                       </div>
 
-                      <div className="flex items-center gap-2 bg-zinc-950 border border-white/5 px-4 py-2 rounded-sm">
-                        <span className="text-[8px] text-charcoal font-bold uppercase tracking-wider">Precio</span>
-                        <span className="font-display font-black text-xs text-gold">${svc.price.toLocaleString('es-AR')}</span>
+                      <div className="flex items-center gap-3 bg-zinc-950 border border-white/5 px-4 py-2.5 rounded-sm">
+                        <span className="text-[10px] text-charcoal font-bold uppercase tracking-wider">Precio</span>
+                        <span className="font-display font-black text-lg text-gold">${svc.price.toLocaleString('es-AR')}</span>
                       </div>
                     </div>
 
