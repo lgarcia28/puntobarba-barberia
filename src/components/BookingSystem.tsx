@@ -20,7 +20,7 @@ import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFiresto
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee, Plus, X } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -253,6 +253,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [drinksLoading, setDrinksLoading] = useState(false);
   const [editingDrinkId, setEditingDrinkId] = useState<string | null>(null);
   const [editingDrinkForm, setEditingDrinkForm] = useState({ name: '', category: 'cafeteria', available: true });
+  const [isDrinkModalOpen, setIsDrinkModalOpen] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, 'drinks'));
@@ -343,6 +344,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       await addDrink(newDrink);
       toast.success('Bebida agregada al catálogo de cortesías');
       setNewDrink({ name: '', category: 'cafeteria', available: true });
+      setIsDrinkModalOpen(false);
     } catch (err) {
       console.error(err);
       toast.error('Error al agregar bebida');
@@ -380,6 +382,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       await updateDrink(editingDrinkId, editingDrinkForm);
       toast.success('Bebida actualizada');
       setEditingDrinkId(null);
+      setIsDrinkModalOpen(false);
     } catch (err) {
       console.error(err);
       toast.error('Error al actualizar bebida');
@@ -3495,85 +3498,31 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       {isBarberAdmin && isIvan && activeAdminTab === 'cortesia' && (
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
-            <div className="flex items-center gap-3 border-b border-white/5 pb-4 mb-6">
-              <Coffee className="w-6 h-6 text-gold" />
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/5 pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <Coffee className="w-6 h-6 text-gold" />
+                <div>
+                  <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
+                    Cortesías de la Casa
+                  </h3>
+                  <p className="text-xs text-charcoal font-bold uppercase">
+                    Agrega, edita y elimina las bebidas disponibles para los clientes
+                  </p>
+                </div>
+              </div>
               <div>
-                <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
-                  Cortesías de la Casa
-                </h3>
-                <p className="text-xs text-charcoal font-bold uppercase">
-                  Agrega, edita y elimina las bebidas disponibles para los clientes
-                </p>
+                <button
+                  onClick={() => {
+                    setEditingDrinkId(null);
+                    setNewDrink({ name: '', category: 'cafeteria', available: true });
+                    setIsDrinkModalOpen(true);
+                  }}
+                  className="rounded-full bg-gold hover:bg-gold-hover text-neutral-900 px-6 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 flex items-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" /> Agregar Nueva Bebida
+                </button>
               </div>
             </div>
-
-            {/* Form to add or edit a drink */}
-            <form 
-              onSubmit={editingDrinkId ? handleEditDrinkSubmit : handleNewDrinkSubmit} 
-              className="space-y-4 bg-black/50 border border-white/5 p-6 mb-8 rounded-sm"
-            >
-              <h4 className="font-display font-bold text-lg uppercase text-light-gray mb-4">
-                {editingDrinkId ? 'Editar Bebida' : 'Agregar Nueva Bebida'}
-              </h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre de la Bebida</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingDrinkId ? editingDrinkForm.name : newDrink.name}
-                    onChange={(e) => {
-                      if (editingDrinkId) {
-                        setEditingDrinkForm({ ...editingDrinkForm, name: e.target.value });
-                      } else {
-                        setNewDrink({ ...newDrink, name: e.target.value });
-                      }
-                    }}
-                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
-                    placeholder="Ej. CERVEZA CORONA, CAFE, COLA..."
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-charcoal">Categoría</label>
-                  <select
-                    value={editingDrinkId ? editingDrinkForm.category : newDrink.category}
-                    onChange={(e) => {
-                      if (editingDrinkId) {
-                        setEditingDrinkForm({ ...editingDrinkForm, category: e.target.value as any });
-                      } else {
-                        setNewDrink({ ...newDrink, category: e.target.value as any });
-                      }
-                    }}
-                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
-                  >
-                    <option value="cafeteria">☕ Cafetería</option>
-                    <option value="alcohol">🍺 Bebida con Alcohol</option>
-                    <option value="sin_alcohol">🥤 Bebida sin Alcohol</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-white/5">
-                <button
-                  type="submit"
-                  disabled={drinksLoading}
-                  className="rounded-full bg-gold hover:bg-gold-hover text-neutral-900 px-8 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                >
-                  {drinksLoading ? 'Guardando...' : editingDrinkId ? 'Guardar Cambios' : 'Guardar Bebida'}
-                </button>
-                {editingDrinkId && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingDrinkId(null)}
-                    className="rounded-full bg-zinc-800 hover:bg-zinc-700 text-light-gray px-8 py-3 font-display font-bold uppercase tracking-widest text-xs transition-all duration-300 cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                )}
-              </div>
-            </form>
 
             {/* List of current drinks */}
             <div className="space-y-4">
@@ -3606,6 +3555,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         onClick={() => {
                           setEditingDrinkId(drink.id);
                           setEditingDrinkForm({ name: drink.name, category: drink.category, available: drink.available });
+                          setIsDrinkModalOpen(true);
                         }}
                         className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/5 cursor-pointer"
                       >
@@ -4615,6 +4565,88 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   Volver / No reprogramar
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* ── Courtesy Drink Modal ── */}
+        {isDrinkModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) { setIsDrinkModalOpen(false); setEditingDrinkId(null); } }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-zinc-900 border border-white/10 p-6 w-full max-w-md shadow-2xl relative rounded-md"
+            >
+              <button
+                onClick={() => { setIsDrinkModalOpen(false); setEditingDrinkId(null); }}
+                className="absolute top-4 right-4 text-charcoal hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="font-display font-black uppercase text-xl mb-4 text-light-gray">
+                {editingDrinkId ? 'Editar Bebida' : 'Agregar Nueva Bebida'}
+              </h3>
+
+              <form 
+                onSubmit={editingDrinkId ? handleEditDrinkSubmit : handleNewDrinkSubmit} 
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Nombre de la Bebida</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingDrinkId ? editingDrinkForm.name : newDrink.name}
+                    onChange={(e) => {
+                      if (editingDrinkId) {
+                        setEditingDrinkForm({ ...editingDrinkForm, name: e.target.value });
+                      } else {
+                        setNewDrink({ ...newDrink, name: e.target.value });
+                      }
+                    }}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold"
+                    placeholder="Ej. CERVEZA CORONA, CAFE, COLA..."
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Categoría</label>
+                  <select
+                    value={editingDrinkId ? editingDrinkForm.category : newDrink.category}
+                    onChange={(e) => {
+                      if (editingDrinkId) {
+                        setEditingDrinkForm({ ...editingDrinkForm, category: e.target.value as any });
+                      } else {
+                        setNewDrink({ ...newDrink, category: e.target.value as any });
+                      }
+                    }}
+                    className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold focus:outline-none focus:border-gold"
+                  >
+                    <option value="cafeteria">☕ Cafetería</option>
+                    <option value="alcohol">🍺 Bebida con Alcohol</option>
+                    <option value="sin_alcohol">🥤 Bebida sin Alcohol</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-white/5">
+                  <button
+                    type="submit"
+                    disabled={drinksLoading}
+                    className="w-full rounded-full bg-gold hover:bg-gold-hover text-neutral-900 py-3 font-display font-bold uppercase tracking-widest text-xs shadow-md shadow-gold/10 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                  >
+                    {drinksLoading ? 'Guardando...' : editingDrinkId ? 'Guardar Cambios' : 'Guardar Bebida'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
