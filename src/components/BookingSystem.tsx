@@ -1970,8 +1970,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       <p className="text-charcoal font-bold uppercase tracking-widest text-xs mb-2">Ingresos Estimados</p>
                       <p className="font-display font-black text-4xl text-gold">
                         ${adminAppts.reduce((acc, appt) => {
-                          const svc = services.find(s => s.name === appt.service);
-                          return acc + (svc ? svc.price : 0);
+                          const price = appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0);
+                          return acc + price;
                         }, 0).toLocaleString('es-AR')}
                       </p>
                     </div>
