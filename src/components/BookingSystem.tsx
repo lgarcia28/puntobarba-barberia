@@ -3225,13 +3225,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           <div className="bg-zinc-900 border border-white/5 p-6 rounded-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-4 mb-6 gap-4">
               <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-gold" />
+                <Scissors className="w-6 h-6 text-gold" />
                 <div>
                   <h3 className="font-display font-black text-2xl uppercase tracking-wider text-light-gray">
-                    Servicios & Precios
+                    Gestión de Servicios
                   </h3>
                   <p className="text-xs text-charcoal font-bold uppercase">
-                    Agrega, edita y elimina los servicios del taller
+                    Agrega, edita o elimina los servicios ofrecidos en la barbería
                   </p>
                 </div>
               </div>
@@ -3242,51 +3242,47 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   setNewService({ name: '', duration: 30, price: '', desc: '' });
                   setIsServiceModalOpen(true);
                 }}
-                className="bg-gold text-zinc-950 px-4 py-2.5 text-xs font-display font-bold uppercase tracking-widest hover:bg-gold/80 transition-all cursor-pointer rounded-sm flex items-center gap-2"
+                className="bg-gold hover:bg-gold-hover text-neutral-900 px-5 py-3 font-display font-bold uppercase tracking-widest text-[11px] shadow-md shadow-gold/10 transition-all duration-300 flex items-center gap-2 cursor-pointer rounded-sm"
               >
                 <Plus className="w-4 h-4" /> Agregar Servicio
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {services.map(svc => (
-                <div key={svc.id} className="bg-black/40 border border-white/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm">
+                <div key={svc.id} className="bg-black/30 border border-white/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h4 className="font-display font-bold text-xl uppercase tracking-wide text-light-gray">{svc.name}</h4>
-                    </div>
-                    {svc.desc && <p className="text-xs text-zinc-500 mt-1">{svc.desc}</p>}
+                    <h4 className="font-display font-black text-lg uppercase tracking-wide text-light-gray">{svc.name}</h4>
+                    <p className="text-[10px] text-charcoal font-bold uppercase mt-1 tracking-wider">
+                      Duración estimada: {svc.duration} minutos
+                    </p>
+                    {svc.desc && <p className="text-xs text-zinc-500 mt-1.5 normal-case">{svc.desc}</p>}
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
-                    <div className="flex flex-row gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                      <div className="flex items-center gap-3 bg-zinc-950 border border-white/5 px-4 py-2.5 rounded-sm">
-                        <span className="text-[10px] text-charcoal font-bold uppercase tracking-wider">Duración</span>
-                        <span className="font-display font-black text-base text-light-gray">{svc.duration} Min</span>
-                      </div>
-
-                      <div className="flex items-center gap-3 bg-zinc-950 border border-white/5 px-4 py-2.5 rounded-sm">
-                        <span className="text-[10px] text-charcoal font-bold uppercase tracking-wider">Precio</span>
-                        <span className="font-display font-black text-lg text-gold">${svc.price.toLocaleString('es-AR')}</span>
-                      </div>
+                  <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 border-white/5 pt-3 md:pt-0">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[10px] text-charcoal font-bold uppercase tracking-wider">Precio:</span>
+                      <span className="font-display font-black text-xl text-white">${svc.price.toLocaleString('es-AR')}</span>
                     </div>
 
-                    <div className="flex gap-2 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => {
                           setEditingServiceId(svc.id);
                           setEditingServiceForm({ name: svc.name, duration: svc.duration, price: String(svc.price), desc: svc.desc || '' });
                           setIsServiceModalOpen(true);
                         }}
-                        className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/5 cursor-pointer"
+                        className="bg-zinc-800/80 hover:bg-zinc-700 text-light-gray p-2 transition-colors cursor-pointer rounded-sm border border-white/5 flex items-center justify-center"
+                        title="Editar Servicio"
                       >
-                        Editar
+                        <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteService(svc.id)}
-                        className="text-[9px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors border border-red-500/20 px-3 py-1.5 rounded-full hover:bg-red-500/5 cursor-pointer"
+                        className="text-zinc-600 hover:text-red-500 p-2 transition-colors cursor-pointer flex items-center justify-center"
+                        title="Eliminar Servicio"
                       >
-                        Eliminar
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
