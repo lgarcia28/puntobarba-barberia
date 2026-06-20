@@ -1440,6 +1440,62 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }
   };
 
+  const handleCompleteAllAppointments = async () => {
+    if (!isIvan) return;
+    const dailyPending = adminAppts.filter((appt: any) => 
+      isSameDay(appt.startTime.toDate(), adminDate) && !appt.completed
+    );
+
+    if (dailyPending.length === 0) {
+      toast.error('No hay turnos pendientes para cobrar en este día.');
+      return;
+    }
+
+    if (!window.confirm(`¿Estás seguro que deseas cobrar los ${dailyPending.length} turnos pendientes de este día?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const batch = writeBatch(db);
+
+      for (const appt of dailyPending) {
+        const apptRef = doc(db, 'appointments', appt.id);
+        const price = appt.customPrice != null ? appt.customPrice : (services.find((s: any) => s.name === appt.service)?.price || 0);
+        
+        batch.update(apptRef, {
+          completed: true,
+          customPrice: price
+        });
+
+        if (appt.startTime && appt.endTime && appt.barberId) {
+          const start = appt.startTime.toDate();
+          const end = appt.endTime.toDate();
+          const durationMin = Math.round((end.getTime() - start.getTime()) / 60000);
+          const intervalsCount = Math.ceil(durationMin / 30);
+          const slotDateStr = format(start, 'yyyy-MM-dd');
+          for (let i = 0; i < intervalsCount; i++) {
+            const slotTime = addMinutes(start, i * 30);
+            const timeStr = format(slotTime, 'HH:mm');
+            const slotId = `${appt.barberId}_${slotDateStr}_${timeStr}`;
+            batch.delete(doc(db, 'slots', slotId));
+          }
+        }
+      }
+
+      await batch.commit();
+      toast.success(`Se cobraron ${dailyPending.length} turnos con éxito.`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Error al registrar el cobro masivo.');
+      handleFirestoreError(err, OperationType.UPDATE, 'appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
   const handleNewServiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newService.name || !newService.price) {
@@ -2233,18 +2289,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                <div
                                  key={tStr}
                                  onClick={() => {
-                                   if (hasPending) {
-                                     const pendingAppt = slotAppts.find(a => !a.completed);
-                                     if (pendingAppt) {
-                                       setCompletingAppt(pendingAppt);
-                                       setCompletingPrice(String(pendingAppt.customPrice != null ? pendingAppt.customPrice : (services.find(s => s.name === pendingAppt.service)?.price || 0)));
-                                     }
-                                   } else if (slotAppts.filter(a => !a.completed).length === 0 || block) {
-                                     if (isSelected) {
-                                       setSelectedTimesForBlocking(selectedTimesForBlocking.filter(t => t !== tStr));
-                                     } else {
-                                       setSelectedTimesForBlocking([...selectedTimesForBlocking, tStr]);
-                                     }
+                                   if (isSelected) {
+                                     setSelectedTimesForBlocking(selectedTimesForBlocking.filter(t => t !== tStr));
+                                   } else {
+                                     setSelectedTimesForBlocking([...selectedTimesForBlocking, tStr]);
                                    }
                                  }}
                                  className={`p-4 text-xs font-bold border transition-all flex flex-col items-center gap-1.5 min-h-[90px] justify-center relative cursor-pointer ${isSelected ? 'scale-105 z-10 shadow-2xl' : ''
@@ -2292,11 +2340,45 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         })()}
                       </div>
 
+                      {/* Botones de Bloquear/Desbloquear */}
+                      <div className="flex flex-col md:flex-row gap-4 my-8">
+                        <button
+                          onClick={handleBlockTime}
+                          disabled={(!isRangeMode && selectedTimesForBlocking.length === 0) || loading}
+                          className="flex-1 bg-gold py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-gold/80 transition-all"
+                        >
+                          {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : null}
+                          {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Bloquear Rango Completo' : `Bloquear / Cancelar Seleccionados (${selectedTimesForBlocking.length})`}
+                        </button>
+
+                        {(selectedTimesForBlocking.length > 0 || isRangeMode) && (
+                          <button
+                            onClick={handleUnblockTime}
+                            disabled={loading}
+                            className="bg-white text-black px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-50"
+                          >
+                            {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Desbloquear Rango Completo' : 'Desbloquear Seleccionados'}
+                          </button>
+                        )}
+                      </div>
+
                       {/* Agenda detallada del día */}
                       <div className="mt-8 border-t border-white/5 pt-8">
-                        <h4 className="font-display font-bold uppercase text-gold mb-4 flex items-center gap-2">
-                          <Database className="w-4 h-4" /> Agenda de {format(adminDate, 'EEEE dd/MM', { locale: es })}
-                        </h4>
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                          <h4 className="font-display font-bold uppercase text-gold flex items-center gap-2">
+                            <Database className="w-4 h-4" /> Agenda de {format(adminDate, 'EEEE dd/MM', { locale: es })}
+                          </h4>
+                          {isIvan && (
+                            <button
+                              onClick={handleCompleteAllAppointments}
+                              disabled={loading || adminAppts.filter((appt: any) => isSameDay(appt.startTime.toDate(), adminDate) && !appt.completed).length === 0}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm shadow-md shadow-emerald-950/20 flex items-center gap-1.5 disabled:opacity-50 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:shadow-none"
+                              title="Cobrar todos los turnos pendientes del día"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Cobrar Todos
+                            </button>
+                          )}
+                        </div>
                         <div className="space-y-2">
                           {adminAppts.filter((a: any) => isSameDay(a.startTime.toDate(), adminDate))
                             .sort((a: any, b: any) => a.startTime.toMillis() - b.startTime.toMillis())
@@ -2570,30 +2652,30 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           });
                         })()}
                       </div>
+                      
+                      {/* Botones de Bloquear/Desbloquear para modo rango en vista semanal */}
+                      <div className="flex flex-col md:flex-row gap-4 mt-8">
+                        <button
+                          onClick={handleBlockTime}
+                          disabled={(!isRangeMode && selectedTimesForBlocking.length === 0) || loading}
+                          className="flex-1 bg-gold py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-gold/80 transition-all"
+                        >
+                          {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : null}
+                          {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Bloquear Rango Completo' : `Bloquear / Cancelar Seleccionados (${selectedTimesForBlocking.length})`}
+                        </button>
+
+                        {(selectedTimesForBlocking.length > 0 || isRangeMode) && (
+                          <button
+                            onClick={handleUnblockTime}
+                            disabled={loading}
+                            className="bg-white text-black px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-50"
+                          >
+                            {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Desbloquear Rango Completo' : 'Desbloquear Seleccionados'}
+                          </button>
+                        )}
+                      </div>
                     </>
                   )}
-
-                  <div className="flex flex-col md:flex-row gap-4">
-
-                    <button
-                        onClick={handleBlockTime}
-                        disabled={(!isRangeMode && selectedTimesForBlocking.length === 0) || loading}
-                        className="flex-1 bg-gold py-4 font-display font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-gold/80 transition-all"
-                      >
-                        {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : null}
-                        {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Bloquear Rango Completo' : `Bloquear / Cancelar Seleccionados (${selectedTimesForBlocking.length})`}
-                      </button>
-
-                      {(selectedTimesForBlocking.length > 0 || isRangeMode) && (
-                        <button
-                          onClick={handleUnblockTime}
-                          disabled={loading}
-                          className="bg-white text-black px-8 py-4 font-display font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-50"
-                        >
-                          {isRangeMode && selectedTimesForBlocking.length === 0 ? 'Desbloquear Rango Completo' : 'Desbloquear Seleccionados'}
-                        </button>
-                      )}
-                    </div>
                   </div>
                 </div>
               )}
