@@ -154,6 +154,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', birthdate: '' });
+  const [isBirthdateAutocompleted, setIsBirthdateAutocompleted] = useState(false);
   const [selectedCourtesy, setSelectedCourtesy] = useState<string | null>(null);
   const [activeServiceCategory, setActiveServiceCategory] = useState<'Todos' | 'Cortes' | 'Barba' | 'Facial' | 'Combos'>('Todos');
   const [isFixedAppointment, setIsFixedAppointment] = useState(false);
@@ -183,6 +184,60 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       horariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   };
+
+  // Autocomplete customer name and birthday from previous appointments
+  useEffect(() => {
+    const phone = customerInfo.phone;
+    const normalized = normalizePhone(phone);
+    
+    // We only query if the normalized phone has a minimum reasonable length (e.g., 8 digits)
+    if (normalized.length < 8) {
+      setIsBirthdateAutocompleted(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const q = query(
+          collection(db, 'appointments'),
+          where('customerPhone', '==', normalized)
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          // Sort by startTime descending in memory to get the most recent appointment
+          const appts = querySnapshot.docs.map(doc => doc.data());
+          appts.sort((a, b) => (b.startTime || '').localeCompare(a.startTime || ''));
+          const latestAppt = appts[0];
+          
+          if (latestAppt) {
+            setCustomerInfo(prev => {
+              // Auto-fill name if it is currently empty or just placeholder
+              const newName = prev.name.trim() === '' ? (latestAppt.customerName || '') : prev.name;
+              
+              // If there's a birthdate, autocomplete it and set isBirthdateAutocompleted to true
+              let newBirthdate = prev.birthdate;
+              if (latestAppt.customerBirthdate) {
+                newBirthdate = latestAppt.customerBirthdate;
+                setIsBirthdateAutocompleted(true);
+              }
+              return {
+                ...prev,
+                name: newName,
+                birthdate: newBirthdate
+              };
+            });
+          }
+        } else {
+          // If no previous appointments found, reset autocompleted state
+          setIsBirthdateAutocompleted(false);
+        }
+      } catch (error) {
+        console.error("Error fetching previous appointments for autocomplete:", error);
+      }
+    }, 600); // 600ms debounce
+
+    return () => clearTimeout(timer);
+  }, [customerInfo.phone]);
 
   const isFirstMount = useRef(true);
 
@@ -1304,7 +1359,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         const b = barbers.find(barber => barber.id === appt.barberId);
         setSelectedBarber(b || null);
         setSelectedService(services.find(s => s.name === appt.service) || null);
-        setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+        setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone, birthdate: appt.customerBirthdate || '' });
         setReschedulingApptId(appt.id);
         setRescheduleOption('single');
         setIsFixedAppointment(false);
@@ -4179,13 +4234,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           className="w-full bg-black border border-white/10 p-4 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base"
                         />
                         <div className="space-y-1 text-left bg-black p-4 border border-white/10">
-                          <label className="block text-[10px] font-black uppercase text-charcoal tracking-widest mb-1 pl-1">Fecha de Nacimiento</label>
+                          <div className="flex items-center justify-between">
+                            <label className="block text-[10px] font-black uppercase text-charcoal tracking-widest mb-1 pl-1">Fecha de Nacimiento</label>
+                            {isBirthdateAutocompleted && (
+                              <span className="text-[9px] text-zinc-500 normal-case font-bold mb-1 pr-1">(Autocompletado de tu último turno)</span>
+                            )}
+                          </div>
                           <input
                             type="date"
                             required
                             value={customerInfo.birthdate}
-                            onChange={e => setCustomerInfo({ ...customerInfo, birthdate: e.target.value })}
-                            className="w-full bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base text-light-gray"
+                            onChange={e => {
+                              setCustomerInfo({ ...customerInfo, birthdate: e.target.value });
+                              setIsBirthdateAutocompleted(false);
+                            }}
+                            className={`w-full bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800' : 'text-light-gray'}`}
                           />
                         </div>
                         {!reschedulingApptId && (
@@ -4527,7 +4590,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     const b = barbers.find(barber => barber.id === appt.barberId);
                     setSelectedBarber(b || null);
                     setSelectedService(services.find(s => s.name === appt.service) || null);
-                    setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+                    setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone, birthdate: appt.customerBirthdate || '' });
                     setReschedulingApptId(appt.id);
                     setRescheduleOption('single');
                     setIsFixedAppointment(false); // only rescheduling this single week instance
@@ -4548,7 +4611,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     const b = barbers.find(barber => barber.id === appt.barberId);
                     setSelectedBarber(b || null);
                     setSelectedService(services.find(s => s.name === appt.service) || null);
-                    setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone });
+                    setCustomerInfo({ name: appt.customerName, phone: appt.customerPhone, birthdate: appt.customerBirthdate || '' });
                     setReschedulingApptId(appt.id);
                     setRescheduleOption('series');
                     setIsFixedAppointment(true); // rescheduling the entire series
