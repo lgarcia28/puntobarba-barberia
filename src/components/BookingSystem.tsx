@@ -238,6 +238,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 newBirthdate = latestApptWithBirthdate.customerBirthdate;
                 setIsBirthdateAutocompleted(true);
                 console.log("[Autocomplete] Setting birthdate to:", newBirthdate);
+                if (document.activeElement === birthdateInputRef.current) {
+                  birthdateInputRef.current?.blur();
+                }
               }
               return {
                 ...prev,
@@ -4270,7 +4273,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               type={isBirthdateAutocompleted ? "text" : "date"}
                               required
                               readOnly={isBirthdateAutocompleted}
-                              tabIndex={-1}
+                              tabIndex={isBirthdateAutocompleted ? -1 : 0}
                               value={isBirthdateAutocompleted ? (() => {
                                 const parts = customerInfo.birthdate.split('-');
                                 return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : customerInfo.birthdate;
