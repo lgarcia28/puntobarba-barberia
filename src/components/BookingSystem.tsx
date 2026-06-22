@@ -198,9 +198,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
     const timer = setTimeout(async () => {
       try {
+        const variations = getPhoneVariations(phone);
+        if (variations.length === 0) return;
         const q = query(
           collection(db, 'appointments'),
-          where('customerPhone', '==', normalized)
+          where('customerPhone', 'in', variations)
         );
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
