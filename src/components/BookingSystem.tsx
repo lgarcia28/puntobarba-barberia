@@ -200,17 +200,19 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       try {
         const variations = getPhoneVariations(phone);
         if (variations.length === 0) return;
+        console.log("[Autocomplete] Searching for variations:", variations);
         const q = query(
           collection(db, 'appointments'),
           where('customerPhone', 'in', variations)
         );
         const querySnapshot = await getDocs(q);
+        console.log("[Autocomplete] Found documents:", querySnapshot.size);
         if (!querySnapshot.empty) {
-          // Sort by startTime descending in memory to get the most recent appointment
           const appts = querySnapshot.docs.map(doc => doc.data());
           appts.sort((a, b) => (b.startTime?.toMillis?.() || 0) - (a.startTime?.toMillis?.() || 0));
           const latestApptOverall = appts[0];
           const latestApptWithBirthdate = appts.find(a => a.customerBirthdate);
+          console.log("[Autocomplete] Latest overall:", latestApptOverall?.customerName, "Latest with birthdate:", latestApptWithBirthdate?.customerBirthdate);
           
           if (latestApptOverall || latestApptWithBirthdate) {
             setCustomerInfo(prev => {
@@ -222,6 +224,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               if (latestApptWithBirthdate && latestApptWithBirthdate.customerBirthdate) {
                 newBirthdate = latestApptWithBirthdate.customerBirthdate;
                 setIsBirthdateAutocompleted(true);
+                console.log("[Autocomplete] Setting birthdate to:", newBirthdate);
               }
               return {
                 ...prev,
@@ -235,7 +238,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           setIsBirthdateAutocompleted(false);
         }
       } catch (error) {
-        console.error("Error fetching previous appointments for autocomplete:", error);
+        console.error("[Autocomplete] Error fetching previous appointments:", error);
       }
     }, 600); // 600ms debounce
 
