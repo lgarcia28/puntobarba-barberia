@@ -175,6 +175,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [adminBlocks, setAdminBlocks] = useState<any[]>([]);
 
   const adminDateInputRef = useRef<HTMLInputElement>(null);
+  const birthdateInputRef = useRef<HTMLInputElement>(null);
   const blockingEndDateInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const horariosRef = useRef<HTMLDivElement>(null);
@@ -195,6 +196,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       setIsBirthdateAutocompleted(false);
       return;
     }
+
+    const clean = phone.replace(/\D/g, "");
+    const isComplete = clean.length === 10 || 
+                       (clean.length === 13 && clean.startsWith("549")) ||
+                       (clean.length === 12 && clean.startsWith("54") && !clean.startsWith("549")) ||
+                       clean.length === 9 ||
+                       (clean.length === 11 && clean.startsWith("34"));
+    const delay = isComplete ? 0 : 300;
 
     const timer = setTimeout(async () => {
       try {
@@ -244,7 +253,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       } catch (error) {
         console.error("[Autocomplete] Error fetching previous appointments:", error);
       }
-    }, 600); // 600ms debounce
+    }, delay);
 
     return () => clearTimeout(timer);
   }, [customerInfo.phone]);
@@ -4257,9 +4266,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           </div>
                           <div className="flex gap-2 items-center">
                             <input
+                              ref={birthdateInputRef}
                               type={isBirthdateAutocompleted ? "text" : "date"}
                               required
                               readOnly={isBirthdateAutocompleted}
+                              tabIndex={-1}
                               value={isBirthdateAutocompleted ? (() => {
                                 const parts = customerInfo.birthdate.split('-');
                                 return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : customerInfo.birthdate;
@@ -4273,7 +4284,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             {isBirthdateAutocompleted && (
                               <button
                                 type="button"
-                                onClick={() => setIsBirthdateAutocompleted(false)}
+                                onClick={() => {
+                                  setIsBirthdateAutocompleted(false);
+                                  setTimeout(() => {
+                                    if (birthdateInputRef.current) {
+                                      birthdateInputRef.current.focus();
+                                      if (typeof birthdateInputRef.current.showPicker === 'function') {
+                                        try {
+                                          birthdateInputRef.current.showPicker();
+                                        } catch (e) {
+                                          console.error("showPicker failed", e);
+                                        }
+                                      }
+                                    }
+                                  }, 100);
+                                }}
                                 className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm cursor-pointer transition-colors shrink-0"
                               >
                                 Modificar
