@@ -209,17 +209,18 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           // Sort by startTime descending in memory to get the most recent appointment
           const appts = querySnapshot.docs.map(doc => doc.data());
           appts.sort((a, b) => (b.startTime?.toMillis?.() || 0) - (a.startTime?.toMillis?.() || 0));
-          const latestAppt = appts[0];
+          const latestApptOverall = appts[0];
+          const latestApptWithBirthdate = appts.find(a => a.customerBirthdate);
           
-          if (latestAppt) {
+          if (latestApptOverall || latestApptWithBirthdate) {
             setCustomerInfo(prev => {
               // Auto-fill name if it is currently empty or just placeholder
-              const newName = prev.name.trim() === '' ? (latestAppt.customerName || '') : prev.name;
+              const newName = prev.name.trim() === '' ? ((latestApptOverall?.customerName) || '') : prev.name;
               
               // If there's a birthdate, autocomplete it and set isBirthdateAutocompleted to true
               let newBirthdate = prev.birthdate;
-              if (latestAppt.customerBirthdate) {
-                newBirthdate = latestAppt.customerBirthdate;
+              if (latestApptWithBirthdate && latestApptWithBirthdate.customerBirthdate) {
+                newBirthdate = latestApptWithBirthdate.customerBirthdate;
                 setIsBirthdateAutocompleted(true);
               }
               return {
@@ -300,13 +301,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [editingProductForm, setEditingProductForm] = useState({ name: '', desc: '', price: '', tag: '', img: '' });
 
   useEffect(() => {
+    if (!isBarberAdmin) return;
     const q = query(collection(db, 'products'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const prodsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setProducts(prodsData);
     });
     return unsubscribe;
-  }, []);
+  }, [isBarberAdmin]);
 
   // Courtesy drinks states and handlers
   const [drinks, setDrinks] = useState<any[]>([]);
