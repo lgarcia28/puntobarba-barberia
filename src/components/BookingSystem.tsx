@@ -4257,10 +4257,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           </div>
                           <div className="flex gap-2 items-center">
                             <input
-                              type="date"
+                              type={isBirthdateAutocompleted ? "text" : "date"}
                               required
                               readOnly={isBirthdateAutocompleted}
-                              value={customerInfo.birthdate}
+                              value={isBirthdateAutocompleted ? (() => {
+                                const parts = customerInfo.birthdate.split('-');
+                                return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : customerInfo.birthdate;
+                              })() : customerInfo.birthdate}
                               onChange={e => {
                                 setCustomerInfo({ ...customerInfo, birthdate: e.target.value });
                                 setIsBirthdateAutocompleted(false);
