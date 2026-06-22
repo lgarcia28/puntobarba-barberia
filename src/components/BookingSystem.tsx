@@ -209,7 +209,11 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         console.log("[Autocomplete] Found documents:", querySnapshot.size);
         if (!querySnapshot.empty) {
           const appts = querySnapshot.docs.map(doc => doc.data());
-          appts.sort((a, b) => (b.startTime?.toMillis?.() || 0) - (a.startTime?.toMillis?.() || 0));
+          appts.sort((a, b) => {
+            const timeA = a.createdAt?.toMillis?.() || a.startTime?.toMillis?.() || 0;
+            const timeB = b.createdAt?.toMillis?.() || b.startTime?.toMillis?.() || 0;
+            return timeB - timeA;
+          });
           const latestApptOverall = appts[0];
           const latestApptWithBirthdate = appts.find(a => a.customerBirthdate);
           console.log("[Autocomplete] Latest overall:", latestApptOverall?.customerName, "Latest with birthdate:", latestApptWithBirthdate?.customerBirthdate);
@@ -4251,16 +4255,28 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               <span className="text-[9px] text-zinc-500 normal-case font-bold mb-1 pr-1">(Autocompletado de tu último turno)</span>
                             )}
                           </div>
-                          <input
-                            type="date"
-                            required
-                            value={customerInfo.birthdate}
-                            onChange={e => {
-                              setCustomerInfo({ ...customerInfo, birthdate: e.target.value });
-                              setIsBirthdateAutocompleted(false);
-                            }}
-                            className={`w-full bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800' : 'text-light-gray'}`}
-                          />
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="date"
+                              required
+                              readOnly={isBirthdateAutocompleted}
+                              value={customerInfo.birthdate}
+                              onChange={e => {
+                                setCustomerInfo({ ...customerInfo, birthdate: e.target.value });
+                                setIsBirthdateAutocompleted(false);
+                              }}
+                              className={`flex-1 bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800/40 cursor-not-allowed' : 'text-light-gray'}`}
+                            />
+                            {isBirthdateAutocompleted && (
+                              <button
+                                type="button"
+                                onClick={() => setIsBirthdateAutocompleted(false)}
+                                className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm cursor-pointer transition-colors shrink-0"
+                              >
+                                Modificar
+                              </button>
+                            )}
+                          </div>
                         </div>
                         {!reschedulingApptId && (
                           <div className="space-y-3">
