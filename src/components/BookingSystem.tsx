@@ -3684,7 +3684,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   placeholder="Tu número de teléfono"
                   value={searchPhone}
                   onChange={(e) => setSearchPhone(e.target.value)}
-                  className="flex-1 bg-zinc-900 border border-white/10 px-6 py-3.5 rounded-full text-white font-display uppercase tracking-widest text-xs focus:outline-none focus:border-gold/50"
+                  className="flex-1 bg-zinc-900 border border-white/10 px-6 py-3.5 rounded-full text-white font-display uppercase tracking-widest text-base focus:outline-none focus:border-gold/50"
                 />
                 <button
                   type="submit"
