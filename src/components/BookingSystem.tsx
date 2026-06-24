@@ -3830,7 +3830,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
                       <User className="text-gold w-5 h-5" /> Selecciona tu Barbero
                     </h3>
-                    <div className="grid grid-cols-3 gap-3 md:gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
                       {barbers.filter(b => b.email !== 'leoneldariogarcia@gmail.com').map(barber => (
                         <button
                           key={barber.id}
