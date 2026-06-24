@@ -2038,7 +2038,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       onClick={() => setSelectedBarber(b)}
                       className={`p-4 border ${selectedBarber?.id === b.id ? 'border-gold bg-gold/10' : 'border-white/5 bg-black'} transition-all text-left flex items-center gap-4`}
                     >
-                      <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full grayscale object-cover" referrerPolicy="no-referrer" />
+                      <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full grayscale object-cover flex-shrink-0" referrerPolicy="no-referrer" />
                       <span className="font-display font-bold uppercase text-sm">{b.name}</span>
                     </button>
                   ))}
@@ -2797,7 +2797,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   <label className="block text-xs font-bold uppercase mb-2 text-charcoal">Foto del Perfil</label>
                   <div className="flex items-center gap-4">
                     {newBarber.photo && (
-                      <img src={newBarber.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-white/10" />
+                      <img src={newBarber.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-white/10 flex-shrink-0" />
                     )}
                     <input
                       type="file"
@@ -2911,7 +2911,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               {barbers.map(b => (
                 <div key={b.id} className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5">
                   <div className="flex items-center gap-4">
-                    <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full object-cover grayscale border border-white/5" referrerPolicy="no-referrer" />
+                    <img src={b.photo} alt={b.name} className="w-16 h-16 rounded-full object-cover grayscale border border-white/5 flex-shrink-0" referrerPolicy="no-referrer" />
                     <div>
                       <p className="font-bold uppercase text-sm">{b.name}</p>
                       <p className="text-xs text-charcoal">{b.email}</p>
@@ -3303,7 +3303,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <img src={b.photo} alt={b.name} className="w-10 h-10 rounded-full grayscale object-cover" referrerPolicy="no-referrer" />
+                              <img src={b.photo} alt={b.name} className="w-10 h-10 rounded-full grayscale object-cover flex-shrink-0" referrerPolicy="no-referrer" />
                               <div>
                                 <p className="font-display font-bold uppercase text-xs text-light-gray">{b.name}</p>
                                 <p className="text-[10px] text-charcoal uppercase font-bold">
