@@ -184,7 +184,7 @@ export async function addBarber(barber: any) {
   }
   try {
     const barberRef = doc(collection(db, 'barbers'));
-    await setDoc(barberRef, { ...barber, id: barberRef.id });
+    await setDoc(barberRef, { ...barber, id: barberRef.id, createdAt: Timestamp.now() });
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, 'barbers');
