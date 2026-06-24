@@ -3840,7 +3840,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                           <img src={barber.photo} alt={barber.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" referrerPolicy="no-referrer" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                           <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 text-left">
-                            <p className="font-display font-black uppercase text-sm sm:text-xl md:text-2xl leading-tight">{barber.name}</p>
+                            <p className="font-display font-black uppercase text-xs sm:text-sm md:text-base leading-tight">{barber.name}</p>
                           </div>
                         </button>
                       ))}
