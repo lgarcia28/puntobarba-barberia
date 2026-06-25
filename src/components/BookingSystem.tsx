@@ -546,8 +546,17 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       }
     });
   }, []);
-
-
+  // Trigger pending WhatsApp reminders check in background on load
+  useEffect(() => {
+    fetch('/api/cron-reminders')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.sent && data.sent.length > 0) {
+          console.log(`[Reminders Cron] Automatically processed and sent ${data.sent.length} reminders.`);
+        }
+      })
+      .catch(err => console.error('[Reminders Cron] Error processing background reminders:', err));
+  }, []);
 
   // Reset selected time when barber or service changes to prevent stale booking hours
   useEffect(() => {
