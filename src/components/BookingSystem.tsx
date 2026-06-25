@@ -587,20 +587,21 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
         // If alphabetical sorting is enabled
         if (shopSettings?.barberSortOrder === 'alphabetical') {
-          return a.name.localeCompare(b.name);
+          return (a.name || '').localeCompare(b.name || '');
         }
 
         // Default chronological order (sort by createdAt)
-        // Missing createdAt elements will default to 0
-        const aTime = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-        const bTime = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+        let aTime = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+        let bTime = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+        if (isNaN(aTime)) aTime = 0;
+        if (isNaN(bTime)) bTime = 0;
         
         if (aTime !== bTime) {
           return aTime - bTime;
         }
 
         // Fallback to alphabetical if timestamps are identical
-        return a.name.localeCompare(b.name);
+        return (a.name || '').localeCompare(b.name || '');
       });
 
       setBarbers(sortedBarbers);
@@ -609,6 +610,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       if (sortedBarbers.length === 0) {
         setBarbers(INITIAL_BARBERS as Barber[]);
       }
+    }, (err) => {
+      console.error("Error fetching barbers from Firestore:", err);
+      // Fallback to local default barbers in case of Firestore error (like quota exceeded)
+      setBarbers(INITIAL_BARBERS as Barber[]);
     });
     return unsubscribe;
   }, [shopSettings?.barberSortOrder]);

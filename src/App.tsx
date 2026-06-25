@@ -158,6 +158,17 @@ export default function App() {
         const adminEmails = ['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
         const userEmailLower = (user.email || '').toLowerCase();
         const isIvanUser = adminEmails.some(email => email.toLowerCase() === userEmailLower);
+
+        // Proactive check: if user is a hardcoded admin, authorize immediately
+        if (isIvanUser) {
+          setIsBarberAdmin(true);
+          if (isBookingOpenRef.current) {
+            setIsBookingOpen(false);
+            window.history.pushState({}, '', '/admin');
+            setCurrentPath('/admin');
+          }
+        }
+
         const q = query(collection(db, 'barbers'));
         unsubBarbers = onSnapshot(q, (snapshot) => {
           const barbersEmails = snapshot.docs.map(doc => doc.data().email || '');
@@ -171,6 +182,12 @@ export default function App() {
             }
           } else {
             setIsBarberAdmin(false);
+          }
+        }, (err) => {
+          console.error("Error loading barbers in App:", err);
+          // If Firestore read fails (e.g. quota limit), fallback to proactive state
+          if (isIvanUser) {
+            setIsBarberAdmin(true);
           }
         });
       } else {
