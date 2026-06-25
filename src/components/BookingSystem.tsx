@@ -618,11 +618,12 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       setUser(u);
       if (u) {
         const adminEmails = ['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
-        const isIvanUser = adminEmails.includes(u.email || '');
+        const userEmailLower = (u.email || '').toLowerCase();
+        const isIvanUser = adminEmails.some(email => email.toLowerCase() === userEmailLower);
         setIsIvan(isIvanUser && !forceClientFlow);
 
-        // Check if user is a barber in the dynamic list
-        const barber = barbers.find(b => b.email === u.email);
+        // Check if user is a barber in the dynamic list (case-insensitive)
+        const barber = barbers.find(b => (b.email || '').toLowerCase() === userEmailLower);
         if ((barber || isIvanUser) && !forceClientFlow) {
           setIsBarberAdmin(true);
           // If not Ivan, auto-select the barber
@@ -2050,7 +2051,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
         <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {barbers
-                  .filter(b => isIvan || b.email === user?.email)
+                  .filter(b => isIvan || (b.email || '').toLowerCase() === (user?.email || '').toLowerCase())
                   .map(b => (
                     <button
                       key={b.id}
@@ -2172,7 +2173,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     if (!selectedBarber) return null;
                     const adminEmails = ['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
                     const bName = selectedBarber.name?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    const isOwnerBarber = adminEmails.includes(selectedBarber.email || '') || bName?.includes('ivan');
+                    const isOwnerBarber = adminEmails.some(email => email.toLowerCase() === (selectedBarber.email || '').toLowerCase()) || bName?.includes('ivan');
                     if (isOwnerBarber) return null;
 
                     const completedAppts = adminAppts.filter((a: any) => a.completed);
@@ -2849,7 +2850,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   onChange={(e) => setNewBarber({ ...newBarber, email: e.target.value })}
                   className="bg-zinc-900 border border-white/10 p-3 text-sm focus:border-gold outline-none"
                 />
-                {!['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'].includes(newBarber.email) && (
+                {!['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'].includes((newBarber.email || '').toLowerCase()) && (
                   <div className="md:col-span-2 bg-zinc-900/50 p-4 border border-white/5 rounded-sm">
                     <label className="block text-xs font-bold uppercase mb-2 text-charcoal">Porcentaje de Comisión para el Barbero (%)</label>
                     <div className="flex items-center gap-4">
@@ -3031,7 +3032,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
-                    {b.email !== auth.currentUser?.email && (
+                    {(b.email || '').toLowerCase() !== (auth.currentUser?.email || '').toLowerCase() && (
                       <button
                         onClick={async () => {
                           if (window.confirm(`¿Estás seguro de eliminar a ${b.name}?`)) {
@@ -3299,7 +3300,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                 const processedAppts = finanzasAppts.map(appt => {
                   const barber = barbers.find(b => b.id === appt.barberId);
-                  const isIvanCut = barber?.id === 'ivan-nunez' || barber?.email === 'puntobarba.barber@gmail.com' || barber?.email === 'leoneldariogarcia@gmail.com' || barber?.email === 'puntobarbabarberia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
+                  const barberEmailLower = (barber?.email || '').toLowerCase();
+                  const isIvanCut = barber?.id === 'ivan-nunez' || barberEmailLower === 'puntobarba.barber@gmail.com' || barberEmailLower === 'leoneldariogarcia@gmail.com' || barberEmailLower === 'puntobarbabarberia@gmail.com' || (barber?.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
                   const svcPrice = appt.customPrice != null ? appt.customPrice : (services.find(s => s.name === appt.service)?.price || 0);
                   
                   let ivanShare = 0;
@@ -3344,7 +3346,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   const completedAppts = barberAppts.filter(a => a.completed);
                   const pendingAppts = barberAppts.filter(a => !a.completed);
 
-                  const isIvanBarber = barber.id === 'ivan-nunez' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || barber.email === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
+                  const bEmailLower = (barber.email || '').toLowerCase();
+                  const isIvanBarber = barber.id === 'ivan-nunez' || bEmailLower === 'puntobarba.barber@gmail.com' || bEmailLower === 'leoneldariogarcia@gmail.com' || bEmailLower === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
 
                   const totalEarnedVal = completedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
                   const commPct = barber.commissionPercentage !== undefined ? barber.commissionPercentage : 50;
@@ -3442,7 +3445,8 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                       const individualBarberEarnings = barbers.map(barber => {
                         const barberCompletedAppts = filteredAppts.filter(a => a.barberId === barber.id && a.completed);
                         const totalEarnedVal = barberCompletedAppts.reduce((sum, a) => sum + a.svcPrice, 0);
-                        const isIvanBarber = barber.id === 'ivan-nunez' || barber.email === 'puntobarba.barber@gmail.com' || barber.email === 'leoneldariogarcia@gmail.com' || barber.email === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
+                        const bEmailLower = (barber.email || '').toLowerCase();
+                        const isIvanBarber = barber.id === 'ivan-nunez' || bEmailLower === 'puntobarba.barber@gmail.com' || bEmailLower === 'leoneldariogarcia@gmail.com' || bEmailLower === 'puntobarbabarberia@gmail.com' || (barber.name && barber.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('ivan'));
                         const commPct = barber.commissionPercentage !== undefined ? barber.commissionPercentage : 50;
                         const commissionVal = isIvanBarber ? totalEarnedVal : totalEarnedVal * (commPct / 100);
                         return {

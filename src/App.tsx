@@ -156,11 +156,12 @@ export default function App() {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         const adminEmails = ['leoneldariogarcia@gmail.com', 'puntobarba.barber@gmail.com', 'puntobarbabarberia@gmail.com'];
-        const isIvanUser = adminEmails.includes(user.email || '');
+        const userEmailLower = (user.email || '').toLowerCase();
+        const isIvanUser = adminEmails.some(email => email.toLowerCase() === userEmailLower);
         const q = query(collection(db, 'barbers'));
         unsubBarbers = onSnapshot(q, (snapshot) => {
-          const barbersEmails = snapshot.docs.map(doc => doc.data().email);
-          const isBarber = barbersEmails.includes(user.email || '');
+          const barbersEmails = snapshot.docs.map(doc => doc.data().email || '');
+          const isBarber = barbersEmails.some(email => email.toLowerCase() === userEmailLower);
           if (isIvanUser || isBarber) {
             setIsBarberAdmin(true);
             if (isBookingOpenRef.current) {
