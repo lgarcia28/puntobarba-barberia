@@ -1385,9 +1385,60 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
   const handleUpdateDuration = async (appt: any, newDuration: number) => {
     try {
-      const newEndTime = addMinutes(appt.startTime.toDate(), newDuration);
+      const startTime = appt.startTime.toDate();
+      const oldEndTime = appt.endTime.toDate();
+      const newEndTime = addMinutes(startTime, newDuration);
       const apptRef = doc(db, 'appointments', appt.id);
-      await updateDoc(apptRef, { endTime: Timestamp.fromDate(newEndTime) });
+
+      const batch = writeBatch(db);
+      batch.update(apptRef, { endTime: Timestamp.fromDate(newEndTime) });
+
+      // Calculate old slots
+      const oldDuration = Math.round((oldEndTime.getTime() - startTime.getTime()) / (60 * 1000));
+      const oldIntervalsCount = Math.ceil(oldDuration / 30);
+      const oldSlotIds: string[] = [];
+      const oldSlotTimes: Date[] = [];
+      for (let i = 0; i < oldIntervalsCount; i++) {
+        const slotTime = addMinutes(startTime, i * 30);
+        const slotDateStr = format(slotTime, 'yyyy-MM-dd');
+        const timeStr = format(slotTime, 'HH:mm');
+        const slotId = `${appt.barberId}_${slotDateStr}_${timeStr}`;
+        oldSlotIds.push(slotId);
+        oldSlotTimes.push(slotTime);
+      }
+
+      // Calculate new slots
+      const newIntervalsCount = Math.ceil(newDuration / 30);
+      const newSlotIds: string[] = [];
+      const newSlotTimes: Date[] = [];
+      for (let i = 0; i < newIntervalsCount; i++) {
+        const slotTime = addMinutes(startTime, i * 30);
+        const slotDateStr = format(slotTime, 'yyyy-MM-dd');
+        const timeStr = format(slotTime, 'HH:mm');
+        const slotId = `${appt.barberId}_${slotDateStr}_${timeStr}`;
+        newSlotIds.push(slotId);
+        newSlotTimes.push(slotTime);
+      }
+
+      // Delete extra old slots
+      oldSlotIds.forEach((slotId) => {
+        if (!newSlotIds.includes(slotId)) {
+          batch.delete(doc(db, 'slots', slotId));
+        }
+      });
+
+      // Create new slots if extended
+      newSlotIds.forEach((slotId, idx) => {
+        if (!oldSlotIds.includes(slotId)) {
+          batch.set(doc(db, 'slots', slotId), {
+            barberId: appt.barberId,
+            startTime: Timestamp.fromDate(newSlotTimes[idx]),
+            appointmentId: appt.id
+          });
+        }
+      });
+
+      await batch.commit();
       toast.success('Duración actualizada correctamente.');
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, 'appointments');
@@ -1437,13 +1488,69 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
       } else {
         updates.customPrice = null;
       }
+
+      const startTime = editingAppt.startTime.toDate();
+      const oldEndTime = editingAppt.endTime.toDate();
+
       // If service changed, update endTime based on new duration
       const svcDurations: Record<string, number> = { 'Corte': 30, 'Corte y Barba': 60, 'Barba': 30 };
       const newDuration = svcDurations[editForm.service];
+      let newEndTime = oldEndTime;
       if (newDuration) {
-        updates.endTime = Timestamp.fromDate(addMinutes(editingAppt.startTime.toDate(), newDuration));
+        newEndTime = addMinutes(startTime, newDuration);
+        updates.endTime = Timestamp.fromDate(newEndTime);
       }
-      await updateDoc(apptRef, updates);
+
+      const batch = writeBatch(db);
+      batch.update(apptRef, updates);
+
+      // Calculate old slots
+      const oldDuration = Math.round((oldEndTime.getTime() - startTime.getTime()) / (60 * 1000));
+      const oldIntervalsCount = Math.ceil(oldDuration / 30);
+      const oldSlotIds: string[] = [];
+      const oldSlotTimes: Date[] = [];
+      for (let i = 0; i < oldIntervalsCount; i++) {
+        const slotTime = addMinutes(startTime, i * 30);
+        const slotDateStr = format(slotTime, 'yyyy-MM-dd');
+        const timeStr = format(slotTime, 'HH:mm');
+        const slotId = `${editingAppt.barberId}_${slotDateStr}_${timeStr}`;
+        oldSlotIds.push(slotId);
+        oldSlotTimes.push(slotTime);
+      }
+
+      // Calculate new slots
+      const newDurationMs = Math.round((newEndTime.getTime() - startTime.getTime()) / (60 * 1000));
+      const newIntervalsCount = Math.ceil(newDurationMs / 30);
+      const newSlotIds: string[] = [];
+      const newSlotTimes: Date[] = [];
+      for (let i = 0; i < newIntervalsCount; i++) {
+        const slotTime = addMinutes(startTime, i * 30);
+        const slotDateStr = format(slotTime, 'yyyy-MM-dd');
+        const timeStr = format(slotTime, 'HH:mm');
+        const slotId = `${editingAppt.barberId}_${slotDateStr}_${timeStr}`;
+        newSlotIds.push(slotId);
+        newSlotTimes.push(slotTime);
+      }
+
+      // Delete extra old slots
+      oldSlotIds.forEach((slotId) => {
+        if (!newSlotIds.includes(slotId)) {
+          batch.delete(doc(db, 'slots', slotId));
+        }
+      });
+
+      // Create new slots
+      newSlotIds.forEach((slotId, idx) => {
+        if (!oldSlotIds.includes(slotId)) {
+          batch.set(doc(db, 'slots', slotId), {
+            barberId: editingAppt.barberId,
+            startTime: Timestamp.fromDate(newSlotTimes[idx]),
+            appointmentId: editingAppt.id
+          });
+        }
+      });
+
+      await batch.commit();
       toast.success('Turno actualizado correctamente.');
       setEditingAppt(null);
     } catch (err) {
