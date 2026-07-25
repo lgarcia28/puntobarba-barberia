@@ -3851,7 +3851,26 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                   </p>
                 </div>
               </div>
-              <div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-charcoal cursor-pointer hover:text-light-gray transition-colors pr-2 py-2">
+                  <input
+                    type="checkbox"
+                    checked={shopSettings?.courtesyEnabled !== false}
+                    onChange={async (e) => {
+                      const enabled = e.target.checked;
+                      const updatedSettings = { ...shopSettings, courtesyEnabled: enabled };
+                      setShopSettings(updatedSettings);
+                      try {
+                        await updateShopSettings({ courtesyEnabled: enabled });
+                        toast.success(enabled ? 'Paso de cortesía HABILITADO para clientes.' : 'Paso de cortesía DESHABILITADO para clientes.');
+                      } catch (err) {
+                        toast.error('Error al actualizar configuración.');
+                      }
+                    }}
+                    className="accent-gold h-4.5 w-4.5 rounded border-white/10 bg-zinc-900 cursor-pointer"
+                  />
+                  Habilitar cortesías
+                </label>
                 <button
                   onClick={() => {
                     setEditingDrinkId(null);
@@ -4375,7 +4394,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         {getAvailableSlots().map(time => (
                           <button
                             key={time}
-                            onClick={() => { setSelectedTime(time); setStep(5); }}
+                            onClick={() => {
+                              setSelectedTime(time);
+                              const isCourtesyEnabled = shopSettings?.courtesyEnabled !== false;
+                              if (isCourtesyEnabled) {
+                                setStep(5);
+                              } else {
+                                setSelectedCourtesy('Ninguna');
+                                setStep(6);
+                              }
+                            }}
                             className={`py-2.5 sm:py-3.5 border font-display font-black text-sm sm:text-base md:text-lg transition-all cursor-pointer rounded-sm ${selectedTime === time ? 'border-white bg-white text-black' : 'border-white/5 bg-black text-charcoal hover:border-gold hover:text-gold'}`}
                           >
                             {time}
@@ -4475,7 +4503,13 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
-                    <button onClick={() => setStep(5)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
+                    <button
+                      onClick={() => {
+                        const isCourtesyEnabled = shopSettings?.courtesyEnabled !== false;
+                        setStep(isCourtesyEnabled ? 5 : 4);
+                      }}
+                      className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer"
+                    >
                       <ChevronLeft className="w-4 h-4" /> Volver
                     </button>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-black uppercase flex items-center gap-3">
