@@ -157,7 +157,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [selectedTimesForBlocking, setSelectedTimesForBlocking] = useState<string[]>([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', birthdate: '' });
   const [isBirthdateAutocompleted, setIsBirthdateAutocompleted] = useState(false);
-  const [birthdateInputVal, setBirthdateInputVal] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [selectedCourtesy, setSelectedCourtesy] = useState<string | null>(null);
   const [activeServiceCategory, setActiveServiceCategory] = useState<'Todos' | 'Cortes' | 'Barba' | 'Facial' | 'Combos'>('Todos');
   const [isFixedAppointment, setIsFixedAppointment] = useState(false);
@@ -178,7 +180,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const [adminBlocks, setAdminBlocks] = useState<any[]>([]);
 
   const adminDateInputRef = useRef<HTMLInputElement>(null);
-  const birthdateInputRef = useRef<HTMLInputElement>(null);
+  const birthDayRef = useRef<HTMLInputElement>(null);
+  const birthMonthRef = useRef<HTMLInputElement>(null);
+  const birthYearRef = useRef<HTMLInputElement>(null);
   const hiddenDatePickerRef = useRef<HTMLInputElement>(null);
   const blockingEndDateInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -190,78 +194,126 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     }, 100);
   };
 
-  // Format birthdate typing mask DD/MM/AAAA
-  const formatBirthdateInput = (value: string, prevValue: string): string => {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      const [y, m, d] = value.split('-');
-      return `${d}/${m}/${y}`;
-    }
+  // Update customerInfo.birthdate (ISO YYYY-MM-DD) whenever day, month, year change
+  const updateBirthdateISO = (dStr: string, mStr: string, yStr: string) => {
+    if (dStr.length > 0 && mStr.length > 0 && yStr.length === 4) {
+      const day = parseInt(dStr, 10);
+      const month = parseInt(mStr, 10);
+      const year = parseInt(yStr, 10);
+      const now = new Date();
 
-    const isDeleting = value.length < prevValue.length;
-
-    // If user explicitly typed a slash after a 1-digit day or month, auto-pad with leading 0
-    if (!isDeleting && value.endsWith('/') && !prevValue.endsWith('/')) {
-      const parts = value.split('/');
-      if (parts.length === 2 && parts[0].length === 1) {
-        value = '0' + parts[0] + '/';
-      } else if (parts.length === 3 && parts[1].length === 1) {
-        value = parts[0] + '/0' + parts[1] + '/';
+      if (
+        !isNaN(day) && !isNaN(month) && !isNaN(year) &&
+        day >= 1 && day <= 31 &&
+        month >= 1 && month <= 12 &&
+        year >= 1920 && year <= now.getFullYear()
+      ) {
+        const dateObj = new Date(year, month - 1, day);
+        if (
+          dateObj.getFullYear() === year &&
+          dateObj.getMonth() === month - 1 &&
+          dateObj.getDate() === day &&
+          dateObj <= now
+        ) {
+          const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          setCustomerInfo(prev => ({ ...prev, birthdate: iso }));
+          return;
+        }
       }
     }
-
-    let numbers = value.replace(/\D/g, '').slice(0, 8);
-
-    if (isDeleting && prevValue.endsWith('/') && !value.endsWith('/')) {
-      numbers = numbers.slice(0, -1);
-    }
-
-    let formatted = '';
-    if (numbers.length > 0) {
-      formatted = numbers.slice(0, 2);
-      if (numbers.length > 2 || (!isDeleting && numbers.length === 2)) {
-        formatted += '/' + numbers.slice(2, 4);
-      }
-      if (numbers.length > 4 || (!isDeleting && numbers.length === 4)) {
-        formatted += '/' + numbers.slice(4, 8);
-      }
-    }
-    return formatted;
+    setCustomerInfo(prev => ({ ...prev, birthdate: '' }));
   };
 
-  const parseBirthdateToISO = (formattedVal: string): string | null => {
-    const parts = formattedVal.split('/');
-    if (parts.length !== 3) return null;
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10);
-    const year = parseInt(parts[2], 10);
-    const now = new Date();
-
-    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-    if (day < 1 || day > 31) return null;
-    if (month < 1 || month > 12) return null;
-    if (year < 1920 || year > now.getFullYear()) return null;
-
-    const d = new Date(year, month - 1, day);
-    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) {
-      return null;
-    }
-    if (d > now) return null;
-
-    const mm = String(month).padStart(2, '0');
-    const dd = String(day).padStart(2, '0');
-    return `${year}-${mm}-${dd}`;
-  };
-
-  const handleBirthdateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatBirthdateInput(e.target.value, birthdateInputVal);
-    setBirthdateInputVal(formatted);
+  const handleDayChange = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 2);
+    setBirthDay(digits);
     setIsBirthdateAutocompleted(false);
+    updateBirthdateISO(digits, birthMonth, birthYear);
+    if (digits.length === 2) {
+      birthMonthRef.current?.focus();
+      birthMonthRef.current?.select();
+    }
+  };
 
-    const iso = parseBirthdateToISO(formatted);
-    if (iso) {
-      setCustomerInfo(prev => ({ ...prev, birthdate: iso }));
-    } else {
-      setCustomerInfo(prev => ({ ...prev, birthdate: '' }));
+  const handleDayKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '/' || e.key === 'Enter') {
+      e.preventDefault();
+      if (birthDay.length === 1) {
+        const padded = '0' + birthDay;
+        setBirthDay(padded);
+        updateBirthdateISO(padded, birthMonth, birthYear);
+      }
+      birthMonthRef.current?.focus();
+      birthMonthRef.current?.select();
+    }
+  };
+
+  const handleMonthChange = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 2);
+    setBirthMonth(digits);
+    setIsBirthdateAutocompleted(false);
+    updateBirthdateISO(birthDay, digits, birthYear);
+    if (digits.length === 2) {
+      birthYearRef.current?.focus();
+      birthYearRef.current?.select();
+    }
+  };
+
+  const handleMonthKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !birthMonth) {
+      birthDayRef.current?.focus();
+    } else if (e.key === '/' || e.key === 'Enter') {
+      e.preventDefault();
+      if (birthMonth.length === 1) {
+        const padded = '0' + birthMonth;
+        setBirthMonth(padded);
+        updateBirthdateISO(birthDay, padded, birthYear);
+      }
+      birthYearRef.current?.focus();
+      birthYearRef.current?.select();
+    }
+  };
+
+  const handleYearChange = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 4);
+    setBirthYear(digits);
+    setIsBirthdateAutocompleted(false);
+    updateBirthdateISO(birthDay, birthMonth, digits);
+  };
+
+  const handleYearKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !birthYear) {
+      birthMonthRef.current?.focus();
+    }
+  };
+
+  const handlePasteBirthdate = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text').trim();
+    const dmyMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmyMatch) {
+      e.preventDefault();
+      const d = dmyMatch[1].padStart(2, '0');
+      const m = dmyMatch[2].padStart(2, '0');
+      const y = dmyMatch[3];
+      setBirthDay(d);
+      setBirthMonth(m);
+      setBirthYear(y);
+      setIsBirthdateAutocompleted(false);
+      updateBirthdateISO(d, m, y);
+      return;
+    }
+    const ymdMatch = text.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+    if (ymdMatch) {
+      e.preventDefault();
+      const y = ymdMatch[1];
+      const m = ymdMatch[2].padStart(2, '0');
+      const d = ymdMatch[3].padStart(2, '0');
+      setBirthDay(d);
+      setBirthMonth(m);
+      setBirthYear(y);
+      setIsBirthdateAutocompleted(false);
+      updateBirthdateISO(d, m, y);
+      return;
     }
   };
 
@@ -270,10 +322,16 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     if (customerInfo.birthdate && /^\d{4}-\d{2}-\d{2}$/.test(customerInfo.birthdate)) {
       const parts = customerInfo.birthdate.split('-');
       if (parts.length === 3) {
-        setBirthdateInputVal(`${parts[2]}/${parts[1]}/${parts[0]}`);
+        setBirthDay(parts[2]);
+        setBirthMonth(parts[1]);
+        setBirthYear(parts[0]);
       }
-    } else if (!customerInfo.birthdate && !birthdateInputVal) {
-      setBirthdateInputVal('');
+    } else if (!customerInfo.birthdate && !isBirthdateAutocompleted) {
+      if (!birthDay && !birthMonth && !birthYear) {
+        setBirthDay('');
+        setBirthMonth('');
+        setBirthYear('');
+      }
     }
   }, [customerInfo.birthdate]);
 
@@ -329,8 +387,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 newBirthdate = latestApptWithBirthdate.customerBirthdate;
                 setIsBirthdateAutocompleted(true);
                 console.log("[Autocomplete] Setting birthdate to:", newBirthdate);
-                if (document.activeElement === birthdateInputRef.current) {
-                  birthdateInputRef.current?.blur();
+                if (document.activeElement === birthDayRef.current || document.activeElement === birthMonthRef.current || document.activeElement === birthYearRef.current) {
+                  birthDayRef.current?.blur();
+                  birthMonthRef.current?.blur();
+                  birthYearRef.current?.blur();
                 }
               }
               return {
@@ -1571,10 +1631,15 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     if (!editingAppt) return;
     try {
       const apptRef = doc(db, 'appointments', editingAppt.id);
+      let bday = (editForm.customerBirthdate || '').trim();
+      if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(bday)) {
+        const parts = bday.split(/[\/\-]/);
+        bday = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
       const updates: any = {
         customerName: editForm.customerName.trim(),
         customerPhone: normalizePhone(editForm.customerPhone.trim()),
-        customerBirthdate: editForm.customerBirthdate || '',
+        customerBirthdate: bday,
         service: editForm.service,
       };
       if (editForm.customPrice !== '') {
@@ -4660,24 +4725,57 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                               </span>
                             ) : (
                               <span className="text-[9px] text-charcoal normal-case font-medium mb-1 pr-1">
-                                DD/MM/AAAA
+                                Día / Mes / Año
                               </span>
                             )}
                           </div>
                           <div className="flex gap-2 items-center">
-                            <input
-                              ref={birthdateInputRef}
-                              type="text"
-                              inputMode="numeric"
-                              placeholder="DD/MM/AAAA (EJ: 28/08/1995)"
-                              maxLength={10}
-                              required
-                              readOnly={isBirthdateAutocompleted}
-                              tabIndex={isBirthdateAutocompleted ? -1 : 0}
-                              value={birthdateInputVal}
-                              onChange={handleBirthdateInputChange}
-                              className={`flex-1 bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800/40 cursor-not-allowed' : 'text-light-gray'}`}
-                            />
+                            {/* Segmented Inputs: Día / Mes / Año */}
+                            <div className="flex items-center gap-1.5 flex-1">
+                              <input
+                                ref={birthDayRef}
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="DD"
+                                maxLength={2}
+                                disabled={isBirthdateAutocompleted}
+                                value={birthDay}
+                                onChange={e => handleDayChange(e.target.value)}
+                                onKeyDown={handleDayKeyDown}
+                                onPaste={handlePasteBirthdate}
+                                className={`w-14 sm:w-16 bg-black border border-white/10 p-2.5 text-center font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800/40 cursor-not-allowed' : 'text-light-gray'}`}
+                              />
+                              <span className="text-zinc-600 font-bold">/</span>
+
+                              <input
+                                ref={birthMonthRef}
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="MM"
+                                maxLength={2}
+                                disabled={isBirthdateAutocompleted}
+                                value={birthMonth}
+                                onChange={e => handleMonthChange(e.target.value)}
+                                onKeyDown={handleMonthKeyDown}
+                                onPaste={handlePasteBirthdate}
+                                className={`w-14 sm:w-16 bg-black border border-white/10 p-2.5 text-center font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800/40 cursor-not-allowed' : 'text-light-gray'}`}
+                              />
+                              <span className="text-zinc-600 font-bold">/</span>
+
+                              <input
+                                ref={birthYearRef}
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="AAAA"
+                                maxLength={4}
+                                disabled={isBirthdateAutocompleted}
+                                value={birthYear}
+                                onChange={e => handleYearChange(e.target.value)}
+                                onKeyDown={handleYearKeyDown}
+                                onPaste={handlePasteBirthdate}
+                                className={`flex-1 min-w-[70px] bg-black border border-white/10 p-2.5 text-center font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800/40 cursor-not-allowed' : 'text-light-gray'}`}
+                              />
+                            </div>
 
                             {/* Hidden native date picker fallback */}
                             <input
@@ -4694,59 +4792,74 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                                   const iso = e.target.value;
                                   const parts = iso.split('-');
                                   if (parts.length === 3) {
+                                    setBirthDay(parts[2]);
+                                    setBirthMonth(parts[1]);
+                                    setBirthYear(parts[0]);
                                     setCustomerInfo(prev => ({ ...prev, birthdate: iso }));
-                                    setBirthdateInputVal(`${parts[2]}/${parts[1]}/${parts[0]}`);
                                     setIsBirthdateAutocompleted(false);
                                   }
                                 }
                               }}
                             />
 
-                            {!isBirthdateAutocompleted && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (hiddenDatePickerRef.current) {
-                                    if (typeof hiddenDatePickerRef.current.showPicker === 'function') {
-                                      try {
-                                        hiddenDatePickerRef.current.showPicker();
-                                      } catch (e) {
-                                        console.error("showPicker failed", e);
-                                        hiddenDatePickerRef.current.click();
-                                      }
-                                    } else {
+                            {/* Calendar picker button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (hiddenDatePickerRef.current) {
+                                  if (typeof hiddenDatePickerRef.current.showPicker === 'function') {
+                                    try {
+                                      hiddenDatePickerRef.current.showPicker();
+                                    } catch (e) {
                                       hiddenDatePickerRef.current.click();
                                     }
+                                  } else {
+                                    hiddenDatePickerRef.current.click();
                                   }
-                                }}
-                                className="bg-zinc-900 hover:bg-zinc-800 text-gold hover:text-white border border-white/10 p-2.5 rounded-sm transition-colors cursor-pointer flex items-center justify-center shrink-0"
-                                title="Elegir desde calendario"
-                              >
-                                <CalendarIcon className="w-5 h-5" />
-                              </button>
-                            )}
+                                }
+                              }}
+                              className="bg-zinc-900 hover:bg-zinc-800 text-gold hover:text-white border border-white/10 p-2.5 rounded-sm transition-colors cursor-pointer flex items-center justify-center shrink-0 h-[46px] w-[46px]"
+                              title="Elegir desde calendario"
+                            >
+                              <CalendarIcon className="w-5 h-5" />
+                            </button>
 
-                            {isBirthdateAutocompleted && (
+                            {/* Modificar button or clear button */}
+                            {isBirthdateAutocompleted ? (
                               <button
                                 type="button"
                                 onClick={() => {
                                   setIsBirthdateAutocompleted(false);
                                   setTimeout(() => {
-                                    if (birthdateInputRef.current) {
-                                      birthdateInputRef.current.focus();
-                                      birthdateInputRef.current.select();
-                                    }
+                                    birthDayRef.current?.focus();
+                                    birthDayRef.current?.select();
                                   }, 50);
                                 }}
-                                className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm cursor-pointer transition-colors shrink-0"
+                                className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm cursor-pointer transition-colors shrink-0 h-[46px]"
                               >
                                 Modificar
                               </button>
-                            )}
+                            ) : (birthDay || birthMonth || birthYear) ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBirthDay('');
+                                  setBirthMonth('');
+                                  setBirthYear('');
+                                  setCustomerInfo(prev => ({ ...prev, birthdate: '' }));
+                                  birthDayRef.current?.focus();
+                                }}
+                                className="bg-zinc-900 hover:bg-zinc-800 text-charcoal hover:text-red-400 border border-white/10 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm cursor-pointer transition-colors shrink-0 h-[46px]"
+                                title="Borrar fecha"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            ) : null}
                           </div>
-                          {birthdateInputVal.length > 0 && !customerInfo.birthdate && !isBirthdateAutocompleted && (
+
+                          {(birthDay || birthMonth || birthYear) && !customerInfo.birthdate && !isBirthdateAutocompleted && (
                             <p className="text-[10px] text-amber-400 font-sans tracking-wide pt-1">
-                              Ingresa tu fecha completa de nacimiento: DD/MM/AAAA (ej: 28/08/1995)
+                              Ingresa una fecha válida de nacimiento: Día (01-31), Mes (01-12) y Año (4 dígitos).
                             </p>
                           )}
                         </div>
@@ -4823,7 +4936,9 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                         setSelectedTime(null);
                         setSelectedCourtesy(null);
                         setCustomerInfo({ name: '', phone: '', birthdate: '' });
-                        setBirthdateInputVal('');
+                        setBirthDay('');
+                        setBirthMonth('');
+                        setBirthYear('');
                         setIsBirthdateAutocompleted(false);
                         setSuccess(false);
                         setIsFixedAppointment(false);
@@ -4888,13 +5003,75 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Fecha de Nacimiento</label>
-                  <input
-                    type="date"
-                    value={editForm.customerBirthdate}
-                    onChange={(e) => setEditForm({ ...editForm, customerBirthdate: e.target.value })}
-                    className="w-full bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
-                  />
+                  <label className="block text-[10px] font-black uppercase text-charcoal mb-1">Fecha de Nacimiento (DD/MM/AAAA)</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="DD/MM/AAAA (ej: 28/08/1995)"
+                      maxLength={10}
+                      value={(() => {
+                        const val = editForm.customerBirthdate || '';
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                          const [y, m, d] = val.split('-');
+                          return `${d}/${m}/${y}`;
+                        }
+                        return val;
+                      })()}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const digits = raw.replace(/\D/g, '').slice(0, 8);
+                        let formatted = digits;
+                        if (digits.length > 4) {
+                          formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                        } else if (digits.length > 2) {
+                          formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+                        }
+                        if (digits.length === 8) {
+                          const d = parseInt(digits.slice(0, 2), 10);
+                          const m = parseInt(digits.slice(2, 4), 10);
+                          const y = parseInt(digits.slice(4, 8), 10);
+                          if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 1920) {
+                            setEditForm({ ...editForm, customerBirthdate: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` });
+                            return;
+                          }
+                        }
+                        setEditForm({ ...editForm, customerBirthdate: formatted });
+                      }}
+                      className="flex-1 bg-black border border-white/10 px-3 py-2 text-sm text-light-gray focus:border-gold outline-none transition-colors"
+                    />
+                    <input
+                      type="date"
+                      tabIndex={-1}
+                      id="admin-edit-date-picker"
+                      aria-hidden="true"
+                      className="sr-only pointer-events-none opacity-0 absolute w-0 h-0"
+                      max={format(new Date(), 'yyyy-MM-dd')}
+                      value={/^\d{4}-\d{2}-\d{2}$/.test(editForm.customerBirthdate) ? editForm.customerBirthdate : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setEditForm({ ...editForm, customerBirthdate: e.target.value });
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('admin-edit-date-picker') as HTMLInputElement;
+                        if (el) {
+                          if (typeof el.showPicker === 'function') {
+                            try { el.showPicker(); } catch (err) { el.click(); }
+                          } else {
+                            el.click();
+                          }
+                        }
+                      }}
+                      className="bg-zinc-900 hover:bg-zinc-800 text-gold hover:text-white border border-white/10 p-2 text-xs font-bold rounded cursor-pointer flex items-center justify-center shrink-0 h-[38px] w-[38px]"
+                      title="Elegir desde calendario"
+                    >
+                      <CalendarIcon className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Servicio */}
