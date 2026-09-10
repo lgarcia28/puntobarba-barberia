@@ -46,37 +46,74 @@ export const addMinutesToTimeStr = (timeStr: string, minutes: number): string =>
 };
 
 export const normalizePhone = (phone: string): string => {
+  if (!phone) return "";
   let clean = phone.replace(/\D/g, "");
+
+  // International 00
   if (clean.startsWith("00")) {
     clean = clean.substring(2);
   }
-  if (clean.startsWith("0") && clean.length > 5) {
-    clean = clean.substring(1);
-  }
 
-  // Spain handling (mobile numbers starting with 6 or 7)
-  if (clean.startsWith("34") && clean.length === 11) {
+  // Spain mobile handling (country code 34 followed by 6 or 7 and 8 more digits = 11 digits, or 9 digits starting with 6 or 7)
+  if ((clean.startsWith("346") || clean.startsWith("347")) && clean.length === 11) {
     return clean;
   }
   if (clean.length === 9 && (clean.startsWith("6") || clean.startsWith("7"))) {
     return "34" + clean;
   }
 
-  // Argentina handling
+  // Remove international Argentina country code 54
+  if (clean.startsWith("54")) {
+    clean = clean.substring(2);
+  }
+
+  // Remove trunk 0
+  if (clean.startsWith("0")) {
+    clean = clean.substring(1);
+  }
+
+  // If starts with 9 (e.g. 93416366746 - 11 digits)
+  if (clean.startsWith("9") && clean.length === 11) {
+    clean = clean.substring(1);
+  }
+
+  // Handle "15" prefix within Argentina
+  // Case A: 12 digits (e.g. 341 15 XXXXXXX, 11 15 XXXXXXXX, 3464 15 XXXXXX)
+  if (clean.length === 12) {
+    if (clean.substring(2, 4) === "15") {
+      clean = clean.substring(0, 2) + clean.substring(4);
+    } else if (clean.substring(3, 5) === "15") {
+      clean = clean.substring(0, 3) + clean.substring(5);
+    } else if (clean.substring(4, 6) === "15") {
+      clean = clean.substring(0, 4) + clean.substring(6);
+    }
+  } else if (clean.length === 11) {
+    if (clean.substring(3, 5) === "15") {
+      clean = clean.substring(0, 3) + clean.substring(5);
+    } else if (clean.substring(2, 4) === "15") {
+      clean = clean.substring(0, 2) + clean.substring(4);
+    }
+  } else if (clean.length === 9 && clean.startsWith("15")) {
+    // 15 + 7 digits local Rosario -> default to 341
+    clean = "341" + clean.substring(2);
+  } else if (clean.length === 7) {
+    // 7 digits local Rosario -> default to 341
+    clean = "341" + clean;
+  }
+
+  // Standard Argentina mobile format: 549 + 10 digits
   if (clean.length === 10) {
     return "549" + clean;
   }
-  if (clean.startsWith("54") && !clean.startsWith("549") && clean.length === 12) {
-    return "549" + clean.substring(2);
-  }
-  if (clean.startsWith("549") && clean.length === 13) {
-    return clean;
+
+  if (clean.startsWith("9") && clean.length === 11) {
+    return "54" + clean;
   }
 
-  // Other countries
   if (clean.length >= 10) {
     return clean;
   }
+
   return clean;
 };
 
@@ -98,17 +135,17 @@ export const getPhoneVariations = (phone: string): string[] => {
     const local = normalized.substring(3); // 10 digits
     variations.add(local);
     variations.add("0" + local); // e.g. 03416055274
+    variations.add("9" + local); // e.g. 93416055274
+    variations.add("54" + local); // e.g. 543416055274
     if (local.startsWith("341")) {
       variations.add("34115" + local.substring(3)); // e.g. 341156055274
+      variations.add("034115" + local.substring(3)); // e.g. 0341156055274
+      variations.add("15" + local.substring(3)); // e.g. 156055274
+      variations.add(local.substring(3)); // e.g. 6055274
     }
   }
 
-  // 4. If normalized starts with "34" (Spain) and has 11 digits
-  if (normalized.startsWith("34") && normalized.length === 11) {
-    variations.add(normalized.substring(2)); // 9 digits
-  }
-
-  // 5. Raw input trimmed
+  // 4. Raw input trimmed
   variations.add(phone.trim());
 
   return Array.from(variations).filter(Boolean);
@@ -558,8 +595,10 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
     fetch('/api/cron-reminders')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.sent && data.sent.length > 0) {
-          console.log(`[Reminders Cron] Automatically processed and sent ${data.sent.length} reminders.`);
+        if (data.success && (data.reminders?.sent?.length > 0 || data.birthdays?.sent?.length > 0 || data.sent?.length > 0)) {
+          const reminderCount = data.reminders?.sent?.length || data.sent?.length || 0;
+          const bdayCount = data.birthdays?.sent?.length || 0;
+          console.log(`[Reminders Cron] Processed: ${reminderCount} reminders, ${bdayCount} birthdays sent.`);
         }
       })
       .catch(err => console.error('[Reminders Cron] Error processing background reminders:', err));
@@ -1094,7 +1133,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              phone: customerInfo.phone,
+              phone: normalizePhone(customerInfo.phone),
               customerName: customerInfo.name,
               service: selectedService.name,
               barber: selectedBarber.name,
@@ -1233,7 +1272,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              phone: customerInfo.phone,
+              phone: normalizePhone(customerInfo.phone),
               customerName: customerInfo.name,
               service: selectedService.name,
               barber: selectedBarber.name,
@@ -1300,7 +1339,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: appt.customerPhone,
+            phone: normalizePhone(appt.customerPhone),
             customerName: appt.customerName,
             service: appt.service,
             barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
@@ -1354,7 +1393,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: appt.customerPhone,
+            phone: normalizePhone(appt.customerPhone),
             customerName: appt.customerName,
             service: appt.service,
             barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
@@ -2047,7 +2086,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                phone: appt.customerPhone,
+                phone: normalizePhone(appt.customerPhone),
                 customerName: appt.customerName,
                 service: appt.service,
                 barber: selectedBarber.name,

@@ -19,28 +19,64 @@ try {
 }
 
 async function sendWhatsAppMessage(phone: string, message: string) {
+  if (!phone) return;
   let clean = phone.replace(/\D/g, "");
+
   if (clean.startsWith("00")) {
     clean = clean.substring(2);
   }
-  if (clean.startsWith("0") && clean.length > 5) {
-    clean = clean.substring(1);
+
+  // España: móvil empieza con 6 o 7
+  if ((clean.startsWith("346") || clean.startsWith("347")) && clean.length === 11) {
+    // clean is already 34 + 9 digits
+  } else if (clean.length === 9 && (clean.startsWith("6") || clean.startsWith("7"))) {
+    clean = "34" + clean;
+  } else {
+    // Argentina: remover 54
+    if (clean.startsWith("54")) {
+      clean = clean.substring(2);
+    }
+
+    // Remover 0 inicial
+    if (clean.startsWith("0")) {
+      clean = clean.substring(1);
+    }
+
+    // Si empieza con 9 (ej: 93416366746 - 11 dígitos)
+    if (clean.startsWith("9") && clean.length === 11) {
+      clean = clean.substring(1);
+    }
+
+    // Quitar prefijo "15" dentro de Argentina
+    if (clean.length === 12) {
+      if (clean.substring(2, 4) === "15") {
+        clean = clean.substring(0, 2) + clean.substring(4);
+      } else if (clean.substring(3, 5) === "15") {
+        clean = clean.substring(0, 3) + clean.substring(5);
+      } else if (clean.substring(4, 6) === "15") {
+        clean = clean.substring(0, 4) + clean.substring(6);
+      }
+    } else if (clean.length === 11) {
+      if (clean.substring(3, 5) === "15") {
+        clean = clean.substring(0, 3) + clean.substring(5);
+      } else if (clean.substring(2, 4) === "15") {
+        clean = clean.substring(0, 2) + clean.substring(4);
+      }
+    } else if (clean.length === 9 && clean.startsWith("15")) {
+      clean = "341" + clean.substring(2);
+    } else if (clean.length === 7) {
+      clean = "341" + clean;
+    }
+
+    // Formato estándar Argentina móvil WhatsApp: 549 + 10 dígitos
+    if (clean.length === 10) {
+      clean = "549" + clean;
+    } else if (clean.startsWith("9") && clean.length === 11) {
+      clean = "54" + clean;
+    }
   }
 
   let formattedPhone = clean;
-  if (clean.startsWith("34") && clean.length === 11) {
-    formattedPhone = clean;
-  } else if (clean.length === 9 && (clean.startsWith("6") || clean.startsWith("7"))) {
-    formattedPhone = "34" + clean;
-  } else if (clean.length === 10) {
-    formattedPhone = "549" + clean;
-  } else if (clean.startsWith("54") && !clean.startsWith("549") && clean.length === 12) {
-    formattedPhone = "549" + clean.substring(2);
-  } else if (clean.startsWith("549") && clean.length === 13) {
-    formattedPhone = clean;
-  } else if (clean.length >= 10) {
-    formattedPhone = clean;
-  }
 
   const GREEN_API_ID = process.env.GREEN_API_ID;
   const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN;
