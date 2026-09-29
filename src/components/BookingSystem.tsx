@@ -4218,7 +4218,7 @@ export const BookingSystem = ({
 
                     <div
                       ref={servicesContainerRef}
-                      className="space-y-6 max-h-[44vh] sm:max-h-[48vh] md:max-h-[52vh] overflow-y-auto pr-2 pb-24 sm:pb-28 overscroll-contain custom-scrollbar touch-pan-y"
+                      className="space-y-6 max-h-[48vh] sm:max-h-[52vh] md:max-h-[56vh] overflow-y-auto pr-2 pb-4 sm:pb-6 overscroll-contain custom-scrollbar touch-pan-y"
                       style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                     >
                       {/* Cortes & Estilo */}
@@ -4390,9 +4390,6 @@ export const BookingSystem = ({
                           </div>
                         </div>
                       )}
-
-                      {/* Espaciador final para garantizar que el último servicio quede 100% visible y cómodo sin recorte */}
-                      <div className="h-16 w-full shrink-0" aria-hidden="true" />
                     </div>
                   </motion.div>
                 )}
