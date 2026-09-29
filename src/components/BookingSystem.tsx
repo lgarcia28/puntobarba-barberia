@@ -157,6 +157,7 @@ interface BookingSystemProps {
   onClose?: () => void;
   forceClientFlow?: boolean;
   initialServiceName?: string | null;
+  onStepChange?: (step: number) => void;
 }
 
 const SERVICE_DESCRIPTIONS: Record<string, string> = {
@@ -185,8 +186,19 @@ const getServiceCategory = (service: any) => {
 };
 
 // --- Booking System Component ---
-export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propSetBookingTab, onClose, forceClientFlow = false, initialServiceName = null }: BookingSystemProps = {}) => {
+export const BookingSystem = ({ 
+  bookingTab: propBookingTab, 
+  setBookingTab: propSetBookingTab, 
+  onClose, 
+  forceClientFlow = false, 
+  initialServiceName = null,
+  onStepChange 
+}: BookingSystemProps = {}) => {
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    onStepChange?.(step);
+  }, [step, onStepChange]);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -585,93 +597,22 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
   const step2WrapperRef = useRef<HTMLDivElement>(null);
   const servicesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Bloquear el scroll de la página general y asegurar que SOLO se scrolleen los servicios en el Paso 2
+  // Bloquear el scroll de la página en /admin si se está en el Paso 2
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (step === 2 && bookingTab === 'agendar') {
-      const originalHtmlOverflow = document.documentElement.style.overflow;
-      const originalBodyOverflow = document.body.style.overflow;
-      const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
-      const originalBodyOverscroll = document.body.style.overscrollBehavior;
+      const isInsideModal = !!document.querySelector('.fixed.inset-0');
+      if (!isInsideModal) {
+        const originalHtmlOverflow = document.documentElement.style.overflow;
+        const originalBodyOverflow = document.body.style.overflow;
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
 
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overscrollBehavior = 'none';
-      document.body.style.overscrollBehavior = 'none';
-
-      // Si estamos dentro del modal, bloquear el overflow del modal contenedor para que SOLO scrollee la lista de servicios
-      const modalContainer = step2WrapperRef.current?.closest('.overflow-y-auto') as HTMLElement | null;
-      let originalModalOverflow = '';
-      if (modalContainer) {
-        originalModalOverflow = modalContainer.style.overflow;
-        modalContainer.style.overflow = 'hidden';
+        return () => {
+          document.documentElement.style.overflow = originalHtmlOverflow;
+          document.body.style.overflow = originalBodyOverflow;
+        };
       }
-
-      const wrapper = step2WrapperRef.current;
-      const container = servicesContainerRef.current;
-
-      const onWheel = (e: WheelEvent) => {
-        if (!container) return;
-        const isInside = container.contains(e.target as Node);
-        if (!isInside) {
-          // Si el cursor está en el encabezado, título o márgenes de paso 2, scrollear la lista de servicios
-          container.scrollTop += e.deltaY;
-          e.preventDefault();
-        } else {
-          // Si el cursor está sobre la lista de servicios pero alcanza los límites, no propagar a la página
-          const isAtTop = container.scrollTop <= 0 && e.deltaY < 0;
-          const isAtBottom = (container.scrollHeight - container.scrollTop <= container.clientHeight + 1) && e.deltaY > 0;
-          if (isAtTop || isAtBottom) {
-            e.preventDefault();
-          }
-        }
-      };
-
-      let touchStartY = 0;
-      const onTouchStart = (e: TouchEvent) => {
-        if (e.touches.length > 0) {
-          touchStartY = e.touches[0].clientY;
-        }
-      };
-      const onTouchMove = (e: TouchEvent) => {
-        if (!container || e.touches.length === 0) return;
-        const currentY = e.touches[0].clientY;
-        const deltaY = touchStartY - currentY;
-        touchStartY = currentY;
-
-        const isInside = container.contains(e.target as Node);
-        if (!isInside) {
-          container.scrollTop += deltaY;
-          if (e.cancelable) e.preventDefault();
-        } else {
-          const isAtTop = container.scrollTop <= 0 && deltaY < 0;
-          const isAtBottom = (container.scrollHeight - container.scrollTop <= container.clientHeight + 1) && deltaY > 0;
-          if ((isAtTop || isAtBottom) && e.cancelable) {
-            e.preventDefault();
-          }
-        }
-      };
-
-      if (wrapper) {
-        wrapper.addEventListener('wheel', onWheel, { passive: false });
-        wrapper.addEventListener('touchstart', onTouchStart, { passive: true });
-        wrapper.addEventListener('touchmove', onTouchMove, { passive: false });
-      }
-
-      return () => {
-        document.documentElement.style.overflow = originalHtmlOverflow;
-        document.body.style.overflow = originalBodyOverflow;
-        document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
-        document.body.style.overscrollBehavior = originalBodyOverscroll;
-        if (modalContainer) {
-          modalContainer.style.overflow = originalModalOverflow;
-        }
-        if (wrapper) {
-          wrapper.removeEventListener('wheel', onWheel);
-          wrapper.removeEventListener('touchstart', onTouchStart);
-          wrapper.removeEventListener('touchmove', onTouchMove);
-        }
-      };
     }
   }, [step, bookingTab]);
 
@@ -4254,6 +4195,14 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
+                    onWheel={(e) => {
+                      if (servicesContainerRef.current) {
+                        const target = e.target as Node;
+                        if (!servicesContainerRef.current.contains(target)) {
+                          servicesContainerRef.current.scrollTop += e.deltaY;
+                        }
+                      }
+                    }}
                   >
                     <button onClick={() => setStep(1)} className="text-charcoal hover:text-gold flex items-center gap-2 text-xs uppercase font-bold tracking-widest mb-2 cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> Volver
@@ -4269,7 +4218,7 @@ export const BookingSystem = ({ bookingTab: propBookingTab, setBookingTab: propS
 
                     <div
                       ref={servicesContainerRef}
-                      className="space-y-6 max-h-[50vh] sm:max-h-[54vh] md:max-h-[58vh] overflow-y-auto pr-2 overscroll-contain custom-scrollbar touch-pan-y"
+                      className="space-y-6 max-h-[48vh] sm:max-h-[52vh] md:max-h-[56vh] overflow-y-auto pr-2 overscroll-contain custom-scrollbar touch-pan-y"
                       style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                     >
                       {/* Cortes & Estilo */}

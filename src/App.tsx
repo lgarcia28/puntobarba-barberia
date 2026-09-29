@@ -42,6 +42,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
   const [showIntro, setShowIntro] = useState(true);
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState<string | null>(null);
+  const [bookingStep, setBookingStep] = useState(1);
   
   // Dynamic products catalog state
   const [products, setProducts] = useState<any[]>([]);
@@ -256,26 +257,30 @@ export default function App() {
     };
   }, []);
 
-  // Bloquear scroll de fondo cuando el modal o la intro están abiertos
+  // Bloquear scroll de fondo cuando el modal o la intro están abiertos (usando position: fixed para congelar el scroll en iOS y desktop)
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (isBookingOpen || showIntro) {
+      const scrollY = window.scrollY;
       document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
       document.documentElement.style.overscrollBehavior = 'none';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overscrollBehavior = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      document.body.style.overscrollBehavior = '';
+
+      return () => {
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.overscrollBehavior = '';
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overscrollBehavior = '';
+        window.scrollTo(0, scrollY);
+      };
     }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      document.body.style.overscrollBehavior = '';
-    };
   }, [isBookingOpen, showIntro]);
 
   // Helper to navigate between pages
@@ -472,9 +477,12 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 md:p-6 overflow-y-auto overscroll-contain"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 md:p-6 overflow-hidden overscroll-none"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setIsBookingOpen(false);
+            if (e.target === e.currentTarget) {
+              setIsBookingOpen(false);
+              setBookingStep(1);
+            }
           }}
         >
           <motion.div
@@ -482,13 +490,16 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-[92%] h-auto max-h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl p-5 sm:p-8 md:p-10 text-white overflow-y-auto overscroll-contain rounded-md concrete-texture flex flex-col justify-start"
+            className={`relative w-[92%] h-auto max-h-[85vh] md:max-h-[90vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl p-5 sm:p-8 md:p-10 text-white rounded-md concrete-texture flex flex-col justify-start overscroll-contain ${
+              bookingStep === 2 ? 'overflow-hidden' : 'overflow-y-auto'
+            }`}
           >
             {/* Close Button */}
             <button 
               onClick={() => {
                 setIsBookingOpen(false);
                 setSelectedServiceForBooking(null);
+                setBookingStep(1);
               }}
               className="absolute top-4 right-4 md:top-6 md:right-6 text-charcoal hover:text-white transition-colors cursor-pointer p-2 hover:bg-white/5 rounded-full z-50"
             >
@@ -501,9 +512,11 @@ export default function App() {
               onClose={() => {
                 setIsBookingOpen(false);
                 setSelectedServiceForBooking(null);
+                setBookingStep(1);
               }}
               forceClientFlow={true}
               initialServiceName={selectedServiceForBooking}
+              onStepChange={setBookingStep}
             />
           </motion.div>
         </motion.div>
