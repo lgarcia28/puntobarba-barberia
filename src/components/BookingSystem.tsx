@@ -4035,7 +4035,7 @@ export const BookingSystem = ({
 
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
-            <div className="flex gap-3 border-b border-white/5 pb-6 mb-8">
+            <div className="flex gap-2 sm:gap-3 border-b border-white/5 pb-3 sm:pb-4 mb-4 sm:mb-6">
               <button
                 onClick={() => setBookingTab('agendar')}
                 className={`px-6 py-2.5 rounded-full font-display font-bold text-xs uppercase tracking-widest transition-all border cursor-pointer ${
@@ -4138,7 +4138,7 @@ export const BookingSystem = ({
             <>
               {/* Steps Indicator */}
               {step <= 6 && (
-                <div className="flex justify-between mb-12 relative">
+                <div className="flex justify-between mb-5 sm:mb-8 md:mb-10 relative">
                   <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/30 -z-10" />
                   {[1, 2, 3, 4, 5, 6].map(s => (
                     <div
@@ -4218,7 +4218,7 @@ export const BookingSystem = ({
 
                     <div
                       ref={servicesContainerRef}
-                      className="space-y-6 max-h-[48vh] sm:max-h-[52vh] md:max-h-[56vh] overflow-y-auto pr-2 overscroll-contain custom-scrollbar touch-pan-y"
+                      className="space-y-6 max-h-[44vh] sm:max-h-[48vh] md:max-h-[52vh] overflow-y-auto pr-2 pb-24 sm:pb-28 overscroll-contain custom-scrollbar touch-pan-y"
                       style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                     >
                       {/* Cortes & Estilo */}
@@ -4390,6 +4390,9 @@ export const BookingSystem = ({
                           </div>
                         </div>
                       )}
+
+                      {/* Espaciador final para garantizar que el último servicio quede 100% visible y cómodo sin recorte */}
+                      <div className="h-16 w-full shrink-0" aria-hidden="true" />
                     </div>
                   </motion.div>
                 )}
