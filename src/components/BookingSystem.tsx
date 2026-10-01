@@ -20,7 +20,7 @@ import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFiresto
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, ChevronDown, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee, Plus, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, Check, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, ChevronDown, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee, Plus, X } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -5309,9 +5309,10 @@ export const BookingSystem = ({
                             }
                             setIsCustomCategoryMode(false);
                           }}
-                          className="bg-gold hover:bg-gold-hover text-neutral-900 px-3 py-2 font-display font-bold uppercase text-[10px] tracking-wider rounded-sm cursor-pointer whitespace-nowrap"
+                          className="bg-gold hover:bg-gold-hover text-neutral-900 px-3 py-2 rounded-sm cursor-pointer flex items-center justify-center transition-colors"
+                          title="Confirmar categoría"
                         >
-                          Usar
+                          <Check className="w-4 h-4 stroke-[2.5]" />
                         </button>
                         <button
                           type="button"
@@ -5319,14 +5320,14 @@ export const BookingSystem = ({
                             setIsCustomCategoryMode(false);
                             setNewCategoryInput('');
                           }}
-                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white px-2.5 py-2 text-xs rounded-sm cursor-pointer"
+                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white px-2.5 py-2 text-xs rounded-sm cursor-pointer flex items-center justify-center transition-colors"
                           title="Cancelar"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                       <p className="text-[10px] text-charcoal italic">
-                        Escribe el nombre de la nueva categoría y presiona "Usar"
+                        Escribe el nombre de la nueva categoría y confirma con el tilde
                       </p>
                     </div>
                   )}
