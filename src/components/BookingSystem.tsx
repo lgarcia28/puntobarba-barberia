@@ -20,7 +20,7 @@ import { BARBERS as INITIAL_BARBERS, SERVICES as DEFAULT_SERVICES, handleFiresto
 import { format, addMinutes, startOfDay, endOfDay, isBefore, isAfter, parseISO, setHours, setMinutes, eachMinuteOfInterval, isSameDay, eachDayOfInterval, getDay, startOfWeek, endOfWeek, addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee, Plus, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Scissors, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, ChevronDown, LogIn, LogOut, Trash2, RefreshCcw, Database, Edit2, Phone, DollarSign, ShoppingBag, UserPlus, Coffee, Plus, X } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -175,14 +175,42 @@ const SERVICE_DESCRIPTIONS: Record<string, string> = {
   'servicio-vip': 'Experiencia VIP de 4 horas: Corte, barba completa, cejas, ritual facial y cortesía.'
 };
 
-const getServiceCategory = (service: any) => {
-  const id = service.id || '';
-  if (id === 'servicio-vip') return 'vip';
-  if (id.startsWith('corte-b-') || id.startsWith('corte-a-') || id.startsWith('corte-r-') || id === 'corte-perfilado-cejas') return 'combos';
-  if (id.startsWith('corte-')) return 'cortes';
-  if (id.startsWith('barba-') || id === 'afeitado-clasico') return 'barba';
-  if (id.includes('facial')) return 'facial';
-  return 'otros';
+export const DEFAULT_SERVICE_CATEGORIES = [
+  'Cortes & Estilo',
+  'Barba & Afeitado',
+  'Cuidado Facial',
+  'Combos de Autor & VIP',
+  'Otros Servicios'
+];
+
+export const getServiceCategory = (service: any): string => {
+  if (service?.category) {
+    const cat = service.category;
+    if (cat === 'cortes') return 'Cortes & Estilo';
+    if (cat === 'barba') return 'Barba & Afeitado';
+    if (cat === 'facial') return 'Cuidado Facial';
+    if (cat === 'combos' || cat === 'vip') return 'Combos de Autor & VIP';
+    if (cat === 'otros') return 'Otros Servicios';
+    return cat;
+  }
+  const id = service?.id || '';
+  if (id === 'servicio-vip' || id.startsWith('corte-b-') || id.startsWith('corte-a-') || id.startsWith('corte-r-') || id === 'corte-perfilado-cejas') {
+    return 'Combos de Autor & VIP';
+  }
+  if (id.startsWith('corte-')) return 'Cortes & Estilo';
+  if (id.startsWith('barba-') || id === 'afeitado-clasico') return 'Barba & Afeitado';
+  if (id.includes('facial')) return 'Cuidado Facial';
+  return 'Otros Servicios';
+};
+
+export const getCategoryIcon = (category: string): string => {
+  const lower = (category || '').toLowerCase();
+  if (lower.includes('corte') || lower.includes('pelo') || lower.includes('cabello') || lower.includes('tijera')) return '✂️';
+  if (lower.includes('barba') || lower.includes('afeitad')) return '🧔';
+  if (lower.includes('facial') || lower.includes('piel') || lower.includes('spa')) return '✨';
+  if (lower.includes('combo') || lower.includes('vip') || lower.includes('autor')) return '👑';
+  if (lower.includes('otro')) return '➕';
+  return '🏷️';
 };
 
 // --- Booking System Component ---
@@ -347,14 +375,26 @@ export const BookingSystem = ({
   const [isAddingBarber, setIsAddingBarber] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
-  const [editingServiceForm, setEditingServiceForm] = useState({ name: '', duration: 30, price: '', desc: '' });
-  const [newService, setNewService] = useState({ name: '', duration: 30, price: '', desc: '' });
+  const [editingServiceForm, setEditingServiceForm] = useState({ name: '', duration: 30, price: '', desc: '', category: 'Cortes & Estilo' });
+  const [newService, setNewService] = useState({ name: '', duration: 30, price: '', desc: '', category: 'Cortes & Estilo' });
+  const [isCustomCategoryMode, setIsCustomCategoryMode] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shopSettings, setShopSettings] = useState<any>({ schedule: DEFAULT_SCHEDULE });
   const [scheduleTargetId, setScheduleTargetId] = useState<string>('general');
   const [editingSchedule, setEditingSchedule] = useState<any>(DEFAULT_SCHEDULE);
   const [useGeneralScheduleForBarber, setUseGeneralScheduleForBarber] = useState<boolean>(true);
   const [services, setServices] = useState<any[]>(DEFAULT_SERVICES);
+
+  const availableServiceCategories = React.useMemo(() => {
+    const fromSettings: string[] = shopSettings?.serviceCategories || [];
+    const fromServices: string[] = services.map(s => getServiceCategory(s)).filter(Boolean);
+    const set = new Set([...DEFAULT_SERVICE_CATEGORIES, ...fromSettings, ...fromServices]);
+    
+    const predefined = ['Cortes & Estilo', 'Barba & Afeitado', 'Cuidado Facial', 'Combos de Autor & VIP'];
+    const custom = Array.from(set).filter(c => !predefined.includes(c) && c !== 'Otros Servicios');
+    return [...predefined, ...custom, 'Otros Servicios'];
+  }, [shopSettings?.serviceCategories, services]);
 
   useEffect(() => {
     if (initialServiceName && services.length > 0) {
@@ -1807,6 +1847,15 @@ export const BookingSystem = ({
       toast.error('Por favor completa el nombre y el precio.');
       return;
     }
+    const finalCategory = isCustomCategoryMode
+      ? newCategoryInput.trim()
+      : (newService.category || 'Otros Servicios');
+
+    if (isCustomCategoryMode && !finalCategory) {
+      toast.error('Por favor escribe el nombre de la nueva categoría.');
+      return;
+    }
+
     setSavingPrices(true);
     try {
       const newSvcObj = {
@@ -1814,7 +1863,8 @@ export const BookingSystem = ({
         name: newService.name,
         duration: Number(newService.duration) || 30,
         price: Number(newService.price),
-        desc: newService.desc || ''
+        desc: newService.desc || '',
+        category: finalCategory
       };
 
       if (services.some(s => s.id === newSvcObj.id)) {
@@ -1823,10 +1873,21 @@ export const BookingSystem = ({
       }
 
       const updatedServices = [...services, newSvcObj];
-      await updateShopSettings({ services: updatedServices });
+      const updatedCategories = Array.from(new Set([
+        ...(shopSettings?.serviceCategories || []),
+        finalCategory
+      ]));
+
+      await updateShopSettings({ 
+        services: updatedServices,
+        serviceCategories: updatedCategories
+      });
+      setShopSettings((prev: any) => ({ ...prev, services: updatedServices, serviceCategories: updatedCategories }));
       setServices(updatedServices);
       setIsServiceModalOpen(false);
-      setNewService({ name: '', duration: 30, price: '', desc: '' });
+      setNewService({ name: '', duration: 30, price: '', desc: '', category: 'Cortes & Estilo' });
+      setIsCustomCategoryMode(false);
+      setNewCategoryInput('');
       toast.success('Servicio agregado correctamente.');
     } catch (err) {
       console.error(err);
@@ -1843,6 +1904,7 @@ export const BookingSystem = ({
         const updatedServices = services.filter(s => s.id !== svcId);
         await updateShopSettings({ services: updatedServices });
         setServices(updatedServices);
+        setShopSettings((prev: any) => ({ ...prev, services: updatedServices }));
         toast.success('Servicio eliminado.');
       } catch (err) {
         console.error(err);
@@ -1860,6 +1922,15 @@ export const BookingSystem = ({
       toast.error('Por favor completa el nombre y el precio.');
       return;
     }
+    const finalCategory = isCustomCategoryMode
+      ? newCategoryInput.trim()
+      : (editingServiceForm.category || 'Otros Servicios');
+
+    if (isCustomCategoryMode && !finalCategory) {
+      toast.error('Por favor escribe el nombre de la nueva categoría.');
+      return;
+    }
+
     setSavingPrices(true);
     try {
       const updatedServices = services.map(svc => {
@@ -1869,16 +1940,28 @@ export const BookingSystem = ({
             name: editingServiceForm.name,
             duration: Number(editingServiceForm.duration) || 30,
             price: Number(editingServiceForm.price),
-            desc: editingServiceForm.desc || ''
+            desc: editingServiceForm.desc || '',
+            category: finalCategory
           };
         }
         return svc;
       });
 
-      await updateShopSettings({ services: updatedServices });
+      const updatedCategories = Array.from(new Set([
+        ...(shopSettings?.serviceCategories || []),
+        finalCategory
+      ]));
+
+      await updateShopSettings({ 
+        services: updatedServices,
+        serviceCategories: updatedCategories
+      });
+      setShopSettings((prev: any) => ({ ...prev, services: updatedServices, serviceCategories: updatedCategories }));
       setServices(updatedServices);
       setEditingServiceId(null);
       setIsServiceModalOpen(false);
+      setIsCustomCategoryMode(false);
+      setNewCategoryInput('');
       toast.success('Servicio actualizado correctamente.');
     } catch (err) {
       console.error('Error al guardar servicio:', err);
@@ -3781,7 +3864,9 @@ export const BookingSystem = ({
               <button
                 onClick={() => {
                   setEditingServiceId(null);
-                  setNewService({ name: '', duration: 30, price: '', desc: '' });
+                  setNewService({ name: '', duration: 30, price: '', desc: '', category: 'Cortes & Estilo' });
+                  setIsCustomCategoryMode(false);
+                  setNewCategoryInput('');
                   setIsServiceModalOpen(true);
                 }}
                 className="bg-gold hover:bg-gold-hover text-neutral-900 px-5 py-3 font-display font-bold uppercase tracking-widest text-[11px] shadow-md shadow-gold/10 transition-all duration-300 flex items-center gap-2 cursor-pointer rounded-sm"
@@ -3794,7 +3879,13 @@ export const BookingSystem = ({
               {services.map(svc => (
                 <div key={svc.id} className="bg-black/30 border border-white/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm">
                   <div className="flex-1">
-                    <h4 className="font-display font-black text-lg uppercase tracking-wide text-light-gray">{svc.name}</h4>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h4 className="font-display font-black text-lg uppercase tracking-wide text-light-gray">{svc.name}</h4>
+                      <span className="text-[9px] bg-gold/10 text-gold border border-gold/20 px-2 py-0.5 font-sans font-bold uppercase tracking-wider rounded flex items-center gap-1">
+                        <span>{getCategoryIcon(getServiceCategory(svc))}</span>
+                        <span>{getServiceCategory(svc)}</span>
+                      </span>
+                    </div>
                     <p className="text-[10px] text-charcoal font-bold uppercase mt-1 tracking-wider">
                       Duración estimada: {svc.duration} minutos
                     </p>
@@ -3811,7 +3902,15 @@ export const BookingSystem = ({
                       <button
                         onClick={() => {
                           setEditingServiceId(svc.id);
-                          setEditingServiceForm({ name: svc.name, duration: svc.duration, price: String(svc.price), desc: svc.desc || '' });
+                          setEditingServiceForm({ 
+                            name: svc.name, 
+                            duration: svc.duration, 
+                            price: String(svc.price), 
+                            desc: svc.desc || '',
+                            category: getServiceCategory(svc)
+                          });
+                          setIsCustomCategoryMode(false);
+                          setNewCategoryInput('');
                           setIsServiceModalOpen(true);
                         }}
                         className="bg-zinc-800/80 hover:bg-zinc-700 text-light-gray p-2 transition-colors cursor-pointer rounded-sm border border-white/5 flex items-center justify-center"
@@ -4035,7 +4134,7 @@ export const BookingSystem = ({
 
       {(!isBarberAdmin || (isBarberAdmin && activeAdminTab === 'agendar')) && (
         <div className="space-y-8">
-            <div className="flex gap-2 sm:gap-3 border-b border-white/5 pb-3 sm:pb-4 mb-4 sm:mb-6">
+            <div className="flex gap-2 sm:gap-3 border-b border-white/5 pb-2.5 sm:pb-3 mb-3 sm:mb-4">
               <button
                 onClick={() => setBookingTab('agendar')}
                 className={`px-6 py-2.5 rounded-full font-display font-bold text-xs uppercase tracking-widest transition-all border cursor-pointer ${
@@ -4138,7 +4237,7 @@ export const BookingSystem = ({
             <>
               {/* Steps Indicator */}
               {step <= 6 && (
-                <div className="flex justify-between mb-5 sm:mb-8 md:mb-10 relative">
+                <div className="flex justify-between mb-4 sm:mb-6 md:mb-7 relative">
                   <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/30 -z-10" />
                   {[1, 2, 3, 4, 5, 6].map(s => (
                     <div
@@ -4218,178 +4317,50 @@ export const BookingSystem = ({
 
                     <div
                       ref={servicesContainerRef}
-                      className="space-y-6 max-h-[48vh] sm:max-h-[52vh] md:max-h-[56vh] overflow-y-auto pr-2 pb-4 sm:pb-6 overscroll-contain custom-scrollbar touch-pan-y"
+                      className="space-y-6 max-h-[40vh] sm:max-h-[44vh] md:max-h-[48vh] overflow-y-auto pr-2 pb-8 sm:pb-10 overscroll-contain custom-scrollbar touch-pan-y"
                       style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                     >
-                      {/* Cortes & Estilo */}
-                      {services.some(s => getServiceCategory(s) === 'cortes') && (
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
-                            ✂️ Cortes & Estilo
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {services.filter(s => getServiceCategory(s) === 'cortes').map(service => {
-                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
-                              return (
-                                <button
-                                  key={service.id}
-                                  onClick={() => { setSelectedService(service); setStep(3); }}
-                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
-                                >
-                                  <div className="space-y-1.5 flex-1">
-                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
-                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
-                                      {service.duration} MINUTOS
-                                    </span>
-                                    {desc && (
-                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
-                                        {desc}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+                      {availableServiceCategories.map(catName => {
+                        const categoryServices = services.filter(s => getServiceCategory(s) === catName);
+                        if (categoryServices.length === 0) return null;
 
-                      {/* Barba & Afeitado */}
-                      {services.some(s => getServiceCategory(s) === 'barba') && (
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
-                            🧔 Barba & Afeitado
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {services.filter(s => getServiceCategory(s) === 'barba').map(service => {
-                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
-                              return (
-                                <button
-                                  key={service.id}
-                                  onClick={() => { setSelectedService(service); setStep(3); }}
-                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
-                                >
-                                  <div className="space-y-1.5 flex-1">
-                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
-                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
-                                      {service.duration} MINUTOS
-                                    </span>
-                                    {desc && (
-                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
-                                        {desc}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
-                                </button>
-                              );
-                            })}
+                        return (
+                          <div key={catName} className="space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2 flex items-center gap-2">
+                              <span>{getCategoryIcon(catName)}</span>
+                              <span>{catName}</span>
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {categoryServices.map(service => {
+                                const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
+                                return (
+                                  <button
+                                    key={service.id}
+                                    onClick={() => { setSelectedService(service); setStep(3); }}
+                                    className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
+                                  >
+                                    <div className="space-y-1.5 flex-1">
+                                      <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
+                                      <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
+                                        {service.duration} MINUTOS
+                                      </span>
+                                      {desc && (
+                                        <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
+                                          {desc}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })}
 
-                      {/* Cuidado Facial */}
-                      {services.some(s => getServiceCategory(s) === 'facial') && (
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
-                            ✨ Cuidado Facial
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {services.filter(s => getServiceCategory(s) === 'facial').map(service => {
-                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
-                              return (
-                                <button
-                                  key={service.id}
-                                  onClick={() => { setSelectedService(service); setStep(3); }}
-                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
-                                >
-                                  <div className="space-y-1.5 flex-1">
-                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
-                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
-                                      {service.duration} MINUTOS
-                                    </span>
-                                    {desc && (
-                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
-                                        {desc}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Combos de Autor & VIP */}
-                      {services.some(s => getServiceCategory(s) === 'combos' || getServiceCategory(s) === 'vip') && (
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
-                            👑 Combos de Autor & VIP
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {services.filter(s => getServiceCategory(s) === 'combos' || getServiceCategory(s) === 'vip').map(service => {
-                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
-                              return (
-                                <button
-                                  key={service.id}
-                                  onClick={() => { setSelectedService(service); setStep(3); }}
-                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
-                                >
-                                  <div className="space-y-1.5 flex-1">
-                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
-                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
-                                      {service.duration} MINUTOS
-                                    </span>
-                                    {desc && (
-                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
-                                        {desc}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Otros Servicios */}
-                      {services.some(s => getServiceCategory(s) === 'otros') && (
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-2">
-                            ➕ Otros Servicios
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {services.filter(s => getServiceCategory(s) === 'otros').map(service => {
-                              const desc = service.desc || SERVICE_DESCRIPTIONS[service.id];
-                              return (
-                                <button
-                                  key={service.id}
-                                  onClick={() => { setSelectedService(service); setStep(3); }}
-                                  className="p-5 bg-black border border-white/5 hover:border-gold transition-all duration-300 flex justify-between items-start gap-4 group cursor-pointer text-left rounded-sm hover:shadow-lg hover:shadow-gold/5"
-                                >
-                                  <div className="space-y-1.5 flex-1">
-                                    <p className="font-display font-black uppercase text-lg sm:text-xl md:text-2xl group-hover:text-gold transition-colors leading-none">{service.name}</p>
-                                    <span className="inline-block text-[9px] text-gold font-sans font-bold uppercase tracking-widest bg-gold/15 px-2 py-0.5 rounded-sm">
-                                      {service.duration} MINUTOS
-                                    </span>
-                                    {desc && (
-                                      <p className="text-charcoal text-[11px] font-sans tracking-wide leading-relaxed mt-1 group-hover:text-light-gray/80 transition-colors">
-                                        {desc}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <p className="text-lg sm:text-xl md:text-2xl font-display font-bold text-light-gray shrink-0 pt-0.5">${service.price.toLocaleString('es-AR')}</p>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+                      {/* Espaciador inferior para garantizar que el último servicio y su badge de duración queden siempre 100% visibles */}
+                      <div className="h-4 w-full shrink-0" aria-hidden="true" />
                     </div>
                   </motion.div>
                 )}
@@ -5248,7 +5219,119 @@ export const BookingSystem = ({
                     placeholder="Ej. Corte de Pelo, Perfilado de Barba..."
                   />
                 </div>
-                
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Categoría</label>
+                    {!isCustomCategoryMode && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomCategoryMode(true);
+                          setNewCategoryInput('');
+                        }}
+                        className="text-[10px] text-gold hover:text-gold-hover font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Nueva Categoría
+                      </button>
+                    )}
+                  </div>
+
+                  {!isCustomCategoryMode ? (
+                    <div className="relative">
+                      <select
+                        value={editingServiceId ? (editingServiceForm.category || 'Otros Servicios') : (newService.category || 'Cortes & Estilo')}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '__add_new__') {
+                            setIsCustomCategoryMode(true);
+                            setNewCategoryInput('');
+                          } else {
+                            if (editingServiceId) {
+                              setEditingServiceForm({ ...editingServiceForm, category: val });
+                            } else {
+                              setNewService({ ...newService, category: val });
+                            }
+                          }
+                        }}
+                        className="w-full bg-zinc-950 border border-white/10 px-4 py-3 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold cursor-pointer appearance-none"
+                      >
+                        {availableServiceCategories.map(cat => (
+                          <option key={cat} value={cat} className="bg-zinc-900 text-light-gray py-1">
+                            {cat}
+                          </option>
+                        ))}
+                        <option value="__add_new__" className="bg-zinc-900 text-gold font-bold py-1">
+                          + Agregar nueva categoría...
+                        </option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-charcoal">
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 bg-black/40 border border-gold/30 p-3 rounded-sm">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCategoryInput}
+                          onChange={(e) => setNewCategoryInput(e.target.value)}
+                          placeholder="Nombre de nueva categoría..."
+                          className="flex-1 bg-zinc-950 border border-white/10 px-3 py-2 text-light-gray font-display font-bold uppercase focus:outline-none focus:border-gold text-xs"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const trimmed = newCategoryInput.trim();
+                              if (trimmed) {
+                                if (editingServiceId) {
+                                  setEditingServiceForm({ ...editingServiceForm, category: trimmed });
+                                } else {
+                                  setNewService({ ...newService, category: trimmed });
+                                }
+                                setIsCustomCategoryMode(false);
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const trimmed = newCategoryInput.trim();
+                            if (!trimmed) {
+                              toast.error('Escribe un nombre para la categoría');
+                              return;
+                            }
+                            if (editingServiceId) {
+                              setEditingServiceForm({ ...editingServiceForm, category: trimmed });
+                            } else {
+                              setNewService({ ...newService, category: trimmed });
+                            }
+                            setIsCustomCategoryMode(false);
+                          }}
+                          className="bg-gold hover:bg-gold-hover text-neutral-900 px-3 py-2 font-display font-bold uppercase text-[10px] tracking-wider rounded-sm cursor-pointer whitespace-nowrap"
+                        >
+                          Usar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomCategoryMode(false);
+                            setNewCategoryInput('');
+                          }}
+                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white px-2.5 py-2 text-xs rounded-sm cursor-pointer"
+                          title="Cancelar"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-charcoal italic">
+                        Escribe el nombre de la nueva categoría y presiona "Usar"
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-charcoal">Duración (minutos)</label>

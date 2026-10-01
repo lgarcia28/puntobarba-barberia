@@ -490,8 +490,8 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-[94%] sm:w-[92%] h-auto max-h-[88vh] md:max-h-[92vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl p-4 sm:p-8 md:p-10 text-white rounded-md concrete-texture flex flex-col justify-start overscroll-contain ${
-              bookingStep === 2 ? 'overflow-hidden' : 'overflow-y-auto'
+            className={`relative w-[94%] sm:w-[92%] h-auto max-h-[88vh] md:max-h-[92vh] md:max-w-4xl bg-zinc-950 border border-white/10 shadow-2xl text-white rounded-md concrete-texture flex flex-col justify-start overscroll-contain ${
+              bookingStep === 2 ? 'p-4 sm:p-6 md:p-7 overflow-hidden' : 'p-4 sm:p-8 md:p-10 overflow-y-auto'
             }`}
           >
             {/* Close Button */}
