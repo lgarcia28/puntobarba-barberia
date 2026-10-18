@@ -910,7 +910,15 @@ export default function App() {
             <img src={logoHorizontal} alt="Punto Barba" className="h-14 w-auto object-contain" />
           </div>
           <p className="text-[10px] text-charcoal uppercase tracking-[0.3em] text-center font-sans">
-            © 2026 Punto Barba. Mendoza 2656, Rosario, Santa Fe. Tel: 341 3293388
+            © 2026 Punto Barba | Desarrollado por{' '}
+            <a 
+              href="https://www.shurianlabs.com.ar/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-gold hover:text-gold-hover hover:underline transition-colors font-medium"
+            >
+              Shurian Labs
+            </a>
           </p>
           <div className="flex gap-8">
             <a 
