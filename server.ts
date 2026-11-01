@@ -248,7 +248,7 @@ export async function processReminders(db: any) {
           shouldSend = true;
         }
       } else {
-        // Turnos de mañana (antes de las 12:00 hs): el día anterior entre las 20:30 y las 21:30 hs
+        // Turnos de mañana (antes de las 12:00 hs): el día anterior entre las 20:00 y las 22:00 hs (antes de la pausa nocturna)
         const previousDayDate = new Date(argStartTime.getTime() - 24 * 3600000);
         const isPreviousDay = argNow.getUTCDate() === previousDayDate.getUTCDate() && 
                               argNow.getUTCMonth() === previousDayDate.getUTCMonth() &&
@@ -258,7 +258,7 @@ export async function processReminders(db: any) {
         const nowMinutes = argNow.getUTCMinutes();
         const nowFloat = nowHour + nowMinutes / 60;
         
-        const isBetweenWindow = nowFloat >= 20.5 && nowFloat <= 21.5; // Entre las 20:30 y las 21:30 hs
+        const isBetweenWindow = nowFloat >= 20.0 && nowFloat < 22.0; // Ventana ampliada de 20:00 a 22:00 hs
         
         const isSameDay = argNow.getUTCDate() === argStartTime.getUTCDate() &&
                           argNow.getUTCMonth() === argStartTime.getUTCMonth() &&
@@ -273,17 +273,22 @@ export async function processReminders(db: any) {
       }
       
       if (shouldSend) {
-        let transactionSuccess = false;
+        let shouldProceed = false;
         try {
-          transactionSuccess = await runTransaction(db, async (transaction) => {
+          shouldProceed = await runTransaction(db, async (transaction) => {
             const apptRef = doc(db, 'appointments', docSnap.id);
             const freshDoc = await transaction.get(apptRef);
             if (!freshDoc.exists()) return false;
             
             const freshAppt = freshDoc.data();
-            if (freshAppt.reminderSent) return false;
+            if (freshAppt.reminderSent || freshAppt.reminderFailed) return false;
             
-            transaction.update(apptRef, { reminderSent: true });
+            // Si ya se intentó hace menos de 10 minutos, evitar colisiones entre crons concurrentes
+            if (freshAppt.reminderAttemptAt && (now.getTime() - freshAppt.reminderAttemptAt.toMillis()) < 10 * 60 * 1000) {
+              return false;
+            }
+            
+            transaction.update(apptRef, { reminderAttemptAt: Timestamp.now() });
             return true;
           });
         } catch (tErr) {
@@ -291,7 +296,7 @@ export async function processReminders(db: any) {
           continue;
         }
 
-        if (transactionSuccess) {
+        if (shouldProceed) {
           let firstName = (appt.customerName || "Cliente").trim().split(" ")[0];
           if (firstName) firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
           
@@ -314,11 +319,23 @@ export async function processReminders(db: any) {
           
           try {
             await sendWhatsAppMessage(appt.customerPhone, message);
+            await updateDoc(doc(db, 'appointments', docSnap.id), {
+              reminderSent: true,
+              reminderSentAt: Timestamp.now(),
+              reminderError: null
+            });
             console.log(`Recordatorio enviado a ${appt.customerPhone} para el turno de las ${timeStr}`);
             results.sent.push(`${appt.customerPhone} (${timeStr})`);
           } catch (waErr: any) {
             console.error(`Error enviando recordatorio a ${appt.customerPhone}:`, waErr);
-            results.errors.push(`${appt.customerPhone}: ${waErr.message || String(waErr)}`);
+            const errMsg = waErr?.message || String(waErr);
+            const isValidationError = errMsg.includes("Validation failed") || errMsg.includes("must be a correct phone number");
+            await updateDoc(doc(db, 'appointments', docSnap.id), {
+              reminderSent: false,
+              reminderFailed: isValidationError ? true : false,
+              reminderError: errMsg
+            });
+            results.errors.push(`${appt.customerPhone}: ${errMsg}`);
           }
         }
       }

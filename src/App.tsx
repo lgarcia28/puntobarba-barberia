@@ -591,6 +591,7 @@ export default function App() {
                         <img
                           src={img.url}
                           alt={`Corte Punto Barba ${idx + 1}`}
+                          loading="lazy"
                           className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
                           referrerPolicy="no-referrer"
                         />
@@ -678,7 +679,7 @@ export default function App() {
                       <div className="relative aspect-square overflow-hidden bg-zinc-950/60 border border-white/5">
                         <img 
                           src={prod.img} 
-                          alt={prod.name} 
+                          alt={prod.name} loading="lazy" 
                           className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-102 transition-all duration-1000"
                           referrerPolicy="no-referrer"
                         />

@@ -45,6 +45,53 @@ export const addMinutesToTimeStr = (timeStr: string, minutes: number): string =>
   return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 };
 
+export const createArgentinaDateTime = (date: Date, timeStr: string): Date => {
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const [h, m] = timeStr.split(':');
+  const hh = h.padStart(2, '0');
+  const mm = m.padStart(2, '0');
+  return new Date(`${dateStr}T${hh}:${mm}:00-03:00`);
+};
+
+export const getArgentinaDayBounds = (date: Date) => {
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const start = new Date(`${dateStr}T00:00:00-03:00`);
+  const end = new Date(`${dateStr}T23:59:59.999-03:00`);
+  return { start, end };
+};
+
+export const formatApptTime = (date: Date): string => {
+  return new Intl.DateTimeFormat('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date);
+};
+
+export const formatApptDate = (date: Date): string => {
+  return new Intl.DateTimeFormat('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+};
+
+export const formatApptDateTime = (date: Date): string => {
+  const dateFormatted = new Intl.DateTimeFormat('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit'
+  }).format(date);
+  return `${dateFormatted} a las ${formatApptTime(date)} hs`;
+};
+
+export const isSameDayArgentina = (d1: Date, d2: Date): boolean => {
+  return formatApptDate(d1) === formatApptDate(d2);
+};
+
 export const normalizePhone = (phone: string): string => {
   if (!phone) return "";
   let clean = phone.replace(/\D/g, "");
@@ -264,13 +311,6 @@ export const BookingSystem = ({
       horariosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   };
-
-  // Keep the date input DOM node in sync with customerInfo.birthdate if not actively typing
-  useEffect(() => {
-    if (birthdateInputRef.current && document.activeElement !== birthdateInputRef.current) {
-      birthdateInputRef.current.value = customerInfo.birthdate || '';
-    }
-  }, [customerInfo.birthdate, isBirthdateAutocompleted]);
 
   // Autocomplete customer name and birthday from previous appointments
   useEffect(() => {
@@ -780,8 +820,7 @@ export const BookingSystem = ({
     setAppointments([]);
     setBlocks([]);
 
-    const start = startOfDay(selectedDate);
-    const end = endOfDay(selectedDate);
+    const { start, end } = getArgentinaDayBounds(selectedDate);
 
     const qAppts = query(
       collection(db, 'appointments'),
@@ -821,8 +860,9 @@ export const BookingSystem = ({
       start = startOfWeek(adminDate, { weekStartsOn: 1 });
       end = endOfWeek(adminDate, { weekStartsOn: 1 });
     } else {
-      start = startOfDay(adminDate);
-      end = endOfDay(adminDate);
+      const bounds = getArgentinaDayBounds(adminDate);
+      start = bounds.start;
+      end = bounds.end;
     }
 
     const qAppts = query(
@@ -1052,7 +1092,7 @@ export const BookingSystem = ({
     }
 
     const [hours, minutes] = selectedTime.split(':').map(Number);
-    const baseStartTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes);
+    const baseStartTime = createArgentinaDateTime(selectedDate, selectedTime);
     const baseEndTime = addMinutes(baseStartTime, selectedService.duration);
 
     try {
@@ -1180,7 +1220,7 @@ export const BookingSystem = ({
             const slotDateStr = format(currentStartTime, 'yyyy-MM-dd');
             for (let i = 0; i < intervalsCount; i++) {
               const slotTime = addMinutes(currentStartTime, i * 30);
-              const timeStr = format(slotTime, 'HH:mm');
+              const timeStr = addMinutesToTimeStr(selectedTime, i * 30);
               const slotId = `${selectedBarber.id}_${slotDateStr}_${timeStr}`;
               batch.set(doc(db, 'slots', slotId), {
                 barberId: selectedBarber.id,
@@ -1232,11 +1272,11 @@ export const BookingSystem = ({
           const intervalsCount = Math.ceil(durationMin / 30);
           const slotTimeKeys: string[] = [];
           const blockKeys: string[] = [];
-          const slotDateStr = format(baseStartTime, 'yyyy-MM-dd');
+          const slotDateStr = format(selectedDate, 'yyyy-MM-dd');
 
           for (let i = 0; i < intervalsCount; i++) {
             const slotTime = addMinutes(baseStartTime, i * 30);
-            const timeStr = format(slotTime, 'HH:mm');
+            const timeStr = addMinutesToTimeStr(selectedTime, i * 30);
             slotTimeKeys.push(`${selectedBarber.id}_${slotDateStr}_${timeStr}`);
             blockKeys.push(`block_${selectedBarber.id}_${slotTime.getTime()}`);
           }
@@ -1418,8 +1458,8 @@ export const BookingSystem = ({
             customerName: appt.customerName,
             service: appt.service,
             barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
-            date: format(appt.startTime.toDate(), 'dd/MM/yyyy'),
-            time: format(appt.startTime.toDate(), 'HH:mm'),
+            date: formatApptDate(appt.startTime.toDate()),
+            time: formatApptTime(appt.startTime.toDate()),
             dayOfWeek: format(appt.startTime.toDate(), 'EEEE', { locale: es }) + (['sábado', 'domingo'].includes(format(appt.startTime.toDate(), 'EEEE', { locale: es })) ? 's' : ''),
             isFixed: true,
             action: 'cancel_series'
@@ -1472,8 +1512,8 @@ export const BookingSystem = ({
             customerName: appt.customerName,
             service: appt.service,
             barber: barbers.find(b => b.id === appt.barberId)?.name || 'Barbero',
-            date: format(appt.startTime.toDate(), 'dd/MM/yyyy'),
-            time: format(appt.startTime.toDate(), 'HH:mm'),
+            date: formatApptDate(appt.startTime.toDate()),
+            time: formatApptTime(appt.startTime.toDate()),
             isFixed: appt.isFixed || false,
             action: 'cancel_single'
           })
@@ -2196,8 +2236,8 @@ export const BookingSystem = ({
       if (cancelledAppointments.length > 0) {
         const messages: string[] = [];
         for (const appt of cancelledAppointments) {
-          const dateStr = format(appt.startTime.toDate(), 'dd/MM/yyyy');
-          const timeStr = format(appt.startTime.toDate(), 'HH:mm');
+          const dateStr = formatApptDate(appt.startTime.toDate());
+          const timeStr = formatApptTime(appt.startTime.toDate());
           
           try {
             await fetch('/api/send-whatsapp', {
@@ -2344,7 +2384,7 @@ export const BookingSystem = ({
                       onClick={() => setSelectedBarber(b)}
                       className={`p-4 border ${selectedBarber?.id === b.id ? 'border-gold bg-gold/10' : 'border-white/5 bg-black'} transition-all text-left flex items-center gap-4`}
                     >
-                      <img src={b.photo} alt={b.name} className="w-12 h-12 rounded-full grayscale object-cover flex-shrink-0" referrerPolicy="no-referrer" />
+                      <img src={b.photo} alt={b.name} loading="lazy" className="w-12 h-12 rounded-full grayscale object-cover flex-shrink-0" referrerPolicy="no-referrer" />
                       <span className="font-display font-bold uppercase text-sm">{b.name}</span>
                     </button>
                   ))}
@@ -2662,7 +2702,7 @@ export const BookingSystem = ({
                                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                     {outOfHoursAppts.map(appt => (
                                       <div key={appt.id} className="bg-gold/20 border border-gold p-3 flex flex-col items-center gap-1">
-                                        <span className="text-sm font-bold">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
+                                        <span className="text-sm font-bold">{formatApptTime(appt.startTime.toDate())} HS</span>
                                         <span className="uppercase text-[9px] font-black truncate w-full text-center">{appt.customerName}</span>
                                         <span className="text-[8px] font-bold">{appt.customerPhone}</span>
                                       </div>
@@ -2815,7 +2855,7 @@ export const BookingSystem = ({
                                   <div className="flex flex-wrap items-center gap-2">
                                     <div className="bg-zinc-800/80 px-2.5 py-1 rounded-sm border border-white/5 flex items-center gap-1.5">
                                       <Clock className="w-3.5 h-3.5 text-gold" />
-                                      <span className="font-display font-black text-sm tracking-wide text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
+                                      <span className="font-display font-black text-sm tracking-wide text-light-gray">{formatApptTime(appt.startTime.toDate())} HS</span>
                                     </div>
                                     <span className="text-[9px] text-charcoal font-black uppercase tracking-wider bg-white/5 px-2 py-1 rounded-sm">
                                       {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} MIN
@@ -2959,7 +2999,7 @@ export const BookingSystem = ({
                                           <div className="flex flex-wrap items-center gap-2">
                                             <div className="bg-zinc-800/80 px-2.5 py-1 rounded-sm border border-white/5 flex items-center gap-1.5">
                                               <Clock className="w-3.5 h-3.5 text-gold" />
-                                              <span className="font-display font-black text-sm tracking-wide text-light-gray">{format(appt.startTime.toDate(), 'HH:mm')} HS</span>
+                                              <span className="font-display font-black text-sm tracking-wide text-light-gray">{formatApptTime(appt.startTime.toDate())} HS</span>
                                             </div>
                                             <span className="text-[9px] text-charcoal font-black uppercase tracking-wider bg-white/5 px-2 py-1 rounded-sm">
                                               {Math.round((appt.endTime.toDate() - appt.startTime.toDate()) / 60000)} MIN
@@ -3293,7 +3333,7 @@ export const BookingSystem = ({
               {barbers.map(b => (
                 <div key={b.id} className="flex items-center justify-between p-4 bg-zinc-900 border border-white/5">
                   <div className="flex items-center gap-4">
-                    <img src={b.photo} alt={b.name} className="w-16 h-16 rounded-full object-cover grayscale border border-white/5 flex-shrink-0" referrerPolicy="no-referrer" />
+                    <img src={b.photo} alt={b.name} loading="lazy" className="w-16 h-16 rounded-full object-cover grayscale border border-white/5 flex-shrink-0" referrerPolicy="no-referrer" />
                     <div>
                       <p className="font-bold uppercase text-sm">{b.name}</p>
                       <p className="text-xs text-charcoal">{b.email}</p>
@@ -3698,7 +3738,7 @@ export const BookingSystem = ({
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <img src={b.photo} alt={b.name} className="w-10 h-10 rounded-full grayscale object-cover flex-shrink-0" referrerPolicy="no-referrer" />
+                              <img src={b.photo} alt={b.name} loading="lazy" className="w-10 h-10 rounded-full grayscale object-cover flex-shrink-0" referrerPolicy="no-referrer" />
                               <div>
                                 <p className="font-display font-bold uppercase text-xs text-light-gray">{b.name}</p>
                                 <p className="text-[10px] text-charcoal uppercase font-bold">
@@ -3778,7 +3818,7 @@ export const BookingSystem = ({
                               <tbody className="divide-y divide-white/5">
                                 {filteredAppts.map(appt => (
                                   <tr key={appt.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="p-3 font-display font-bold">{format(appt.startTime.toDate(), 'HH:mm')}</td>
+                                    <td className="p-3 font-display font-bold">{formatApptTime(appt.startTime.toDate())}</td>
                                     <td className="p-3 uppercase font-bold text-xs">
                                       {appt.customerName} {appt.isWalkIn && <span className="text-[8px] bg-gold/20 text-gold border border-gold/30 px-1 font-black uppercase tracking-wider ml-1 rounded-sm">Walk-in</span>}
                                     </td>
@@ -4193,7 +4233,7 @@ export const BookingSystem = ({
                         <div className="text-left md:text-right w-full md:w-auto flex flex-col items-start md:items-end">
                           <div>
                             <p className="font-display font-bold text-gold capitalize whitespace-nowrap">{format(appt.startTime.toDate(), 'EEEE dd/MM/yyyy', { locale: es })}</p>
-                            <p className="font-bold text-lg">{format(appt.startTime.toDate(), 'HH:mm')} HS</p>
+                            <p className="font-bold text-lg">{formatApptTime(appt.startTime.toDate())} HS</p>
                           </div>
                           <div className="flex gap-2 mt-3 md:mt-2 w-full md:w-auto justify-start md:justify-end">
                              {(() => {
@@ -4275,7 +4315,7 @@ export const BookingSystem = ({
                           onClick={() => { setSelectedBarber(barber); if (selectedService) { setStep(3); } else { setStep(2); } }}
                           className="group relative aspect-square overflow-hidden border border-white/5 hover:border-gold transition-all cursor-pointer"
                         >
-                          <img src={barber.photo} alt={barber.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" referrerPolicy="no-referrer" />
+                          <img src={barber.photo} alt={barber.name} loading="lazy" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" referrerPolicy="no-referrer" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                           <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 text-left">
                             <p className="font-display font-black uppercase text-sm sm:text-base md:text-lg lg:text-xl leading-tight">{barber.name}</p>
@@ -4651,25 +4691,15 @@ export const BookingSystem = ({
                               required
                               readOnly={isBirthdateAutocompleted}
                               tabIndex={isBirthdateAutocompleted ? -1 : 0}
-                              defaultValue={!isBirthdateAutocompleted ? (customerInfo.birthdate || '') : undefined}
                               value={isBirthdateAutocompleted ? (() => {
                                 const parts = (customerInfo.birthdate || '').split('-');
-                                return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : customerInfo.birthdate;
-                              })() : undefined}
+                                return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : (customerInfo.birthdate || '');
+                              })() : (customerInfo.birthdate || '')}
                               max={format(new Date(), 'yyyy-MM-dd')}
                               min="1920-01-01"
                               onChange={e => {
-                                if (e.target.value) {
-                                  setCustomerInfo(prev => ({ ...prev, birthdate: e.target.value }));
-                                  setIsBirthdateAutocompleted(false);
-                                }
-                              }}
-                              onBlur={e => {
-                                if (!e.target.value) {
-                                  setCustomerInfo(prev => ({ ...prev, birthdate: '' }));
-                                } else {
-                                  setCustomerInfo(prev => ({ ...prev, birthdate: e.target.value }));
-                                }
+                                setCustomerInfo(prev => ({ ...prev, birthdate: e.target.value }));
+                                setIsBirthdateAutocompleted(false);
                               }}
                               className={`flex-1 bg-black border border-white/5 p-2 font-display font-bold uppercase tracking-widest focus:border-gold outline-none transition-colors text-base ${isBirthdateAutocompleted ? 'text-zinc-500 border-zinc-800/40 cursor-not-allowed' : 'text-light-gray'}`}
                             />
@@ -4802,7 +4832,7 @@ export const BookingSystem = ({
             >
               <h3 className="font-display font-black uppercase text-xl mb-1 text-light-gray">Editar Turno</h3>
               <p className="text-charcoal text-xs uppercase font-bold mb-6">
-                {editingAppt && format(editingAppt.startTime.toDate(), "EEEE dd/MM 'a las' HH:mm 'hs'", { locale: es })}
+                {editingAppt && formatApptDateTime(editingAppt.startTime.toDate())}
               </p>
 
               <div className="space-y-4">
@@ -4923,7 +4953,7 @@ export const BookingSystem = ({
             >
               <h3 className="font-display font-black uppercase text-xl mb-1 text-light-gray">Registrar Cobro</h3>
               <p className="text-charcoal text-xs uppercase font-bold mb-6">
-                Turno de {completingAppt.customerName} a las {format(completingAppt.startTime.toDate(), "HH:mm 'hs'")}
+                Turno de {completingAppt.customerName} a las {formatApptTime(completingAppt.startTime.toDate())} hs
               </p>
 
               <div className="space-y-4">
@@ -4979,7 +5009,7 @@ export const BookingSystem = ({
             >
               <h3 className="font-display font-black uppercase text-xl mb-2 text-light-gray">Cancelar Turno Fijo</h3>
               <p className="text-charcoal text-xs uppercase font-bold mb-6">
-                Turno de {fixedCancelAppt.customerName} - {format(fixedCancelAppt.startTime.toDate(), "EEEE dd/MM 'a las' HH:mm 'hs'", { locale: es })}
+                Turno de {fixedCancelAppt.customerName} - {formatApptDateTime(fixedCancelAppt.startTime.toDate())}
               </p>
 
               <div className="space-y-3">
@@ -5031,7 +5061,7 @@ export const BookingSystem = ({
             >
               <h3 className="font-display font-black uppercase text-xl mb-2 text-light-gray">Reprogramar Turno Fijo</h3>
               <p className="text-charcoal text-xs uppercase font-bold mb-6">
-                Turno de {fixedRescheduleAppt.customerName} - {format(fixedRescheduleAppt.startTime.toDate(), "EEEE dd/MM 'a las' HH:mm 'hs'", { locale: es })}
+                Turno de {fixedRescheduleAppt.customerName} - {formatApptDateTime(fixedRescheduleAppt.startTime.toDate())}
               </p>
 
               <div className="space-y-3">

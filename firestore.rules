@@ -53,15 +53,34 @@ service cloud.firestore {
     }
 
     function isValidAppointment(data) {
-      return data.barberId is string && 
-             data.customerName is string && data.customerName.size() > 0 &&
-             data.customerPhone is string && data.customerPhone.size() > 5 &&
-             (data['service'] == 'Corte de pelo' || data['service'] == 'Barba' || data['service'] == 'Corte y Barba') &&
+      return data.barberId is string && data.barberId.size() > 0 && data.barberId.size() <= 128 &&
+             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 120 &&
+             // Phone may be empty for admin-created walk-ins
+             data.customerPhone is string && data.customerPhone.size() <= 30 &&
+             data.service is string && data.service.size() >= 1 && data.service.size() <= 120 &&
              data.startTime is timestamp &&
              data.endTime is timestamp &&
              data.endTime > data.startTime &&
              (data.status == 'confirmed' || data.status == 'cancelled') &&
              data.createdAt is timestamp;
+    }
+
+    function isValidSlot(data) {
+      return data.appointmentId is string && data.appointmentId.size() > 0 && data.appointmentId.size() <= 128 &&
+             data.barberId is string && data.barberId.size() <= 128 &&
+             data.startTime is timestamp;
+    }
+
+    // Slot may be released: its appointment is gone or cancelled (post-write state, so it
+    // works inside the same batch/transaction that cancels the appointment)
+    function slotAppointmentReleasedAfter(appointmentId) {
+      return !existsAfter(/databases/$(database)/documents/appointments/$(appointmentId)) ||
+             getAfter(/databases/$(database)/documents/appointments/$(appointmentId)).data.status == 'cancelled';
+    }
+
+    function slotAppointmentReleasedNow(appointmentId) {
+      return !exists(/databases/$(database)/documents/appointments/$(appointmentId)) ||
+             get(/databases/$(database)/documents/appointments/$(appointmentId)).data.status != 'confirmed';
     }
 
     function isValidBlock(data) {
@@ -82,7 +101,7 @@ service cloud.firestore {
 
     match /appointments/{appointmentId} {
       allow read: if true;
-      allow create: if true; // Allow public booking
+      allow create: if isValidAppointment(request.resource.data); // Allow public booking
       allow update: if (isAuthenticated() && (isAdmin() || isBarber(resource.data.barberId))) || 
                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && request.resource.data.status == 'cancelled') ||
                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reminderSent']));
@@ -91,12 +110,26 @@ service cloud.firestore {
 
     match /slots/{slotId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if isValidSlot(request.resource.data);
+      // Public overwrite only of orphan slots (appointment missing/not confirmed); admins/barbers always
+      allow update: if isValidSlot(request.resource.data) &&
+                       (isAdmin() || isBarber(resource.data.barberId) ||
+                        (resource.data.appointmentId is string && slotAppointmentReleasedNow(resource.data.appointmentId)));
+      // Public delete only when the referenced appointment is (being) cancelled or nonexistent
+      allow delete: if resource == null || isAdmin() || isBarber(resource.data.barberId) ||
+                       (resource.data.appointmentId is string && slotAppointmentReleasedAfter(resource.data.appointmentId));
     }
 
     match /birthday_logs/{logId} {
       allow read: if true;
-      allow write: if true;
+      // The cron (api/cron-reminders.ts) uses the client SDK unauthenticated, so creation of a
+      // well-formed log must stay open; update/delete require auth.
+      allow create: if isAuthenticated() ||
+                       (request.resource.data.phone is string && request.resource.data.phone.size() <= 30 &&
+                        request.resource.data.name is string && request.resource.data.name.size() <= 120 &&
+                        request.resource.data.year is int &&
+                        request.resource.data.sentAt is timestamp);
+      allow update, delete: if isAuthenticated();
     }
 
     match /blocks/{blockId} {
